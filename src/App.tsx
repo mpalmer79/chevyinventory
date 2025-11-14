@@ -2,7 +2,6 @@ import React, {
   useState,
   useMemo,
   useEffect,
-  ChangeEvent,
   FC,
 } from "react";
 import * as XLSX from "xlsx";
@@ -65,14 +64,13 @@ function formatCurrency(value: number): string {
   }).format(value);
 }
 
-/* ---------- Data hook (loads default inventory + uploads) ---------- */
+/* ---------- Data hook (loads default inventory) ---------- */
 
 function useInventoryData() {
   const [rows, setRows] = useState<InventoryRow[]>([]);
-  const [fileName, setFileName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const loadFromArrayBuffer = async (data: ArrayBuffer, name: string) => {
+  const loadFromArrayBuffer = async (data: ArrayBuffer) => {
     try {
       const workbook = XLSX.read(data, { type: "array" });
       const sheetName = workbook.SheetNames[0];
@@ -97,21 +95,13 @@ function useInventoryData() {
       }));
 
       setRows(parsed);
-      setFileName(name);
       setError(null);
     } catch (err) {
       console.error(err);
       setError(
-        "There was a problem reading that Excel file. Please check the format."
+        "There was a problem reading the inventory file. Please check the format."
       );
     }
-  };
-
-  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const data = await file.arrayBuffer();
-    await loadFromArrayBuffer(data, file.name);
   };
 
   // Auto-load /public/inventory.xlsx on first render
@@ -127,7 +117,7 @@ function useInventoryData() {
         }
 
         const data = await res.arrayBuffer();
-        await loadFromArrayBuffer(data, "inventory.xlsx");
+        await loadFromArrayBuffer(data);
       } catch (err) {
         console.error("Failed to load default inventory:", err);
       }
@@ -175,9 +165,7 @@ function useInventoryData() {
 
   return {
     rows,
-    fileName,
     error,
-    handleFileChange,
     sortedRows,
     modelPieData,
   };
@@ -186,27 +174,17 @@ function useInventoryData() {
 /* ---------- Layout components ---------- */
 
 type HeaderProps = {
-  fileName: string | null;
-  hasRows: boolean;
-  onFileChange: (e: ChangeEvent<HTMLInputElement>) => void;
   searchTerm: string;
   onSearchChange: (value: string) => void;
 };
 
-const HeaderBar: FC<HeaderProps> = ({
-  fileName,
-  hasRows,
-  onFileChange,
-  searchTerm,
-  onSearchChange,
-}) => (
+const HeaderBar: FC<HeaderProps> = ({ searchTerm, onSearchChange }) => (
   <header className="app-header">
     <div className="brand-block">
       <div className="brand-main">QUIRK CHEVROLET</div>
       <div className="brand-sub">MANCHESTER NH</div>
     </div>
 
-    {/* 3 "lines" of space is approximate; handled via margin in CSS */}
     <div className="header-controls">
       <input
         className="search-input"
@@ -215,20 +193,6 @@ const HeaderBar: FC<HeaderProps> = ({
         value={searchTerm}
         onChange={(e) => onSearchChange(e.target.value)}
       />
-
-      <label className="upload-button">
-        <span>{hasRows ? "Import another file" : "Import Excel inventory"}</span>
-        <input
-          type="file"
-          accept=".xlsx,.xls"
-          onChange={onFileChange}
-          style={{ display: "none" }}
-        />
-      </label>
-
-      <div className="file-name">
-        {fileName ? <span>{fileName}</span> : <span>No file loaded yet</span>}
-      </div>
     </div>
   </header>
 );
@@ -311,13 +275,13 @@ const InventoryTable: FC<InventoryTableProps> = ({ rows }) => {
               <th>Make</th>
               <th>Model</th>
               <th>Trim</th>
-              <th>VIN</th>
+              {/* VIN column removed */}
               <th>Model #</th>
               <th>Cyl</th>
               <th>Lot</th>
               <th>Status</th>
               <th>Age</th>
-              <th>Cyl2</th>
+              {/* Cyl2 column removed */}
               <th>MSRP</th>
             </tr>
           </thead>
@@ -330,13 +294,13 @@ const InventoryTable: FC<InventoryTableProps> = ({ rows }) => {
                 <td>{row.Make}</td>
                 <td>{row.Model}</td>
                 <td>{row.Trim}</td>
-                <td>{row.VIN}</td>
+                {/* VIN cell removed */}
                 <td>{row["Model Number"]}</td>
                 <td>{row.Cylinders}</td>
                 <td>{row.Lot}</td>
                 <td>{row["Vehicle Status"]}</td>
                 <td>{row.Age}</td>
-                <td>{row.Cylinders2}</td>
+                {/* Cyl2 cell removed */}
                 <td>{formatCurrency(row.MSRP)}</td>
               </tr>
             ))}
@@ -350,8 +314,7 @@ const InventoryTable: FC<InventoryTableProps> = ({ rows }) => {
 /* ---------- App ---------- */
 
 const App: FC = () => {
-  const { rows, fileName, error, handleFileChange, sortedRows, modelPieData } =
-    useInventoryData();
+  const { rows, error, sortedRows, modelPieData } = useInventoryData();
 
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -384,9 +347,6 @@ const App: FC = () => {
   return (
     <div className="app-root">
       <HeaderBar
-        fileName={fileName}
-        hasRows={rows.length > 0}
-        onFileChange={handleFileChange}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
       />
