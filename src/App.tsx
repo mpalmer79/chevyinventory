@@ -40,16 +40,10 @@ type ModelPieDatum = {
   value: number;
 };
 
-type InventoryKpis = {
-  total: number;
-  avgAge: number;
-  totalMsrp: number;
-  avgMsrp: number;
-};
-
 /* ---------- Constants / helpers ---------- */
 
 const QUIRK_GREEN = "#16a34a";
+const DEFAULT_INVENTORY_PATH = "/inventory.xlsx";
 
 const CHART_COLORS = [
   QUIRK_GREEN,
@@ -62,8 +56,6 @@ const CHART_COLORS = [
   "#22d3ee",
 ];
 
-const DEFAULT_INVENTORY_PATH = "/inventory.xlsx";
-
 function formatCurrency(value: number): string {
   if (!Number.isFinite(value)) return "-";
   return new Intl.NumberFormat("en-US", {
@@ -73,14 +65,13 @@ function formatCurrency(value: number): string {
   }).format(value);
 }
 
-/* ---------- Data hook (now also loads /inventory.xlsx) ---------- */
+/* ---------- Data hook (loads default inventory + uploads) ---------- */
 
 function useInventoryData() {
   const [rows, setRows] = useState<InventoryRow[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // shared loader used by both default file and manual upload
   const loadFromArrayBuffer = async (data: ArrayBuffer, name: string) => {
     try {
       const workbook = XLSX.read(data, { type: "array" });
@@ -116,7 +107,6 @@ function useInventoryData() {
     }
   };
 
-  // manual upload (still works)
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -124,7 +114,7 @@ function useInventoryData() {
     await loadFromArrayBuffer(data, file.name);
   };
 
-  // NEW: auto-load /inventory.xlsx from public/ on first render
+  // Auto-load /public/inventory.xlsx on first render
   useEffect(() => {
     const loadDefaultInventory = async () => {
       try {
@@ -140,7 +130,6 @@ function useInventoryData() {
         await loadFromArrayBuffer(data, "inventory.xlsx");
       } catch (err) {
         console.error("Failed to load default inventory:", err);
-        // we don't set an error for sales staff; just leave rows empty
       }
     };
 
@@ -151,10 +140,12 @@ function useInventoryData() {
     if (!rows.length) return [];
 
     return [...rows].sort((a, b) => {
+      // Group by model alphabetically
       if (a.Model !== b.Model) {
         return a.Model.localeCompare(b.Model);
       }
 
+      // Sub-group Silverado 1500 by Model Number
       const isASilverado = a.Model.toUpperCase() === "SILVERADO 1500";
       const isBSilverado = b.Model.toUpperCase() === "SILVERADO 1500";
 
@@ -164,31 +155,9 @@ function useInventoryData() {
         }
       }
 
+      // Then sort within each group by Age desc
       return b.Age - a.Age;
     });
-  }, [rows]);
-
-  const kpis = useMemo<InventoryKpis>(() => {
-    if (!rows.length) {
-      return { total: 0, avgAge: 0, totalMsrp: 0, avgMsrp: 0 };
-    }
-
-    const total = rows.length;
-    const totalAge = rows.reduce(
-      (sum, r) => sum + (Number.isFinite(r.Age) ? r.Age : 0),
-      0
-    );
-    const totalMsrp = rows.reduce(
-      (sum, r) => sum + (Number.isFinite(r.MSRP) ? r.MSRP : 0),
-      0
-    );
-
-    return {
-      total,
-      avgAge: totalAge / total,
-      totalMsrp,
-      avgMsrp: totalMsrp / total,
-    };
   }, [rows]);
 
   const modelPieData = useMemo<ModelPieDatum[]>(() => {
@@ -210,7 +179,6 @@ function useInventoryData() {
     error,
     handleFileChange,
     sortedRows,
-    kpis,
     modelPieData,
   };
 }
@@ -233,9 +201,21 @@ const HeaderBar: FC<HeaderProps> = ({
   onSearchChange,
 }) => (
   <header className="app-header">
-    <div className="brand-pill">QUIRK CHEVROLET MANCHESTER NH</div>
+    <div className="brand-block">
+      <div className="brand-main">QUIRK CHEVROLET</div>
+      <div className="brand-sub">MANCHESTER NH</div>
+    </div>
 
-    <div className="header-right">
+    {/* 3 "lines" of space is approximate; handled via margin in CSS */}
+    <div className="header-controls">
+      <input
+        className="search-input"
+        type="text"
+        placeholder="Search stock #, VIN, model..."
+        value={searchTerm}
+        onChange={(e) => onSearchChange(e.target.value)}
+      />
+
       <label className="upload-button">
         <span>{hasRows ? "Import another file" : "Import Excel inventory"}</span>
         <input
@@ -249,14 +229,6 @@ const HeaderBar: FC<HeaderProps> = ({
       <div className="file-name">
         {fileName ? <span>{fileName}</span> : <span>No file loaded yet</span>}
       </div>
-
-      <input
-        className="search-input"
-        type="text"
-        placeholder="Search stock #, VIN, model..."
-        value={searchTerm}
-        onChange={(e) => onSearchChange(e.target.value)}
-      />
     </div>
   </header>
 );
@@ -378,7 +350,7 @@ const InventoryTable: FC<InventoryTableProps> = ({ rows }) => {
 /* ---------- App ---------- */
 
 const App: FC = () => {
-  const { rows, fileName, error, handleFileChange, sortedRows, kpis, modelPieData } =
+  const { rows, fileName, error, handleFileChange, sortedRows, modelPieData } =
     useInventoryData();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -420,31 +392,6 @@ const App: FC = () => {
       />
 
       <main className="app-main">
-        <section className="panel">
-          <div className="section-title">Upload inventory</div>
-          <p className="intro-copy">
-            Import the latest Excel export from your Quirk Chevrolet inventory
-            report. We’ll group by model, sub-group Silverado 1500 by model
-            number, and visualize the mix for you.
-          </p>
-          <p className="kpi-row">
-            <span>Total Units</span>
-            <strong>{kpis.total.toLocaleString()}</strong>
-          </p>
-          <p className="kpi-row">
-            <span>Average Age (days)</span>
-            <strong>{kpis.avgAge.toFixed(1)}</strong>
-          </p>
-          <p className="kpi-row">
-            <span>Total MSRP</span>
-            <strong>{formatCurrency(kpis.totalMsrp)}</strong>
-          </p>
-          <p className="kpi-row">
-            <span>Average MSRP</span>
-            <strong>{formatCurrency(kpis.avgMsrp)}</strong>
-          </p>
-        </section>
-
         {error && (
           <section className="panel error-panel">
             <div className="section-title">File error</div>
