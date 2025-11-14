@@ -44,6 +44,7 @@ type ModelPieDatum = {
 const QUIRK_GREEN = "#16a34a";
 const DEFAULT_INVENTORY_PATH = "/inventory.xlsx";
 
+/* Base fallback palette */
 const CHART_COLORS = [
   QUIRK_GREEN,
   "#22c55e",
@@ -54,6 +55,11 @@ const CHART_COLORS = [
   "#eab308",
   "#22d3ee",
 ];
+
+/* 🎨 MODEL-BASED COLOR MAP (your request) */
+const MODEL_COLORS: Record<string, string> = {
+  "SILVERADO 1500": "#7FAFD8", // light denim powder blue
+};
 
 function formatCurrency(value: number): string {
   if (!Number.isFinite(value)) return "-";
@@ -104,17 +110,11 @@ function useInventoryData() {
     }
   };
 
-  // Auto-load /public/inventory.xlsx on first render
   useEffect(() => {
     const loadDefaultInventory = async () => {
       try {
         const res = await fetch(DEFAULT_INVENTORY_PATH);
-        if (!res.ok) {
-          console.warn(
-            `Default inventory file not found at ${DEFAULT_INVENTORY_PATH}`
-          );
-          return;
-        }
+        if (!res.ok) return;
 
         const data = await res.arrayBuffer();
         await loadFromArrayBuffer(data);
@@ -130,22 +130,17 @@ function useInventoryData() {
     if (!rows.length) return [];
 
     return [...rows].sort((a, b) => {
-      // Group by model alphabetically
       if (a.Model !== b.Model) {
         return a.Model.localeCompare(b.Model);
       }
 
-      // Sub-group Silverado 1500 by Model Number
       const isASilverado = a.Model.toUpperCase() === "SILVERADO 1500";
       const isBSilverado = b.Model.toUpperCase() === "SILVERADO 1500";
 
       if (isASilverado && isBSilverado) {
-        if (a["Model Number"] !== b["Model Number"]) {
-          return a["Model Number"].localeCompare(b["Model Number"]);
-        }
+        return a["Model Number"].localeCompare(b["Model Number"]);
       }
 
-      // Then sort within each group by Age desc
       return b.Age - a.Age;
     });
   }, [rows]);
@@ -183,6 +178,7 @@ const HeaderBar: FC<HeaderProps> = ({ searchTerm, onSearchChange }) => (
     <div className="brand-block">
       <div className="brand-main">QUIRK CHEVROLET</div>
       <div className="brand-sub">MANCHESTER NH</div>
+      <div style={{ height: "36px" }}></div>
     </div>
 
     <div className="header-controls">
@@ -192,6 +188,7 @@ const HeaderBar: FC<HeaderProps> = ({ searchTerm, onSearchChange }) => (
         placeholder="Search stock #, VIN, model..."
         value={searchTerm}
         onChange={(e) => onSearchChange(e.target.value)}
+        style={{ width: "280px" }} /* extended to ~20 characters */
       />
     </div>
   </header>
@@ -219,13 +216,21 @@ const ChartsSection: FC<ChartsSectionProps> = ({ modelPieData }) => {
                 nameKey="name"
                 paddingAngle={2}
               >
-                {modelPieData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={CHART_COLORS[index % CHART_COLORS.length]}
-                  />
-                ))}
+                {modelPieData.map((entry, index) => {
+                  const label = entry.name.toUpperCase();
+                  const sliceColor =
+                    MODEL_COLORS[label] ??
+                    CHART_COLORS[index % CHART_COLORS.length];
+
+                  return (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={sliceColor}
+                    />
+                  );
+                })}
               </Pie>
+
               <Tooltip
                 contentStyle={{
                   background: "#020617",
@@ -234,6 +239,7 @@ const ChartsSection: FC<ChartsSectionProps> = ({ modelPieData }) => {
                   fontSize: 12,
                 }}
               />
+
               <Legend
                 layout="horizontal"
                 align="center"
@@ -265,6 +271,7 @@ const InventoryTable: FC<InventoryTableProps> = ({ rows }) => {
       <div className="section-title">
         Inventory Detail · Grouped by Model / Model Number
       </div>
+
       <div className="table-shell">
         <table>
           <thead>
@@ -275,16 +282,17 @@ const InventoryTable: FC<InventoryTableProps> = ({ rows }) => {
               <th>Make</th>
               <th>Model</th>
               <th>Trim</th>
-              {/* VIN column removed */}
+              {/* VIN removed */}
               <th>Model #</th>
               <th>Cyl</th>
               <th>Lot</th>
               <th>Status</th>
               <th>Age</th>
-              {/* Cyl2 column removed */}
+              {/* Cyl2 removed */}
               <th>MSRP</th>
             </tr>
           </thead>
+
           <tbody>
             {visibleRows.map((row) => (
               <tr key={row["Stock Number"]}>
@@ -294,13 +302,11 @@ const InventoryTable: FC<InventoryTableProps> = ({ rows }) => {
                 <td>{row.Make}</td>
                 <td>{row.Model}</td>
                 <td>{row.Trim}</td>
-                {/* VIN cell removed */}
                 <td>{row["Model Number"]}</td>
                 <td>{row.Cylinders}</td>
                 <td>{row.Lot}</td>
                 <td>{row["Vehicle Status"]}</td>
                 <td>{row.Age}</td>
-                {/* Cyl2 cell removed */}
                 <td>{formatCurrency(row.MSRP)}</td>
               </tr>
             ))}
@@ -315,7 +321,6 @@ const InventoryTable: FC<InventoryTableProps> = ({ rows }) => {
 
 const App: FC = () => {
   const { rows, error, sortedRows, modelPieData } = useInventoryData();
-
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredRows = useMemo<InventoryRow[]>(() => {
@@ -324,12 +329,10 @@ const App: FC = () => {
     const term = searchTerm.trim().toLowerCase();
 
     return sortedRows.filter((row) => {
-      const stock = (row["Stock Number"] || "").toString().toLowerCase();
-      const shortVin = (row["Short VIN"] || "").toString().toLowerCase();
-      const model = (row.Model || "").toString().toLowerCase();
-      const modelNumber = (row["Model Number"] || "")
-        .toString()
-        .toLowerCase();
+      const stock = (row["Stock Number"] || "").toLowerCase();
+      const shortVin = (row["Short VIN"] || "").toLowerCase();
+      const model = (row.Model || "").toLowerCase();
+      const modelNumber = (row["Model Number"] || "").toLowerCase();
 
       return (
         stock.includes(term) ||
@@ -340,9 +343,10 @@ const App: FC = () => {
     });
   }, [sortedRows, searchTerm]);
 
-  const displayModelPieData = modelPieData.length
-    ? modelPieData
-    : [{ name: "No data", value: 1 }];
+  const displayModelPieData =
+    modelPieData.length > 0
+      ? modelPieData
+      : [{ name: "No data", value: 1 }];
 
   return (
     <div className="app-root">
