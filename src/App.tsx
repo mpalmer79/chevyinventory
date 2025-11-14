@@ -1,4 +1,10 @@
-import React, { useState, useMemo, useEffect, ChangeEvent } from "react";
+import React, {
+  useState,
+  useMemo,
+  useEffect,
+  ChangeEvent,
+  FC,
+} from "react";
 import * as XLSX from "xlsx";
 import "./style.css";
 import {
@@ -9,6 +15,8 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
+
+/* ---------- Types ---------- */
 
 type InventoryRow = {
   "Stock Number": string;
@@ -32,8 +40,19 @@ type ModelPieDatum = {
   value: number;
 };
 
+type InventoryKpis = {
+  total: number;
+  avgAge: number;
+  totalMsrp: number;
+  avgMsrp: number;
+};
+
+/* ---------- Constants / helpers ---------- */
+
+const QUIRK_GREEN = "#16a34a";
+
 const CHART_COLORS = [
-  "#16a34a",
+  QUIRK_GREEN,
   "#22c55e",
   "#4ade80",
   "#a3e635",
@@ -42,6 +61,8 @@ const CHART_COLORS = [
   "#eab308",
   "#22d3ee",
 ];
+
+const DEFAULT_INVENTORY_PATH = "/inventory.xlsx";
 
 function formatCurrency(value: number): string {
   if (!Number.isFinite(value)) return "-";
@@ -52,24 +73,16 @@ function formatCurrency(value: number): string {
   }).format(value);
 }
 
-/**
- * Local hook to manage inventory state.
- * (This is fully self-contained and doesn’t depend on src/hooks/.)
- */
+/* ---------- Data hook (now also loads /inventory.xlsx) ---------- */
+
 function useInventoryData() {
   const [rows, setRows] = useState<InventoryRow[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    setError(null);
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setFileName(file.name);
-
+  // shared loader used by both default file and manual upload
+  const loadFromArrayBuffer = async (data: ArrayBuffer, name: string) => {
     try {
-      const data = await file.arrayBuffer();
       const workbook = XLSX.read(data, { type: "array" });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
@@ -93,6 +106,8 @@ function useInventoryData() {
       }));
 
       setRows(parsed);
+      setFileName(name);
+      setError(null);
     } catch (err) {
       console.error(err);
       setError(
@@ -101,16 +116,45 @@ function useInventoryData() {
     }
   };
 
+  // manual upload (still works)
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const data = await file.arrayBuffer();
+    await loadFromArrayBuffer(data, file.name);
+  };
+
+  // NEW: auto-load /inventory.xlsx from public/ on first render
+  useEffect(() => {
+    const loadDefaultInventory = async () => {
+      try {
+        const res = await fetch(DEFAULT_INVENTORY_PATH);
+        if (!res.ok) {
+          console.warn(
+            `Default inventory file not found at ${DEFAULT_INVENTORY_PATH}`
+          );
+          return;
+        }
+
+        const data = await res.arrayBuffer();
+        await loadFromArrayBuffer(data, "inventory.xlsx");
+      } catch (err) {
+        console.error("Failed to load default inventory:", err);
+        // we don't set an error for sales staff; just leave rows empty
+      }
+    };
+
+    loadDefaultInventory();
+  }, []);
+
   const sortedRows = useMemo<InventoryRow[]>(() => {
     if (!rows.length) return [];
 
     return [...rows].sort((a, b) => {
-      // Group by Model (A–Z)
       if (a.Model !== b.Model) {
         return a.Model.localeCompare(b.Model);
       }
 
-      // Sub-group Silverado 1500 by Model Number
       const isASilverado = a.Model.toUpperCase() === "SILVERADO 1500";
       const isBSilverado = b.Model.toUpperCase() === "SILVERADO 1500";
 
@@ -120,9 +164,31 @@ function useInventoryData() {
         }
       }
 
-      // Within each group, sort by Age descending
       return b.Age - a.Age;
     });
+  }, [rows]);
+
+  const kpis = useMemo<InventoryKpis>(() => {
+    if (!rows.length) {
+      return { total: 0, avgAge: 0, totalMsrp: 0, avgMsrp: 0 };
+    }
+
+    const total = rows.length;
+    const totalAge = rows.reduce(
+      (sum, r) => sum + (Number.isFinite(r.Age) ? r.Age : 0),
+      0
+    );
+    const totalMsrp = rows.reduce(
+      (sum, r) => sum + (Number.isFinite(r.MSRP) ? r.MSRP : 0),
+      0
+    );
+
+    return {
+      total,
+      avgAge: totalAge / total,
+      totalMsrp,
+      avgMsrp: totalMsrp / total,
+    };
   }, [rows]);
 
   const modelPieData = useMemo<ModelPieDatum[]>(() => {
@@ -144,73 +210,66 @@ function useInventoryData() {
     error,
     handleFileChange,
     sortedRows,
+    kpis,
     modelPieData,
   };
 }
 
+/* ---------- Layout components ---------- */
+
 type HeaderProps = {
   fileName: string | null;
-  onFileChange: (e: ChangeEvent<HTMLInputElement>) => void;
   hasRows: boolean;
+  onFileChange: (e: ChangeEvent<HTMLInputElement>) => void;
   searchTerm: string;
   onSearchChange: (value: string) => void;
 };
 
-const HeaderBar: React.FC<HeaderProps> = ({
+const HeaderBar: FC<HeaderProps> = ({
   fileName,
-  onFileChange,
   hasRows,
+  onFileChange,
   searchTerm,
   onSearchChange,
-}) => {
-  return (
-    <header className="app-header">
-      <div className="brand-pill">
-        QUIRK CHEVROLET MANCHESTER NH
-      </div>
+}) => (
+  <header className="app-header">
+    <div className="brand-pill">QUIRK CHEVROLET MANCHESTER NH</div>
 
-      <div className="header-right">
-        <label className="upload-button">
-          <span>{hasRows ? "Import another file" : "Import Excel inventory"}</span>
-          <input
-            type="file"
-            accept=".xlsx,.xls"
-            onChange={onFileChange}
-            style={{ display: "none" }}
-          />
-        </label>
-
-        <div className="file-name">
-          {fileName ? <span>{fileName}</span> : <span>No file loaded yet</span>}
-        </div>
-
+    <div className="header-right">
+      <label className="upload-button">
+        <span>{hasRows ? "Import another file" : "Import Excel inventory"}</span>
         <input
-          className="search-input"
-          type="text"
-          placeholder="Search stock #, VIN, model..."
-          value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
+          type="file"
+          accept=".xlsx,.xls"
+          onChange={onFileChange}
+          style={{ display: "none" }}
         />
+      </label>
+
+      <div className="file-name">
+        {fileName ? <span>{fileName}</span> : <span>No file loaded yet</span>}
       </div>
-    </header>
-  );
-};
+
+      <input
+        className="search-input"
+        type="text"
+        placeholder="Search stock #, VIN, model..."
+        value={searchTerm}
+        onChange={(e) => onSearchChange(e.target.value)}
+      />
+    </div>
+  </header>
+);
 
 type ChartsSectionProps = {
   modelPieData: ModelPieDatum[];
 };
 
-const ChartsSection: React.FC<ChartsSectionProps> = ({ modelPieData }) => {
+const ChartsSection: FC<ChartsSectionProps> = ({ modelPieData }) => {
   if (!modelPieData.length) return null;
 
   return (
-    <section
-      style={{
-        display: "grid",
-        gridTemplateColumns: "minmax(0, 1fr)",
-        gap: "16px",
-      }}
-    >
+    <section className="panel-grid">
       <div className="panel">
         <div className="section-title">Inventory Mix · Top Models</div>
         <div style={{ height: 260 }}>
@@ -260,31 +319,16 @@ type InventoryTableProps = {
   rows: InventoryRow[];
 };
 
-const InventoryTable: React.FC<InventoryTableProps> = ({ rows }) => {
+const InventoryTable: FC<InventoryTableProps> = ({ rows }) => {
   if (!rows.length) return null;
 
-  const body = rows.slice(0, 500).map((row) => (
-    <tr key={row["Stock Number"]}>
-      <td>{row["Stock Number"]}</td>
-      <td>{row["Short VIN"]}</td>
-      <td>{row.Year}</td>
-      <td>{row.Make}</td>
-      <td>{row.Model}</td>
-      <td>{row.Trim}</td>
-      <td>{row.VIN}</td>
-      <td>{row["Model Number"]}</td>
-      <td>{row.Cylinders}</td>
-      <td>{row.Lot}</td>
-      <td>{row["Vehicle Status"]}</td>
-      <td>{row.Age}</td>
-      <td>{row.Cylinders2}</td>
-      <td>{formatCurrency(row.MSRP)}</td>
-    </tr>
-  ));
+  const visibleRows = rows.slice(0, 500);
 
   return (
     <section className="panel">
-      <div className="section-title">Inventory Detail · Grouped by Model</div>
+      <div className="section-title">
+        Inventory Detail · Grouped by Model / Model Number
+      </div>
       <div className="table-shell">
         <table>
           <thead>
@@ -305,17 +349,36 @@ const InventoryTable: React.FC<InventoryTableProps> = ({ rows }) => {
               <th>MSRP</th>
             </tr>
           </thead>
-          <tbody>{body}</tbody>
+          <tbody>
+            {visibleRows.map((row) => (
+              <tr key={row["Stock Number"]}>
+                <td>{row["Stock Number"]}</td>
+                <td>{row["Short VIN"]}</td>
+                <td>{row.Year}</td>
+                <td>{row.Make}</td>
+                <td>{row.Model}</td>
+                <td>{row.Trim}</td>
+                <td>{row.VIN}</td>
+                <td>{row["Model Number"]}</td>
+                <td>{row.Cylinders}</td>
+                <td>{row.Lot}</td>
+                <td>{row["Vehicle Status"]}</td>
+                <td>{row.Age}</td>
+                <td>{row.Cylinders2}</td>
+                <td>{formatCurrency(row.MSRP)}</td>
+              </tr>
+            ))}
+          </tbody>
         </table>
       </div>
     </section>
   );
 };
 
-/* ----------------- App ----------------- */
+/* ---------- App ---------- */
 
-const App: React.FC = () => {
-  const { rows, fileName, error, handleFileChange, sortedRows, modelPieData } =
+const App: FC = () => {
+  const { rows, fileName, error, handleFileChange, sortedRows, kpis, modelPieData } =
     useInventoryData();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -350,8 +413,8 @@ const App: React.FC = () => {
     <div className="app-root">
       <HeaderBar
         fileName={fileName}
-        onFileChange={handleFileChange}
         hasRows={rows.length > 0}
+        onFileChange={handleFileChange}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
       />
@@ -359,26 +422,33 @@ const App: React.FC = () => {
       <main className="app-main">
         <section className="panel">
           <div className="section-title">Upload inventory</div>
-          <p
-            style={{
-              fontSize: "13px",
-              color: "#111827",
-            }}
-          >
+          <p className="intro-copy">
             Import the latest Excel export from your Quirk Chevrolet inventory
             report. We’ll group by model, sub-group Silverado 1500 by model
             number, and visualize the mix for you.
           </p>
-          <p className="app-footer">
-            Quirk Chevrolet Manchester · Inventory Dashboard Prototype
+          <p className="kpi-row">
+            <span>Total Units</span>
+            <strong>{kpis.total.toLocaleString()}</strong>
+          </p>
+          <p className="kpi-row">
+            <span>Average Age (days)</span>
+            <strong>{kpis.avgAge.toFixed(1)}</strong>
+          </p>
+          <p className="kpi-row">
+            <span>Total MSRP</span>
+            <strong>{formatCurrency(kpis.totalMsrp)}</strong>
+          </p>
+          <p className="kpi-row">
+            <span>Average MSRP</span>
+            <strong>{formatCurrency(kpis.avgMsrp)}</strong>
           </p>
         </section>
 
         {error && (
-          <section className="panel" style={{ borderColor: "#b91c1c" }}>
-            <div className="section-title" style={{ color: "#b91c1c" }}>
-              {error}
-            </div>
+          <section className="panel error-panel">
+            <div className="section-title">File error</div>
+            <p>{error}</p>
           </section>
         )}
 
