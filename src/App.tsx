@@ -111,15 +111,33 @@ const App: FC = () => {
     return data;
   }, [sortedRows, filters, searchTerm]);
 
+  // Shared drill-down grouping logic
   const buildGroups = (items: InventoryRow[]) => {
     const groups: Record<string, InventoryRow[]> = {};
+
     items.forEach((r) => {
-      if (!groups[r.Model]) groups[r.Model] = [];
-      groups[r.Model].push(r);
+      const make = (r.Make || "").toString().trim();
+      const model = (r.Model || "").toString().trim();
+      const modelNumber = (r["Model Number"] || "").toString().trim();
+
+      let key: string;
+
+      // Special handling: SILVERADO 1500 split by Model Number
+      if (model.toUpperCase() === "SILVERADO 1500" && modelNumber) {
+        key = `${make}|${model}|${modelNumber}`;
+      } else {
+        key = `${make}|${model}`;
+      }
+
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(r);
     });
-    Object.keys(groups).forEach((model) => {
-      groups[model].sort((a, b) => b.Age - a.Age); // oldest first
+
+    // Sort each group by Age descending (oldest first)
+    Object.keys(groups).forEach((k) => {
+      groups[k].sort((a, b) => b.Age - a.Age);
     });
+
     return groups;
   };
 
