@@ -15,10 +15,88 @@ import { InventoryTable } from "./components/InventoryTable";
 import { DrilldownTable } from "./components/DrilldownTable";
 import { VehicleDetailDrawer } from "./components/VehicleDetailDrawer";
 
+/* -------- Natural-language search helpers -------- */
+
+type ParsedNaturalQuery = {
+  color?: string;
+  model?: string;
+  modelNumber?: string;
+};
+
+const COLOR_KEYWORDS = [
+  "black",
+  "white",
+  "blue",
+  "red",
+  "silver",
+  "grey",
+  "gray",
+  "green",
+  "orange",
+  "yellow",
+  "tan",
+  "beige",
+  "brown",
+  "gold"
+];
+
+function parseNaturalQuery(
+  query: string,
+  rows: InventoryRow[]
+): ParsedNaturalQuery {
+  const lower = query.toLowerCase();
+  const result: ParsedNaturalQuery = {};
+
+  // 1) Color
+  for (const c of COLOR_KEYWORDS) {
+    if (lower.includes(c)) {
+      result.color = c;
+      break;
+    }
+  }
+
+  // 2) Model number – match against known model numbers from data
+  const allModelNumbers = new Set(
+    rows
+      .map((r) => (r["Model Number"] || "").toString().toUpperCase())
+      .filter(Boolean)
+  );
+  const tokens = (query.toUpperCase().match(/[A-Z0-9]+/g) || []) as string[];
+  for (const token of tokens) {
+    if (allModelNumbers.has(token)) {
+      result.modelNumber = token;
+      break;
+    }
+  }
+
+  // 3) Model – match against known models (full names)
+  const knownModels = Array.from(
+    new Set(rows.map((r) => (r.Model || "").toString()))
+  );
+  for (const m of knownModels) {
+    if (!m) continue;
+    if (lower.includes(m.toLowerCase())) {
+      result.model = m;
+      break;
+    }
+  }
+
+  // Heuristic for “silverado 1500”
+  if (!result.model && lower.includes("silverado") && lower.includes("1500")) {
+    result.model = "SILVERADO 1500";
+  }
+
+  return result;
+}
+
+/* ------------------------------------------------- */
+
 const App: FC = () => {
   const { rows, error, sortedRows, modelPieData } = useInventoryData();
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [intentQuery, setIntentQuery] = useState(""); // smart search field
+
   const [filters, setFilters] = useState<Filters>({
     model: "",
     yearMin: "",
@@ -66,39 +144,94 @@ const App: FC = () => {
   const filteredRows = useMemo(() => {
     let data = [...sortedRows];
 
-    if (filters.model) data = data.filter((r) => r.Model === filters.model);
+    // Structured filters
+    if (filters.model) {
+      data = data.filter((r) => r.Model === filters.model);
+    }
 
     if (filters.yearMin) {
       const minYear = Number(filters.yearMin);
-      if (!Number.isNaN(minYear)) data = data.filter((r) => r.Year >= minYear);
+      if (!Number.isNaN(minYear)) {
+        data = data.filter((r) => r.Year >= minYear);
+      }
     }
 
     if (filters.yearMax) {
       const maxYear = Number(filters.yearMax);
-      if (!Number.isNaN(maxYear)) data = data.filter((r) => r.Year <= maxYear);
+      if (!Number.isNaN(maxYear)) {
+        data = data.filter((r) => r.Year <= maxYear);
+      }
     }
 
     if (filters.priceMin) {
       const min = Number(filters.priceMin);
-      if (!Number.isNaN(min)) data = data.filter((r) => r.MSRP >= min);
+      if (!Number.isNaN(min)) {
+        data = data.filter((r) => r.MSRP >= min);
+      }
     }
 
     if (filters.priceMax) {
       const max = Number(filters.priceMax);
-      if (!Number.isNaN(max)) data = data.filter((r) => r.MSRP <= max);
+      if (!Number.isNaN(max)) {
+        data = data.filter((r) => r.MSRP <= max);
+      }
     }
 
     if (filters.atRiskOnly) {
       data = data.filter((r) => r.Age > 90);
     }
 
+    // Natural-language smart search
+    if (intentQuery.trim()) {
+      const parsed = parseNaturalQuery(intentQuery, rows);
+
+      if (parsed.model) {
+        const modelLower = parsed.model.toLowerCase();
+        data = data.filter(
+          (r) => (r.Model || "").toLowerCase() === modelLower
+        );
+      }
+
+      if (parsed.modelNumber) {
+        const modelNumberUpper = parsed.modelNumber.toUpperCase();
+        data = data.filter(
+          (r) =>
+            (r["Model Number"] || "").toString().toUpperCase() ===
+            modelNumberUpper
+        );
+      }
+
+      if (parsed.color) {
+        const colorLower = parsed.color.toLowerCase();
+        data = data.filter((r) =>
+          (r["Exterior Color"] || "").toLowerCase().includes(colorLower)
+        );
+      }
+
+      // Fallback: generic text match if nothing was parsed
+      if (!parsed.model && !parsed.modelNumber && !parsed.color) {
+        const q = intentQuery.toLowerCase();
+        data = data.filter((r) => {
+          const blob = `${r.Make} ${r.Model} ${r["Exterior Color"]} ${
+            r["Model Number"]
+          } ${r["Stock Number"]}`.toLowerCase();
+          return blob.includes(q);
+        });
+      }
+    }
+
+    // Header search bar (stock #, VIN, model, model number)
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
-      data = data.filter((r) => {
-        const stock = (r["Stock Number"] || "").toLowerCase();
-        const shortVin = (r["Short VIN"] || "").toLowerCase();
-        const model = (r.Model || "").toLowerCase();
-        const modelNumber = (r["Model Number"] || "").toLowerCase();
+
+      data = data.filter((row) => {
+        const stock = (row["Stock Number"] || "").toString().toLowerCase();
+        const shortVin = (row["Short VIN"] || "").toString().toLowerCase();
+        const model = (row.Model || "").toString().toLowerCase();
+        const modelNumber = (row["Model Number"] || "")
+          .toString()
+          .toLowerCase();
+
         return (
           stock.includes(term) ||
           shortVin.includes(term) ||
@@ -109,7 +242,7 @@ const App: FC = () => {
     }
 
     return data;
-  }, [sortedRows, filters, searchTerm]);
+  }, [sortedRows, filters, searchTerm, intentQuery, rows]);
 
   // Shared drill-down grouping logic
   const buildGroups = (items: InventoryRow[]) => {
@@ -162,6 +295,34 @@ const App: FC = () => {
   const handleRowClick = (row: InventoryRow) => setSelectedVehicle(row);
   const handleCloseDetail = () => setSelectedVehicle(null);
 
+  // Voice search using Web Speech API (when supported)
+  const handleVoiceSearch = () => {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert("Voice search is not supported in this browser.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setIntentQuery(transcript);
+    };
+
+    recognition.onerror = () => {
+      alert("Sorry, there was a problem understanding your voice.");
+    };
+
+    recognition.start();
+  };
+
   return (
     <div className="app-root">
       <HeaderBar searchTerm={searchTerm} onSearchChange={setSearchTerm} />
@@ -180,6 +341,9 @@ const App: FC = () => {
               models={modelsList}
               filters={filters}
               onChange={setFilters}
+              intentQuery={intentQuery}
+              onIntentQueryChange={setIntentQuery}
+              onVoiceSearch={handleVoiceSearch}
             />
 
             <KpiBar
