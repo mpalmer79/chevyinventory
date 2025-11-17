@@ -1,1 +1,93 @@
+/* Inventory tables */
+
+.table-shell {
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead {
+  background: rgba(15, 23, 42, 0.96);
+}
+
+th,
+td {
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+tbody tr:nth-child(even) {
+  background: rgba(15, 23, 42, 0.96);
+}
+
+tbody tr:nth-child(odd) {
+  background: rgba(15, 23, 42, 0.9);
+}
+
+tbody tr:hover {
+  background: rgba(22, 163, 74, 0.08);
+}
+
+/* Clickable rows */
+
+.click-row {
+  cursor: pointer;
+}
+
+/* Group header row spanning full width (drill-down header rows) */
+
+.group-header-row td {
+  background: #f9fafb;
+  color: #000000;
+  font-weight: 600;
+  padding: 6px 16px;
+  text-transform: none;
+  border-top: 1px solid rgba(15, 23, 42, 0.6);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.6);
+}
+
+.group-header-row td:first-child {
+  border-radius: 6px 0 0 6px;
+}
+
+.group-header-row td:last-child {
+  border-radius: 0 6px 6px 0;
+}
+
+/* Drill-down table group formatting */
+
+.drill-group {
+  margin-bottom: 28px;
+}
+
+.drill-group-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #e5e7eb;
+  letter-spacing: 0.04em;
+  padding-left: 4px;
+}
+
+/* Inventory table column headers */
+
+.panel table th {
+  text-align: left;
+  color: #9ca3af;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+.panel table td {
+  color: #e5e7eb;
+  font-size: 12px;
+}
 
