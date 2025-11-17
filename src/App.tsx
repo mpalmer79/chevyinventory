@@ -31,10 +31,17 @@ type ModelPieDatum = {
   value: number;
 };
 
+type AgingBuckets = {
+  bucket0_30: number;
+  bucket31_60: number;
+  bucket61_90: number;
+  bucket90_plus: number;
+};
+
 /* ---------- Constants / helpers ---------- */
 
 const QUIRK_GREEN = "#16a34a";
-const POWDER_BLUE = "#5A6A82"; // powder blue swatch
+const POWDER_BLUE = "#5A6A82"; // Silverado 1500 highlight color
 const DEFAULT_INVENTORY_PATH = "/inventory.xlsx";
 
 const CHART_COLORS = [
@@ -195,12 +202,65 @@ const HeaderBar: FC<HeaderProps> = ({ searchTerm, onSearchChange }) => (
   </header>
 );
 
-type ChartsSectionProps = {
-  modelPieData: ModelPieDatum[];
+/* ----- KPI strip ----- */
+
+type SummaryMetricsProps = {
+  totalUnits: number;
+  avgAge: number | null;
+  totalMsrp: number | null;
+  newArrivalCount: number;
 };
 
-const ChartsSection: FC<ChartsSectionProps> = ({ modelPieData }) => {
+const SummaryMetrics: FC<SummaryMetricsProps> = ({
+  totalUnits,
+  avgAge,
+  totalMsrp,
+  newArrivalCount,
+}) => {
+  if (!totalUnits) return null;
+
+  return (
+    <section className="metrics-row">
+      <div className="metric-card">
+        <div className="metric-label">Total Units</div>
+        <div className="metric-value">{totalUnits}</div>
+      </div>
+      <div className="metric-card">
+        <div className="metric-label">Average Days in Stock</div>
+        <div className="metric-value">
+          {avgAge !== null ? avgAge.toFixed(0) : "-"}
+        </div>
+      </div>
+      <div className="metric-card">
+        <div className="metric-label">Total MSRP on Lot</div>
+        <div className="metric-value">
+          {totalMsrp !== null ? formatCurrency(totalMsrp) : "-"}
+        </div>
+      </div>
+      <div className="metric-card">
+        <div className="metric-label">New Arrivals (≤ 7 days)</div>
+        <div className="metric-value metric-pill">
+          {newArrivalCount > 0 ? newArrivalCount : "0"}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+/* ----- Charts + aging buckets ----- */
+
+type ChartsSectionProps = {
+  modelPieData: ModelPieDatum[];
+  agingBuckets: AgingBuckets;
+};
+
+const ChartsSection: FC<ChartsSectionProps> = ({
+  modelPieData,
+  agingBuckets,
+}) => {
   if (!modelPieData.length) return null;
+
+  const { bucket0_30, bucket31_60, bucket61_90, bucket90_plus } = agingBuckets;
 
   return (
     <section className="panel-grid">
@@ -245,9 +305,80 @@ const ChartsSection: FC<ChartsSectionProps> = ({ modelPieData }) => {
           </ResponsiveContainer>
         </div>
       </div>
+
+      <div className="panel">
+        <div className="section-title">Aging Overview · Days in Stock</div>
+        <div className="aging-grid">
+          <div className="aging-card">
+            <div className="aging-label">0–30 days</div>
+            <div className="aging-count">{bucket0_30}</div>
+            <span className="aging-tag fresh">Fresh</span>
+          </div>
+          <div className="aging-card">
+            <div className="aging-label">31–60 days</div>
+            <div className="aging-count">{bucket31_60}</div>
+            <span className="aging-tag normal">Normal</span>
+          </div>
+          <div className="aging-card">
+            <div className="aging-label">61–90 days</div>
+            <div className="aging-count">{bucket61_90}</div>
+            <span className="aging-tag watch">Watch</span>
+          </div>
+          <div className="aging-card aging-risk">
+            <div className="aging-label">90+ days</div>
+            <div className="aging-count">{bucket90_plus}</div>
+            <span className="aging-tag risk">At Risk</span>
+          </div>
+        </div>
+        <p className="aging-footnote">
+          Focus on <span className="text-highlight">90+ day</span> units first
+          when planning daily follow-up and pricing.
+        </p>
+      </div>
     </section>
   );
 };
+
+/* ----- New arrivals panel ----- */
+
+type NewArrivalsProps = {
+  rows: InventoryRow[];
+};
+
+const NewArrivalsPanel: FC<NewArrivalsProps> = ({ rows }) => {
+  if (!rows.length) return null;
+
+  return (
+    <section className="panel">
+      <div className="section-title">New Arrivals · Last 7 Days</div>
+      <div className="new-arrivals">
+        {rows.map((row) => (
+          <div className="arrival-card" key={row["Stock Number"]}>
+            <div className="arrival-main">
+              <span className="arrival-stock">#{row["Stock Number"]}</span>
+              <span className="arrival-title">
+                {row.Year} {row.Make} {row.Model} {row.Trim}
+              </span>
+            </div>
+            <div className="arrival-meta">
+              <span className="arrival-pill">
+                {row["Exterior Color"] || "Color TBD"}
+              </span>
+              <span className="arrival-pill">
+                {row.Age} day{row.Age === 1 ? "" : "s"} in stock
+              </span>
+              <span className="arrival-price">
+                {formatCurrency(row.MSRP)}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+};
+
+/* ----- Inventory table ----- */
 
 type InventoryTableProps = {
   rows: InventoryRow[];
@@ -335,6 +466,71 @@ const App: FC = () => {
     ? modelPieData
     : [{ name: "No data", value: 1 }];
 
+  // ---------- Derived metrics for KPIs, aging, and new arrivals ----------
+
+  const summaryAndSegments = useMemo(() => {
+    if (!rows.length) {
+      return {
+        totalUnits: 0,
+        avgAge: null as number | null,
+        totalMsrp: null as number | null,
+        agingBuckets: {
+          bucket0_30: 0,
+          bucket31_60: 0,
+          bucket61_90: 0,
+          bucket90_plus: 0,
+        } as AgingBuckets,
+        newArrivals: [] as InventoryRow[],
+      };
+    }
+
+    let totalAge = 0;
+    let totalMsrp = 0;
+
+    const aging: AgingBuckets = {
+      bucket0_30: 0,
+      bucket31_60: 0,
+      bucket61_90: 0,
+      bucket90_plus: 0,
+    };
+
+    const newArrivals: InventoryRow[] = [];
+
+    rows.forEach((row) => {
+      const age = row.Age || 0;
+      totalAge += age;
+      totalMsrp += Number.isFinite(row.MSRP) ? row.MSRP : 0;
+
+      if (age <= 30) aging.bucket0_30 += 1;
+      else if (age <= 60) aging.bucket31_60 += 1;
+      else if (age <= 90) aging.bucket61_90 += 1;
+      else aging.bucket90_plus += 1;
+
+      if (age <= 7) {
+        newArrivals.push(row);
+      }
+    });
+
+    // Show newest arrivals first
+    newArrivals.sort((a, b) => a.Age - b.Age);
+
+    return {
+      totalUnits: rows.length,
+      avgAge: rows.length ? totalAge / rows.length : null,
+      totalMsrp: rows.length ? totalMsrp : null,
+      agingBuckets: aging,
+      newArrivals,
+    };
+  }, [rows]);
+
+  const {
+    totalUnits,
+    avgAge,
+    totalMsrp,
+    agingBuckets,
+    newArrivals,
+  } = summaryAndSegments;
+
   return (
     <div className="app-root">
       <HeaderBar searchTerm={searchTerm} onSearchChange={setSearchTerm} />
@@ -349,7 +545,17 @@ const App: FC = () => {
 
         {rows.length > 0 && (
           <>
-            <ChartsSection modelPieData={displayModelPieData} />
+            <SummaryMetrics
+              totalUnits={totalUnits}
+              avgAge={avgAge}
+              totalMsrp={totalMsrp}
+              newArrivalCount={newArrivals.length}
+            />
+            <ChartsSection
+              modelPieData={displayModelPieData}
+              agingBuckets={agingBuckets}
+            />
+            <NewArrivalsPanel rows={newArrivals} />
             <InventoryTable rows={filteredRows} />
           </>
         )}
