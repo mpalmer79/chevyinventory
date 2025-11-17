@@ -101,6 +101,7 @@ function useInventoryData() {
       setRows(parsed);
       setError(null);
     } catch (err) {
+      console.error(err);
       setError("Error parsing inventory file.");
     }
   };
@@ -112,14 +113,18 @@ function useInventoryData() {
         if (!res.ok) return;
         const data = await res.arrayBuffer();
         await loadFromArrayBuffer(data);
-      } catch {}
+      } catch (err) {
+        console.error("Failed to load default inventory:", err);
+      }
     };
     loadDefaultInventory();
   }, []);
 
   const sortedRows = useMemo(() => {
     return [...rows].sort((a, b) => {
+      // Group by model alphabetically
       if (a.Model !== b.Model) return a.Model.localeCompare(b.Model);
+      // Within model: Age descending (oldest first)
       return b.Age - a.Age;
     });
   }, [rows]);
@@ -141,13 +146,10 @@ function useInventoryData() {
 
 /* ------------------ Header ------------------ */
 
-const HeaderBar = ({
-  searchTerm,
-  onSearchChange,
-}: {
+const HeaderBar: FC<{
   searchTerm: string;
   onSearchChange: (v: string) => void;
-}) => (
+}> = ({ searchTerm, onSearchChange }) => (
   <header className="app-header">
     <div className="brand-block">
       <div className="brand-main">QUIRK CHEVROLET</div>
@@ -168,17 +170,12 @@ const HeaderBar = ({
 
 /* ------------------ KPI Cards ------------------ */
 
-const KpiBar = ({
-  totalUnits,
-  newArrivalCount,
-  onSelectTotalUnits,
-  onSelectNewArrivals,
-}: {
+const KpiBar: FC<{
   totalUnits: number;
   newArrivalCount: number;
   onSelectTotalUnits: () => void;
   onSelectNewArrivals: () => void;
-}) => (
+}> = ({ totalUnits, newArrivalCount, onSelectTotalUnits, onSelectNewArrivals }) => (
   <div className="kpi-row">
     <div className="kpi-card" onClick={onSelectTotalUnits}>
       <div className="kpi-label">Total Units</div>
@@ -194,11 +191,7 @@ const KpiBar = ({
 
 /* ------------------ Charts + Aging ------------------ */
 
-const ChartsSection = ({
-  modelPieData,
-  agingBuckets,
-  agingHandlers,
-}: {
+const ChartsSection: FC<{
   modelPieData: ModelPieDatum[];
   agingBuckets: AgingBuckets;
   agingHandlers: {
@@ -207,7 +200,7 @@ const ChartsSection = ({
     on61_90: () => void;
     on90_plus: () => void;
   };
-}) => (
+}> = ({ modelPieData, agingBuckets, agingHandlers }) => (
   <section className="panel-grid">
     <div className="panel">
       <div className="section-title centered">Inventory Mix · Top Models</div>
@@ -224,10 +217,7 @@ const ChartsSection = ({
               paddingAngle={2}
             >
               {modelPieData.map((entry, index) => (
-                <Cell
-                  key={index}
-                  fill={getModelColor(entry.name, index)}
-                />
+                <Cell key={index} fill={getModelColor(entry.name, index)} />
               ))}
             </Pie>
             <Tooltip
@@ -299,45 +289,46 @@ const ChartsSection = ({
 
 /* ------------------ New Arrivals Panel ------------------ */
 
-const NewArrivalsPanel = ({ rows }: { rows: InventoryRow[] }) => (
-  <section className="panel">
-    <div className="section-title">New Arrivals · Last 7 Days</div>
-    <div className="new-arrivals">
-      {rows.map((row) => (
-        <div className="arrival-card" key={row["Stock Number"]}>
-          <div className="arrival-main">
-            <span className="arrival-stock">#{row["Stock Number"]}</span>
-            <span className="arrival-title">
-              {row.Year} {row.Make} {row.Model} {row.Trim}
-            </span>
-          </div>
+const NewArrivalsPanel: FC<{ rows: InventoryRow[] }> = ({ rows }) => {
+  if (!rows.length) return null;
 
-          <div className="arrival-meta">
-            <span className="arrival-pill">
-              {row["Exterior Color"] || "Color TBD"}
-            </span>
-            <span className="arrival-pill">
-              {row.Age} day{row.Age === 1 ? "" : "s"} in stock
-            </span>
-            <span className="arrival-price">
-              {formatCurrency(row.MSRP)}
-            </span>
+  return (
+    <section className="panel">
+      <div className="section-title">New Arrivals · Last 7 Days</div>
+      <div className="new-arrivals">
+        {rows.map((row) => (
+          <div className="arrival-card" key={row["Stock Number"]}>
+            <div className="arrival-main">
+              <span className="arrival-stock">#{row["Stock Number"]}</span>
+              <span className="arrival-title">
+                {row.Year} {row.Make} {row.Model} {row.Trim}
+              </span>
+            </div>
+
+            <div className="arrival-meta">
+              <span className="arrival-pill">
+                {row["Exterior Color"] || "Color TBD"}
+              </span>
+              <span className="arrival-pill">
+                {row.Age} day{row.Age === 1 ? "" : "s"} in stock
+              </span>
+              <span className="arrival-price">
+                {formatCurrency(row.MSRP)}
+              </span>
+            </div>
           </div>
-        </div>
-      ))}
-    </div>
-  </section>
-);
+        ))}
+      </div>
+    </section>
+  );
+};
 
 /* ------------------ Drill-down Table ------------------ */
 
-const DrilldownTable = ({
-  groups,
-  onBack,
-}: {
+const DrilldownTable: FC<{
   groups: Record<string, InventoryRow[]>;
   onBack: () => void;
-}) => (
+}> = ({ groups, onBack }) => (
   <section className="panel">
     <div className="drill-header">
       <button className="back-button" onClick={onBack}>
@@ -355,24 +346,25 @@ const DrilldownTable = ({
               <tr>
                 <th>Stock #</th>
                 <th>Year</th>
+                <th>Make</th>
                 <th>Model</th>
                 <th>Trim</th>
                 <th>Exterior Color</th>
-                <th>Miles</th>
+                <th>Short VIN</th>
                 <th>Age</th>
                 <th>MSRP</th>
               </tr>
             </thead>
-
             <tbody>
               {groups[model].map((row) => (
                 <tr key={row["Stock Number"]}>
                   <td>{row["Stock Number"]}</td>
                   <td>{row.Year}</td>
+                  <td>{row.Make}</td>
                   <td>{row.Model}</td>
                   <td>{row.Trim}</td>
                   <td>{row["Exterior Color"]}</td>
-                  <td>{row.Cylinders}</td>
+                  <td>{row["Short VIN"]}</td>
                   <td>{row.Age}</td>
                   <td>{formatCurrency(row.MSRP)}</td>
                 </tr>
@@ -385,6 +377,58 @@ const DrilldownTable = ({
   </section>
 );
 
+/* ------------------ Inventory Table (default view) ------------------ */
+
+const InventoryTable: FC<{ rows: InventoryRow[] }> = ({ rows }) => {
+  if (!rows.length) return null;
+
+  const visibleRows = rows.slice(0, 500);
+
+  return (
+    <section className="panel">
+      <div className="section-title">
+        Inventory Detail · Grouped by Model / Model Number
+      </div>
+      <div className="table-shell">
+        <table>
+          <thead>
+            <tr>
+              <th>Stock #</th>
+              <th>Year</th>
+              <th>Make</th>
+              <th>Model</th>
+              <th>Exterior Color</th>
+              <th>Trim</th>
+              <th>Model #</th>
+              <th>Cyl</th>
+              <th>Short VIN</th>
+              <th>Age</th>
+              <th>MSRP</th>
+            </tr>
+          </thead>
+          <tbody>
+            {visibleRows.map((row) => (
+              <tr key={row["Stock Number"]}>
+                <td>{row["Stock Number"]}</td>
+                <td>{row.Year}</td>
+                <td>{row.Make}</td>
+                <td>{row.Model}</td>
+                <td>{row["Exterior Color"]}</td>
+                <td>{row.Trim}</td>
+                <td>{row["Model Number"]}</td>
+                <td>{row.Cylinders}</td>
+                <td>{row["Short VIN"]}</td>
+                <td>{row.Age}</td>
+                <td>{formatCurrency(row.MSRP)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+};
+
 /* ------------------ Main App ------------------ */
 
 const App: FC = () => {
@@ -395,21 +439,26 @@ const App: FC = () => {
     null | "total" | "new" | "0_30" | "31_60" | "61_90" | "90_plus"
   >(null);
 
+  // Search filtering always applied to the full sortedRows
   const filteredRows = useMemo(() => {
     if (!searchTerm.trim()) return sortedRows;
     const term = searchTerm.toLowerCase();
-    return sortedRows.filter((r) =>
-      [
-        r["Stock Number"].toLowerCase(),
-        r["Short VIN"].toLowerCase(),
-        r.Model.toLowerCase(),
-        r["Model Number"].toLowerCase(),
-      ].some((f) => f.includes(term))
-    );
+    return sortedRows.filter((r) => {
+      const stock = (r["Stock Number"] || "").toLowerCase();
+      const shortVin = (r["Short VIN"] || "").toLowerCase();
+      const model = (r.Model || "").toLowerCase();
+      const modelNumber = (r["Model Number"] || "").toLowerCase();
+      return (
+        stock.includes(term) ||
+        shortVin.includes(term) ||
+        model.includes(term) ||
+        modelNumber.includes(term)
+      );
+    });
   }, [searchTerm, sortedRows]);
 
-  const agingBuckets = useMemo(() => {
-    const b = {
+  const agingBuckets = useMemo<AgingBuckets>(() => {
+    const b: AgingBuckets = {
       bucket0_30: 0,
       bucket31_60: 0,
       bucket61_90: 0,
@@ -437,7 +486,7 @@ const App: FC = () => {
       groups[r.Model].push(r);
     });
     Object.keys(groups).forEach((model) => {
-      groups[model].sort((a, b) => b.Age - a.Age);
+      groups[model].sort((a, b) => b.Age - a.Age); // Age desc within model
     });
     return groups;
   };
@@ -450,12 +499,13 @@ const App: FC = () => {
     if (drillType === "total") result = [...sortedRows];
     if (drillType === "new") result = [...newArrivalRows];
     if (drillType === "0_30") result = rows.filter((r) => r.Age <= 30);
-    if (drillType === "31_60") result = rows.filter((r) => r.Age > 30 && r.Age <= 60);
-    if (drillType === "61_90") result = rows.filter((r) => r.Age > 60 && r.Age <= 90);
+    if (drillType === "31_60")
+      result = rows.filter((r) => r.Age > 30 && r.Age <= 60);
+    if (drillType === "61_90")
+      result = rows.filter((r) => r.Age > 60 && r.Age <= 90);
     if (drillType === "90_plus") result = rows.filter((r) => r.Age > 90);
 
-    result.sort((a, b) => a.Model.localeCompare(b.Model));
-
+    result.sort((a, b) => a.Model.localeCompare(b.Model)); // Model alpha
     return buildGroups(result);
   }, [drillType, rows, sortedRows, newArrivalRows]);
 
@@ -491,13 +541,16 @@ const App: FC = () => {
               }}
             />
 
+            {/* When not drilling down: show New Arrivals panel + full inventory table */}
             {!drillType && <NewArrivalsPanel rows={newArrivalRows} />}
 
             {drillType ? (
-              <DrilldownTable
-                groups={drillData!}
-                onBack={() => setDrillType(null)}
-              />
+              drillData && (
+                <DrilldownTable
+                  groups={drillData}
+                  onBack={() => setDrillType(null)}
+                />
+              )
             ) : (
               <InventoryTable rows={filteredRows} />
             )}
