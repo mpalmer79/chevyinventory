@@ -176,14 +176,15 @@
   visibility: hidden;
 }
 
+/* Form controls for MODEL / CHOOSE YEAR / MSRP – black text */
 .filter-select,
 .filter-input {
   width: 100%;
   padding: 6px 8px;
   border-radius: 8px;
   border: 1px solid rgba(148, 163, 184, 0.35);
-  background: rgba(15, 23, 42, 0.9);
-  color: #e5e7eb;
+  background: #f9fafb; /* light background for readability */
+  color: #000000;      /* black text */
   font-size: 12px;
 }
 
@@ -540,15 +541,16 @@ tbody tr:hover {
     gap: 4px;
   }
 }
-/* Force dropdown model list to use black text */
-select,
-select option {
-  color: #000 !important;
+
+/* Force dropdown model/year/MSRP lists to use black text */
+.filter-select,
+.filter-select option {
+  color: #000000 !important;
   background-color: #ffffff !important;
 }
 
-/* Keep the selected value readable as well */
-select:focus,
-select:active {
-  color: #000 !important;
+/* Keep the selected value readable while focused/active */
+.filter-select:focus,
+.filter-select:active {
+  color: #000000 !important;
 }
