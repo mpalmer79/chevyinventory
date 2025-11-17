@@ -34,23 +34,20 @@ const STOP_WORDS = new Set([
   "please",
 ]);
 
-const INITIAL_FILTERS: Filters = {
-  model: "",
-  year: "ALL", // ALL | 2025 | 2026 as string
-  priceMin: "",
-  priceMax: "",
-};
-
 const App: FC = () => {
   const { rows, error, sortedRows, modelPieData } = useInventoryData();
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [filters, setFilters] = useState<Filters>(INITIAL_FILTERS);
+  const [filters, setFilters] = useState<Filters>({
+    model: "",
+    year: "ALL",     // NEW unified year filter
+    priceMin: "",
+    priceMax: "",
+  });
 
   const [drillType, setDrillType] = useState<DrillType>(null);
-  const [selectedVehicle, setSelectedVehicle] = useState<InventoryRow | null>(
-    null
-  );
+  const [selectedVehicle, setSelectedVehicle] =
+    useState<InventoryRow | null>(null);
 
   const modelsList = useMemo(
     () => Array.from(new Set(rows.map((r) => r.Model))).sort(),
@@ -81,39 +78,41 @@ const App: FC = () => {
     [rows]
   );
 
-  // ---- FILTER + SEARCH (header search + Smart Search both feed searchTerm) ----
+  // -----------------------------------------------------------
+  // SMART SEARCH SYSTEM (voice + text)
+  // -----------------------------------------------------------
+  const applySmartSearch = (input: string) => {
+    setSearchTerm(input);
+  };
+
+  // -----------------------------------------------------------
+  // FILTER + SEARCH PIPELINE
+  // -----------------------------------------------------------
   const filteredRows = useMemo(() => {
     let data = [...sortedRows];
 
-    // Model filter
+    // MODEL
     if (filters.model) {
       data = data.filter((r) => r.Model === filters.model);
     }
 
-    // Year filter (ALL / 2025 / 2026)
-    if (filters.year && filters.year !== "ALL") {
+    // UNIFIED YEAR (ALL / 2025 / 2026)
+    if (filters.year !== "ALL") {
       const yr = Number(filters.year);
-      if (!Number.isNaN(yr)) {
-        data = data.filter((r) => r.Year === yr);
-      }
+      data = data.filter((r) => r.Year === yr);
     }
 
-    // MSRP filters
+    // PRICE RANGE
     if (filters.priceMin) {
-      const min = Number(filters.priceMin);
-      if (!Number.isNaN(min)) {
-        data = data.filter((r) => r.MSRP >= min);
-      }
+      const val = Number(filters.priceMin);
+      if (!Number.isNaN(val)) data = data.filter((r) => r.MSRP >= val);
     }
-
     if (filters.priceMax) {
-      const max = Number(filters.priceMax);
-      if (!Number.isNaN(max)) {
-        data = data.filter((r) => r.MSRP <= max);
-      }
+      const val = Number(filters.priceMax);
+      if (!Number.isNaN(val)) data = data.filter((r) => r.MSRP <= val);
     }
 
-    // Text / Smart search
+    // SMART SEARCH text/vocal
     if (searchTerm.trim()) {
       const rawTokens = searchTerm
         .toLowerCase()
@@ -137,25 +136,26 @@ const App: FC = () => {
           .join(" ")
           .toLowerCase();
 
-        return tokens.every((token) => haystack.includes(token));
+        return tokens.every((t) => haystack.includes(t));
       });
     }
 
     return data;
   }, [sortedRows, filters, searchTerm]);
 
-  // ---- Shared drill-down grouping logic ----
+  // -----------------------------------------------------------
+  // GROUPING LOGIC (Default + Drilldown)
+  // -----------------------------------------------------------
   const buildGroups = (items: InventoryRow[]) => {
     const groups: Record<string, InventoryRow[]> = {};
 
     items.forEach((r) => {
-      const make = (r.Make || "").toString().trim();
-      const model = (r.Model || "").toString().trim();
-      const modelNumber = (r["Model Number"] || "").toString().trim();
+      const make = (r.Make || "").trim();
+      const model = (r.Model || "").trim();
+      const modelNumber = (r["Model Number"] || "").trim();
 
       let key: string;
 
-      // Special handling: SILVERADO 1500 split by Model Number
       if (model.toUpperCase() === "SILVERADO 1500" && modelNumber) {
         key = `${make}|${model}|${modelNumber}`;
       } else {
@@ -166,7 +166,7 @@ const App: FC = () => {
       groups[key].push(r);
     });
 
-    // Sort each group by Age descending (oldest first)
+    // Sort inside groups by age
     Object.keys(groups).forEach((k) => {
       groups[k].sort((a, b) => b.Age - a.Age);
     });
@@ -192,21 +192,22 @@ const App: FC = () => {
     return buildGroups(result);
   }, [drillType, rows, sortedRows, newArrivalRows]);
 
+  // -----------------------------------------------------------
+  // RESET TO DEFAULT VIEW
+  // -----------------------------------------------------------
+  const resetView = () => {
+    setDrillType(null);
+    setSearchTerm("");
+    setFilters({
+      model: "",
+      year: "ALL",
+      priceMin: "",
+      priceMax: "",
+    });
+  };
+
   const handleRowClick = (row: InventoryRow) => setSelectedVehicle(row);
   const handleCloseDetail = () => setSelectedVehicle(null);
-
-  // Smart Search (mic + text) feeds the same searchTerm as the top header box
-  const handleSmartSearch = (query: string) => {
-    setSearchTerm(query);
-  };
-
-  // Reset EVERYTHING to the initial "page just loaded" state
-  const resetView = () => {
-    setFilters(INITIAL_FILTERS);
-    setSearchTerm("");
-    setDrillType(null);
-    setSelectedVehicle(null);
-  };
 
   return (
     <div className="app-root">
@@ -226,15 +227,14 @@ const App: FC = () => {
               models={modelsList}
               filters={filters}
               onChange={setFilters}
-              onSmartSearch={handleSmartSearch}
+              onSmartSearch={applySmartSearch}
+              onApplySearch={() => {}} // SEARCH pill handled inside FiltersBar
             />
 
             <KpiBar
               totalUnits={rows.length}
               newArrivalCount={newArrivalRows.length}
-              // Clicking 259 should reset the entire dashboard view
               onSelectTotalUnits={resetView}
-              // 7-day arrivals still drill down
               onSelectNewArrivals={() => setDrillType("new")}
             />
 
@@ -249,7 +249,12 @@ const App: FC = () => {
               }}
             />
 
-            <InventoryHealthPanel rows={rows} agingBuckets={agingBuckets} />
+            {!drillType && (
+              <InventoryHealthPanel
+                rows={rows}
+                agingBuckets={agingBuckets}
+              />
+            )}
 
             {!drillType && <NewArrivalsPanel rows={newArrivalRows} />}
 
@@ -257,7 +262,7 @@ const App: FC = () => {
               drillData && (
                 <DrilldownTable
                   groups={drillData}
-                  onBack={() => setDrillType(null)}
+                  onBack={resetView}
                   onRowClick={handleRowClick}
                 />
               )
