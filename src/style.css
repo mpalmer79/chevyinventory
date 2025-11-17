@@ -302,7 +302,7 @@ tbody tr:hover {
 /* White group header row spanning full width */
 .group-header-row td {
   background: #f9fafb;
-  color: #020617;
+  color: #000000;              /* <- pure black text */
   font-weight: 600;
   padding: 6px 16px;
   text-transform: none;
