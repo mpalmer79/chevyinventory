@@ -1,247 +1,223 @@
-// src/App.tsx
-import React, { FC, useMemo, useState } from "react";
-import "./style.css";
+// src/components/FiltersBar.tsx
+import React, { FC, useRef, useState } from "react";
+import { Filters } from "../types";
 
-import { useInventoryData } from "./hooks/useInventoryData";
-import { AgingBuckets, DrillType, Filters, InventoryRow } from "./types";
-
-import { HeaderBar } from "./components/HeaderBar";
-import { FiltersBar } from "./components/FiltersBar";
-import { KpiBar } from "./components/KpiBar";
-import { ChartsSection } from "./components/ChartsSection";
-import { InventoryHealthPanel } from "./components/InventoryHealthPanel";
-import { NewArrivalsPanel } from "./components/NewArrivalsPanel";
-import { InventoryTable } from "./components/InventoryTable";
-import { DrilldownTable } from "./components/DrilldownTable";
-import { VehicleDetailDrawer } from "./components/VehicleDetailDrawer";
-
-const STOP_WORDS = new Set([
-    "i","im","i'm","looking","for","to","the","a","an",
-    "with","show","me","find","need","want","please"
-]);
-
-const App: FC = () => {
-    const { rows, error, sortedRows, modelPieData } = useInventoryData();
-
-    // ----------------- STATE -----------------
-    const [searchTerm, setSearchTerm] = useState("");
-    const [smartQuery, setSmartQuery] = useState("");
-
-    const [filters, setFilters] = useState<Filters>({
-        model: "",
-        year: "ALL",
-        priceMin: "",
-        priceMax: ""
-    });
-
-    const [drillType, setDrillType] = useState<DrillType>(null);
-    const [selectedVehicle, setSelectedVehicle] = useState<InventoryRow | null>(null);
-
-    // ----------------- MICROPHONE -----------------
-    const handleVoiceSearch = () => {
-        const SpeechRecognition =
-            (window as any).SpeechRecognition ||
-            (window as any).webkitSpeechRecognition;
-
-        if (!SpeechRecognition) {
-            alert("Voice search not supported on this device.");
-            return;
-        }
-
-        const recog = new SpeechRecognition();
-        recog.continuous = false;
-        recog.interimResults = false;
-        recog.lang = "en-US";
-
-        recog.onresult = (event: any) => {
-            const text = event.results[0][0].transcript.trim();
-            setSmartQuery(text);
-            setSearchTerm(text);
-        };
-
-        recog.onerror = (e: any) => console.error("Speech error:", e);
-        recog.start();
-    };
-
-    // ----------------- FILTERED LIST -----------------
-    const filteredRows = useMemo(() => {
-        let data = [...sortedRows];
-
-        if (filters.model) {
-            data = data.filter((r) => r.Model === filters.model);
-        }
-
-        if (filters.year !== "ALL") {
-            const yr = Number(filters.year);
-            data = data.filter((r) => r.Year === yr);
-        }
-
-        if (filters.priceMin) {
-            data = data.filter((r) => r.MSRP >= Number(filters.priceMin));
-        }
-
-        if (filters.priceMax) {
-            data = data.filter((r) => r.MSRP <= Number(filters.priceMax));
-        }
-
-        if (searchTerm.trim() !== "") {
-            const rawTokens = searchTerm.toLowerCase().split(/\s+/).filter(Boolean);
-            const tokens = rawTokens.filter((t) => !STOP_WORDS.has(t));
-
-            data = data.filter((r) => {
-                const haystack = [
-                    r["Stock Number"],
-                    r["Short VIN"],
-                    r.Make,
-                    r.Model,
-                    r["Model Number"],
-                    r["Exterior Color"],
-                    r.Trim,
-                    String(r.Year),
-                ]
-                    .join(" ")
-                    .toLowerCase();
-
-                return tokens.every((token) => haystack.includes(token));
-            });
-        }
-
-        return data;
-    }, [sortedRows, filters, searchTerm]);
-
-    // ----------------- NEW ARRIVALS -----------------
-    const newArrivalRows = useMemo(
-        () => rows.filter((r) => r.Age <= 7).sort((a, b) => a.Model.localeCompare(b.Model)),
-        [rows]
-    );
-
-    // ----------------- AGING BUCKETS -----------------
-    const agingBuckets: AgingBuckets = useMemo(() => {
-        const b = { bucket0_30: 0, bucket31_60: 0, bucket61_90: 0, bucket90_plus: 0 };
-        rows.forEach((r) => {
-            if (r.Age <= 30) b.bucket0_30++;
-            else if (r.Age <= 60) b.bucket31_60++;
-            else if (r.Age <= 90) b.bucket61_90++;
-            else b.bucket90_plus++;
-        });
-        return b;
-    }, [rows]);
-
-    // ----------------- DRILLDOWN -----------------
-    const buildGroups = (items: InventoryRow[]) => {
-        const groups: Record<string, InventoryRow[]> = {};
-        items.forEach((r) => {
-            const key = `${r.Make}|${r.Model}|${r["Model Number"]}`;
-            if (!groups[key]) groups[key] = [];
-            groups[key].push(r);
-        });
-
-        Object.values(groups).forEach((g) =>
-            g.sort((a, b) => b.Age - a.Age)
-        );
-
-        return groups;
-    };
-
-    const drillData = useMemo(() => {
-        if (!drillType) return null;
-
-        let result: InventoryRow[] = [];
-
-        if (drillType === "total") result = [...sortedRows];
-        if (drillType === "new") result = [...newArrivalRows];
-        if (drillType === "0_30") result = rows.filter((r) => r.Age <= 30);
-        if (drillType === "31_60") result = rows.filter((r) => r.Age > 30 && r.Age <= 60);
-        if (drillType === "61_90") result = rows.filter((r) => r.Age > 60 && r.Age <= 90);
-        if (drillType === "90_plus") result = rows.filter((r) => r.Age > 90);
-
-        result.sort((a, b) => a.Model.localeCompare(b.Model));
-        return buildGroups(result);
-    }, [drillType, rows, sortedRows, newArrivalRows]);
-
-    const resetAll = () => {
-        setDrillType(null);
-        setSearchTerm("");
-        setSmartQuery("");
-        setFilters({ model: "", year: "ALL", priceMin: "", priceMax: "" });
-    };
-
-    const handleRowClick = (row: InventoryRow) => setSelectedVehicle(row);
-
-    // ----------------- UI -----------------
-    return (
-        <div className="app-root">
-            <HeaderBar searchTerm={searchTerm} onSearchChange={setSearchTerm} />
-
-            <main className="app-main">
-                {/* Microphone button outside search bar */}
-                <button
-                    className="mic-float-btn"
-                    onClick={handleVoiceSearch}
-                    aria-label="Voice Search"
-                >
-                    🎤
-                </button>
-
-                {error && (
-                    <section className="panel error-panel">
-                        <div className="section-title">File Error</div>
-                        <p>{error}</p>
-                    </section>
-                )}
-
-                {rows.length > 0 && (
-                    <>
-                        <FiltersBar
-                            models={Array.from(new Set(rows.map((r) => r.Model))).sort()}
-                            filters={filters}
-                            onChange={setFilters}
-                            onSearchClick={() => setSearchTerm(smartQuery)}
-                        />
-
-                        <KpiBar
-                            totalUnits={rows.length}
-                            newArrivalCount={newArrivalRows.length}
-                            onSelectTotalUnits={resetAll}
-                            onSelectNewArrivals={() => setDrillType("new")}
-                        />
-
-                        <ChartsSection
-                            modelPieData={modelPieData}
-                            agingBuckets={agingBuckets}
-                            agingHandlers={{
-                                on0_30: () => setDrillType("0_30"),
-                                on31_60: () => setDrillType("31_60"),
-                                on61_90: () => setDrillType("61_90"),
-                                on90_plus: () => setDrillType("90_plus"),
-                            }}
-                        />
-
-                        <InventoryHealthPanel rows={rows} agingBuckets={agingBuckets} />
-
-                        {!drillType && <NewArrivalsPanel rows={newArrivalRows} />}
-
-                        {drillType ? (
-                            drillData && (
-                                <DrilldownTable
-                                    groups={drillData}
-                                    onBack={resetAll}
-                                    onRowClick={handleRowClick}
-                                />
-                            )
-                        ) : (
-                            <InventoryTable rows={filteredRows} onRowClick={handleRowClick} />
-                        )}
-
-                        <VehicleDetailDrawer
-                            vehicle={selectedVehicle}
-                            onClose={() => setSelectedVehicle(null)}
-                        />
-                    </>
-                )}
-            </main>
-        </div>
-    );
+type FiltersBarProps = {
+  models: string[];
+  filters: Filters;
+  onChange: (filters: Filters) => void;
+  onSmartSearch: (query: string) => void;
 };
 
-export default App;
+export const FiltersBar: FC<FiltersBarProps> = ({
+  models,
+  filters,
+  onChange,
+  onSmartSearch,
+}) => {
+  const [listening, setListening] = useState(false);
+  const recognitionRef = useRef<any | null>(null);
+
+  const handleFilterChange = (patch: Partial<Filters>) => {
+    onChange({ ...filters, ...patch });
+  };
+
+  const handleMicClick = () => {
+    const w = window as any;
+    const SpeechRecognition =
+      w.SpeechRecognition || w.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert("Voice search is not supported on this browser.");
+      return;
+    }
+
+    if (!recognitionRef.current) {
+      const recog = new SpeechRecognition();
+      recog.lang = "en-US";
+      recog.continuous = false;
+      recog.interimResults = false;
+
+      recog.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript.trim();
+        if (transcript) {
+          onSmartSearch(transcript);
+        }
+      };
+
+      recog.onend = () => {
+        setListening(false);
+      };
+
+      recognitionRef.current = recog;
+    }
+
+    if (listening) {
+      recognitionRef.current.stop();
+      setListening(false);
+    } else {
+      setListening(true);
+      recognitionRef.current.start();
+    }
+  };
+
+  const handleSearchClick = () => {
+    onSmartSearch("manual-search");
+  };
+
+  return (
+    <section className="panel">
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "260px 260px 260px 1fr",
+          gap: 16,
+          alignItems: "flex-start",
+        }}
+      >
+        {/* MODEL DROPDOWN */}
+        <div>
+          <div className="section-title">Model</div>
+          <select
+            value={filters.model}
+            onChange={(e) => handleFilterChange({ model: e.target.value })}
+            style={{
+              width: "100%",
+              background: "white",
+              color: "black",
+              padding: "6px 8px",
+              borderRadius: 8,
+            }}
+          >
+            <option value="">All Models</option>
+            {models.map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </select>
+
+          {/* YEAR DROPDOWN */}
+          <div className="section-title" style={{ marginTop: 16 }}>
+            Choose Year
+          </div>
+
+          <select
+            value={filters.yearMin}
+            onChange={(e) =>
+              handleFilterChange({
+                yearMin: e.target.value,
+                yearMax: e.target.value,
+              })
+            }
+            style={{
+              width: "100%",
+              background: "white",
+              color: "black",
+              padding: "6px 8px",
+              borderRadius: 8,
+            }}
+          >
+            <option value="">ALL</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+          </select>
+
+          {/* MSRP RANGE */}
+          <div className="section-title" style={{ marginTop: 16 }}>
+            MSRP Range
+          </div>
+
+          <div style={{ display: "flex", gap: 8 }}>
+            <input
+              type="number"
+              placeholder="Min"
+              value={filters.priceMin}
+              onChange={(e) =>
+                handleFilterChange({ priceMin: e.target.value || "" })
+              }
+              style={{
+                flex: 1,
+                background: "white",
+                color: "black",
+                padding: "6px 8px",
+                borderRadius: 8,
+                border: "1px solid #ccc",
+              }}
+            />
+
+            <input
+              type="number"
+              placeholder="Max"
+              value={filters.priceMax}
+              onChange={(e) =>
+                handleFilterChange({ priceMax: e.target.value || "" })
+              }
+              style={{
+                flex: 1,
+                background: "white",
+                color: "black",
+                padding: "6px 8px",
+                borderRadius: 8,
+                border: "1px solid #ccc",
+              }}
+            />
+          </div>
+
+          {/* SEARCH PILL */}
+          <button
+            onClick={handleSearchClick}
+            style={{
+              marginTop: 12,
+              width: "100%",
+              padding: "10px 0",
+              borderRadius: 999,
+              border: "1px solid #22c55e",
+              background: "#0f172a",
+              color: "white",
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            Search
+          </button>
+        </div>
+
+        {/* SPACERS TO PRESERVE GRID SHAPE */}
+        <div></div>
+        <div></div>
+
+        {/* MICROPHONE BUTTON OUTSIDE THE SEARCH BAR */}
+        <div>
+          <div className="section-title">Voice Search</div>
+
+          <button
+            onClick={handleMicClick}
+            style={{
+              width: 50,
+              height: 50,
+              borderRadius: "50%",
+              border: listening
+                ? "2px solid #22c55e"
+                : "2px solid rgba(148,163,184,0.6)",
+              background: "#0f172a",
+              color: "white",
+              fontSize: 20,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: 10,
+            }}
+          >
+            🎤
+          </button>
+
+          <div style={{ fontSize: 11, color: "#9ca3af" }}>
+            Tap the microphone and speak a model, trim, or color.
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
