@@ -1,5 +1,5 @@
 // src/components/FiltersBar.tsx
-import React, { FC, useState } from "react";
+import React, { FC, useRef, useState } from "react";
 import { Filters } from "../types";
 
 type FiltersBarProps = {
@@ -17,19 +17,18 @@ export const FiltersBar: FC<FiltersBarProps> = ({
 }) => {
   const [smartQuery, setSmartQuery] = useState("");
   const [listening, setListening] = useState(false);
+  const recognitionRef = useRef<any | null>(null);
 
   const handleFilterChange = (patch: Partial<Filters>) => {
     onChange({ ...filters, ...patch });
   };
 
-  /** ---------------- SMART SEARCH TEXT SUBMIT ---------------- */
   const handleSmartSubmit = (value: string) => {
     const q = value.trim();
     setSmartQuery(q);
     onSmartSearch(q);
   };
 
-  /** ---------------- SMART SEARCH MANUAL ENTER ---------------- */
   const handleSmartInputKeyDown: React.KeyboardEventHandler<HTMLInputElement> =
     (e) => {
       if (e.key === "Enter") {
@@ -37,47 +36,51 @@ export const FiltersBar: FC<FiltersBarProps> = ({
       }
     };
 
-  /** ---------------- MICROPHONE CLICK (ANDROID-SAFE) ---------------- */
   const handleMicClick = () => {
     const w = window as any;
     const SpeechRecognition =
       w.SpeechRecognition || w.webkitSpeechRecognition || null;
 
     if (!SpeechRecognition) {
-      alert("Voice search is not supported on this device.");
+      alert(
+        "Voice search is not supported in this browser. Please type your request."
+      );
       return;
     }
 
-    const recog = new SpeechRecognition();
-    recog.continuous = false;
-    recog.interimResults = false;
-    recog.lang = "en-US";
+    if (!recognitionRef.current) {
+      const recog = new SpeechRecognition();
+      recog.continuous = false;
+      recog.interimResults = false;
+      recog.lang = "en-US";
 
-    recog.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript.trim();
-      setSmartQuery(transcript);
-      onSmartSearch(transcript);
-    };
+      recog.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript.trim();
+        setSmartQuery(transcript);
+        onSmartSearch(transcript);
+      };
 
-    recog.onerror = () => setListening(false);
-    recog.onend = () => setListening(false);
+      recog.onend = () => setListening(false);
 
-    setListening(true);
-    recog.start(); // MUST be called directly on click for Android
-  };
+      recognitionRef.current = recog;
+    }
 
-  /** ---------------- RESET SEARCH ---------------- */
-  const handleSearchPillClick = () => {
-    onSmartSearch(
-      `${filters.yearMin || ""} ${filters.priceMin || ""} ${filters.priceMax || ""}`
-    );
+    if (listening) {
+      recognitionRef.current.stop();
+      setListening(false);
+    } else {
+      setListening(true);
+      recognitionRef.current.start();
+    }
   };
 
   return (
     <section className="panel filters-panel">
       <div className="filters-layout">
-        {/* ---------------- LEFT COLUMN (MODEL + YEAR) ---------------- */}
+
+        {/* COLUMN 1 — MODEL + YEAR */}
         <div className="filters-column">
+          {/* MODEL */}
           <div className="filter-row">
             <label className="filter-label">Model</label>
             <select
@@ -94,43 +97,87 @@ export const FiltersBar: FC<FiltersBarProps> = ({
             </select>
           </div>
 
+          {/* YEAR DROPDOWN (ALL, 2025, 2026) */}
           <div className="filter-row" style={{ marginTop: 16 }}>
             <label className="filter-label">Choose Year</label>
             <select
               className="filter-select"
               value={filters.yearMin}
-              onChange={(e) =>
-                handleFilterChange({
-                  yearMin: e.target.value,
-                  yearMax: e.target.value,
-                })
-              }
+              onChange={(e) => {
+                const yr = e.target.value;
+                if (yr === "ALL") {
+                  handleFilterChange({ yearMin: "", yearMax: "" });
+                } else {
+                  handleFilterChange({ yearMin: yr, yearMax: yr });
+                }
+              }}
             >
-              <option value="">ALL</option>
+              <option value="ALL">ALL</option>
               <option value="2025">2025</option>
               <option value="2026">2026</option>
             </select>
           </div>
         </div>
 
-        {/* ---------------- MIDDLE COLUMN SPACERS (PRESERVE LAYOUT) ---------------- */}
-        <div className="filters-column" />
-        <div className="filters-column" />
+        {/* COLUMN 2 — MSRP RANGE */}
+        <div className="filters-column">
+          <div className="filter-row">
+            <label className="filter-label">MSRP Range</label>
+            <div className="filter-row-inline">
+              <input
+                type="number"
+                className="filter-input"
+                placeholder="Min"
+                value={filters.priceMin}
+                onChange={(e) =>
+                  handleFilterChange({ priceMin: e.target.value || "" })
+                }
+              />
+              <input
+                type="number"
+                className="filter-input"
+                placeholder="Max"
+                value={filters.priceMax}
+                onChange={(e) =>
+                  handleFilterChange({ priceMax: e.target.value || "" })
+                }
+              />
+            </div>
 
-        {/* ---------------- RIGHT COLUMN (SMART SEARCH + MSRP) ---------------- */}
-        <div className="filters-column nl-search-column">
-          {/* SMART SEARCH */}
+            {/* SEARCH BUTTON */}
+            <button
+              style={{
+                marginTop: 10,
+                padding: "8px 18px",
+                borderRadius: 999,
+                background: "#22c55e",
+                color: "#000",
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: "pointer",
+                border: "none",
+                width: "fit-content",
+              }}
+              onClick={() => onSmartSearch(smartQuery)}
+            >
+              SEARCH
+            </button>
+          </div>
+        </div>
+
+        {/* COLUMN 3 — SMART SEARCH */}
+        <div className="nl-search-column">
           <label className="filter-label">Smart Search</label>
+
           <div className="nl-search-shell">
+            {/* MICROPHONE ALWAYS VISIBLE */}
             <button
               type="button"
               onClick={handleMicClick}
-              aria-label="Voice search"
               className="mic-button"
+              aria-label="Voice search"
               style={{
-                borderColor: listening
-                  ? "rgba(34,197,94,0.9)"
-                  : "rgba(148,163,184,0.7)",
+                borderColor: listening ? "#22c55e" : "rgba(148,163,184,0.6)",
               }}
             >
               🎤
@@ -138,58 +185,17 @@ export const FiltersBar: FC<FiltersBarProps> = ({
 
             <input
               type="text"
-              className="nl-search-input"
-              placeholder="Tell me what you're looking for."
               value={smartQuery}
               onChange={(e) => setSmartQuery(e.target.value)}
               onKeyDown={handleSmartInputKeyDown}
+              placeholder="Tell me what you're looking for."
+              className="nl-search-input"
             />
           </div>
 
-          {/* MSRP RANGE */}
-          <div className="filter-row" style={{ marginTop: 20 }}>
-            <label className="filter-label">MSRP Range</label>
-
-            <div className="filter-row-inline">
-              <input
-                type="number"
-                placeholder="Min"
-                value={filters.priceMin}
-                onChange={(e) =>
-                  handleFilterChange({ priceMin: e.target.value })
-                }
-                className="filter-input"
-              />
-
-              <input
-                type="number"
-                placeholder="Max"
-                value={filters.priceMax}
-                onChange={(e) =>
-                  handleFilterChange({ priceMax: e.target.value })
-                }
-                className="filter-input"
-              />
-            </div>
+          <div className="nl-search-hint">
+            Try “blue Silverado 1500” or “white Silverado CK10543”.
           </div>
-
-          {/* SEARCH PILL */}
-          <button
-            onClick={handleSearchPillClick}
-            style={{
-              marginTop: 10,
-              padding: "8px 16px",
-              borderRadius: 999,
-              background: "#22c55e",
-              color: "black",
-              border: "none",
-              fontWeight: 600,
-              cursor: "pointer",
-              width: "fit-content",
-            }}
-          >
-            SEARCH
-          </button>
         </div>
       </div>
     </section>
