@@ -14,13 +14,29 @@ export const DrilldownTable: FC<Props> = ({
   onBack,
   onRowClick,
 }) => {
-  const flatRows = useMemo(
-    () =>
-      Object.keys(groups)
-        .sort()
-        .flatMap((model) => groups[model]),
+  // Keys look like "CHEVROLET|EQUINOX" or "CHEVROLET|SILVERADO 1500|CK10543"
+  const sortedKeys = useMemo(
+    () => Object.keys(groups).sort(),
     [groups]
   );
+
+  const flatRows = useMemo(
+    () => sortedKeys.flatMap((key) => groups[key]),
+    [groups, sortedKeys]
+  );
+
+  const getTitle = (key: string): string => {
+    const parts = key.split("|");
+    const make = (parts[0] || "").toUpperCase();
+    const model = (parts[1] || "").toUpperCase();
+    const modelNumber = parts[2] || "";
+    const count = groups[key]?.length || 0;
+
+    if (modelNumber) {
+      return `${make} ${model} ${modelNumber} - ${count}`;
+    }
+    return `${make} ${model} - ${count}`;
+  };
 
   return (
     <section className="panel">
@@ -37,9 +53,9 @@ export const DrilldownTable: FC<Props> = ({
         </button>
       </div>
 
-      {Object.keys(groups).map((model) => (
-        <div key={model} className="drill-group">
-          <div className="drill-group-title">{model}</div>
+      {sortedKeys.map((key) => (
+        <div key={key} className="drill-group">
+          <div className="drill-group-title">{getTitle(key)}</div>
           <div className="table-shell">
             <table>
               <thead>
@@ -49,6 +65,7 @@ export const DrilldownTable: FC<Props> = ({
                   <th>Make</th>
                   <th>Model</th>
                   <th>Trim</th>
+                  <th>Model #</th>
                   <th>Exterior Color</th>
                   <th>Short VIN</th>
                   <th>Age</th>
@@ -56,7 +73,7 @@ export const DrilldownTable: FC<Props> = ({
                 </tr>
               </thead>
               <tbody>
-                {groups[model].map((row) => (
+                {groups[key].map((row) => (
                   <tr
                     key={row["Stock Number"]}
                     onClick={() => onRowClick(row)}
@@ -67,6 +84,7 @@ export const DrilldownTable: FC<Props> = ({
                     <td>{row.Make}</td>
                     <td>{row.Model}</td>
                     <td>{row.Trim}</td>
+                    <td>{row["Model Number"]}</td>
                     <td>{row["Exterior Color"]}</td>
                     <td>{row["Short VIN"]}</td>
                     <td>{row.Age}</td>
