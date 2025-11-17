@@ -1,134 +1,134 @@
 // src/components/FiltersBar.tsx
-import React, { FC, ChangeEvent } from "react";
+import React, { FC, useRef, useState } from "react";
 import { Filters } from "../types";
 
-type Props = {
+type FiltersBarProps = {
   models: string[];
   filters: Filters;
   onChange: (filters: Filters) => void;
-  intentQuery: string;
-  onIntentQueryChange: (value: string) => void;
-  onVoiceSearch: () => void;
+  // New: Smart Search callback (voice or typed)
+  onSmartSearch: (query: string) => void;
 };
 
-export const FiltersBar: FC<Props> = ({
+export const FiltersBar: FC<FiltersBarProps> = ({
   models,
   filters,
   onChange,
-  intentQuery,
-  onIntentQueryChange,
-  onVoiceSearch,
+  onSmartSearch,
 }) => {
-  const handleField =
-    (field: keyof Filters) =>
-    (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-      if (e.target.type === "checkbox") {
-        const checked = (e.target as HTMLInputElement).checked;
-        onChange({ ...filters, [field]: checked } as Filters);
-      } else {
-        onChange({ ...filters, [field]: e.target.value } as Filters);
+  const [smartQuery, setSmartQuery] = useState("");
+  const [listening, setListening] = useState(false);
+  const recognitionRef = useRef<any | null>(null);
+
+  const handleFilterChange = (patch: Partial<Filters>) => {
+    onChange({ ...filters, ...patch });
+  };
+
+  const handleSmartSubmit = (value: string) => {
+    const q = value.trim();
+    setSmartQuery(q);
+    onSmartSearch(q);
+  };
+
+  const handleSmartInputKeyDown: React.KeyboardEventHandler<HTMLInputElement> =
+    (e) => {
+      if (e.key === "Enter") {
+        handleSmartSubmit((e.target as HTMLInputElement).value);
       }
     };
 
+  const handleMicClick = () => {
+    if (typeof window === "undefined") return;
+
+    const w = window as any;
+    const SpeechRecognition =
+      w.SpeechRecognition || w.webkitSpeechRecognition || null;
+
+    if (!SpeechRecognition) {
+      // Browser does not support Web Speech API – fall back to manual typing
+      alert(
+        "Voice search is not supported in this browser. Please type your request."
+      );
+      return;
+    }
+
+    if (!recognitionRef.current) {
+      const recog = new SpeechRecognition();
+      recog.continuous = false;
+      recog.interimResults = false;
+      recog.lang = "en-US";
+
+      recog.onresult = (event: any) => {
+        const transcript = Array.from(event.results)
+          .map((r: any) => r[0].transcript)
+          .join(" ")
+          .trim();
+
+        if (transcript) {
+          setSmartQuery(transcript);
+          onSmartSearch(transcript);
+        }
+      };
+
+      recog.onend = () => {
+        setListening(false);
+      };
+
+      recognitionRef.current = recog;
+    }
+
+    if (listening) {
+      recognitionRef.current.stop();
+      setListening(false);
+    } else {
+      setListening(true);
+      recognitionRef.current.start();
+    }
+  };
+
   return (
-    <section className="panel filters-panel">
-      <div className="filters-layout">
-        <div className="filters-column">
-          <div className="filter-row">
-            <label className="filter-label">Model</label>
-            <select
-              className="filter-select"
-              value={filters.model}
-              onChange={handleField("model")}
-            >
-              <option value="">All Models</option>
-              {models.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
-          </div>
+    <section className="panel">
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "260px 260px 260px 1fr",
+          gap: 16,
+          alignItems: "flex-start",
+        }}
+      >
+        {/* Standard filters */}
+        <div>
+          <div className="section-title">Model</div>
+          <select
+            value={filters.model}
+            onChange={(e) => handleFilterChange({ model: e.target.value })}
+            style={{ width: "100%" }}
+          >
+            <option value="">All Models</option>
+            {models.map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </select>
 
-          <div className="filter-row-inline">
-            <div className="filter-field">
-              <label className="filter-label">Year Range</label>
-              <input
-                className="filter-input"
-                placeholder="Min"
-                value={filters.yearMin}
-                onChange={handleField("yearMin")}
-              />
-            </div>
-            <div className="filter-field">
-              <label className="filter-label invisible-label">Year Max</label>
-              <input
-                className="filter-input"
-                placeholder="Max"
-                value={filters.yearMax}
-                onChange={handleField("yearMax")}
-              />
-            </div>
+          <div className="section-title" style={{ marginTop: 16 }}>
+            Year Range
           </div>
-
-          <div className="filter-row-inline">
-            <div className="filter-field">
-              <label className="filter-label">MSRP Range</label>
-              <input
-                className="filter-input"
-                placeholder="Min"
-                value={filters.priceMin}
-                onChange={handleField("priceMin")}
-              />
-            </div>
-            <div className="filter-field">
-              <label className="filter-label invisible-label">MSRP Max</label>
-              <input
-                className="filter-input"
-                placeholder="Max"
-                value={filters.priceMax}
-                onChange={handleField("priceMax")}
-              />
-            </div>
-          </div>
-
-          <div className="filter-row checkbox-row">
-            <label className="filter-checkbox">
-              <input
-                type="checkbox"
-                checked={filters.atRiskOnly}
-                onChange={handleField("atRiskOnly")}
-              />
-              <span>At Risk Only</span>
-            </label>
-            <span className="filter-note">90+ days</span>
-          </div>
-        </div>
-
-        <div className="nl-search-column">
-          <label className="filter-label">Smart Search</label>
-          <div className="nl-search-shell">
-            <button
-              type="button"
-              className="mic-button"
-              onClick={onVoiceSearch}
-              aria-label="Voice search"
-            >
-              🎤
-            </button>
+          <div style={{ display: "flex", gap: 8 }}>
             <input
-              type="text"
-              className="nl-search-input"
-              placeholder="Tell me what you're looking for."
-              value={intentQuery}
-              onChange={(e) => onIntentQueryChange(e.target.value)}
+              type="number"
+              placeholder="Min"
+              value={filters.yearMin}
+              onChange={(e) =>
+                handleFilterChange({ yearMin: e.target.value || "" })
+              }
+              style={{ flex: 1 }}
             />
-          </div>
-          <div className="nl-search-hint">
-            Try: “blue Silverado 1500” or “white Silverado CK10543”
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-};
+            <input
+              type="number"
+              placeholder="Max"
+              value={filters.yearMax}
+              onChange={(e) =>
+                handleFilterChange({ yearMax: e.target.value || "" })
+              }
