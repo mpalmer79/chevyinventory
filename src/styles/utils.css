@@ -1,4 +1,5 @@
-.centered { text-align: center; }
-.clickable { cursor: pointer; }
-.hidden { display: none; }
+/* Generic utility helpers */
 
+.centered {
+  text-align: center;
+}
