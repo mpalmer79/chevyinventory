@@ -1,5 +1,4 @@
 /* KPI cards */
-
 .kpi-card {
   background: rgba(15, 23, 42, 0.95);
   border-radius: 16px;
@@ -21,25 +20,22 @@
   margin-top: 4px;
 }
 
-.clickable {
+/* Drill-down back button + title */
+.back-button {
+  background: none;
+  border: 1px solid #4ade80;
+  color: #4ade80;
+  padding: 6px 12px;
+  border-radius: 8px;
   cursor: pointer;
 }
 
-/* Hover highlight for drill-down clickable numbers */
-
-.kpi-value.clickable:hover,
-.aging-count.clickable:hover {
-  color: #4ade80;
-  text-shadow: 0 0 6px rgba(74, 222, 128, 0.4);
+.drill-title {
+  font-size: 16px;
+  font-weight: 600;
 }
 
-.kpi-card:hover {
-  border-color: rgba(74, 222, 128, 0.45);
-  box-shadow: 0 0 8px rgba(74, 222, 128, 0.25);
-}
-
-/* New arrivals cards */
-
+/* New arrivals list */
 .new-arrivals {
   display: flex;
   flex-direction: column;
@@ -91,3 +87,14 @@
   font-weight: 600;
 }
 
+/* Hover effects for KPI cards and clickable KPI values */
+.kpi-value.clickable:hover,
+.aging-count.clickable:hover {
+  color: #4ade80;
+  text-shadow: 0 0 6px rgba(74, 222, 128, 0.4);
+}
+
+.kpi-card:hover {
+  border-color: rgba(74, 222, 128, 0.45);
+  box-shadow: 0 0 8px rgba(74, 222, 128, 0.25);
+}
