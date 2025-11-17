@@ -1,1 +1,10 @@
+/* Shared component text styles */
+
+.section-title {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: #9ca3af;
+  margin-bottom: 8px;
+}
 
