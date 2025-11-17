@@ -540,3 +540,15 @@ tbody tr:hover {
     gap: 4px;
   }
 }
+/* Force dropdown model list to use black text */
+select,
+select option {
+  color: #000 !important;
+  background-color: #ffffff !important;
+}
+
+/* Keep the selected value readable as well */
+select:focus,
+select:active {
+  color: #000 !important;
+}
