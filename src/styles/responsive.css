@@ -1,1 +1,37 @@
+/* Responsive adjustments */
+
+@media (max-width: 1024px) {
+  .panel-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .filters-layout {
+    flex-direction: column;
+  }
+
+  .filters-column {
+    max-width: none;
+  }
+
+  .nl-search-column {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .kpi-row {
+    grid-template-columns: 1fr;
+  }
+
+  .panel-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .arrival-meta {
+    flex-direction: column;
+    gap: 4px;
+  }
+}
 
