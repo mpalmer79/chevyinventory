@@ -109,11 +109,10 @@ export const FiltersBar: FC<FiltersBarProps> = ({
           </div>
 
           <select
-            value={filters.yearMin}
+            value={filters.year}
             onChange={(e) =>
               handleFilterChange({
-                yearMin: e.target.value,
-                yearMax: e.target.value,
+                year: e.target.value,
               })
             }
             className="filter-select"
