@@ -1,12 +1,12 @@
 // src/components/FiltersBar.tsx
-import React, { FC, useRef, useState } from "react";
+import React, { FC } from "react";
 import { Filters } from "../types";
+import { SmartSearch } from "./SmartSearch";
 
 type FiltersBarProps = {
   models: string[];
   filters: Filters;
   onChange: (filters: Filters) => void;
-  // Smart Search callback (voice or typed)
   onSmartSearch: (query: string) => void;
 };
 
@@ -16,73 +16,12 @@ export const FiltersBar: FC<FiltersBarProps> = ({
   onChange,
   onSmartSearch,
 }) => {
-  const [smartQuery, setSmartQuery] = useState("");
-  const [listening, setListening] = useState(false);
-  const recognitionRef = useRef<any | null>(null);
-
   const handleFilterChange = (patch: Partial<Filters>) => {
     onChange({ ...filters, ...patch });
   };
 
-  const handleSmartSubmit = (value: string) => {
-    const q = value.trim();
-    setSmartQuery(q);
-    onSmartSearch(q);
-  };
-
-  const handleSmartInputKeyDown: React.KeyboardEventHandler<HTMLInputElement> =
-    (e) => {
-      if (e.key === "Enter") {
-        handleSmartSubmit((e.target as HTMLInputElement).value);
-      }
-    };
-
-  const handleMicClick = () => {
-    if (typeof window === "undefined") return;
-
-    const w = window as any;
-    const SpeechRecognition =
-      w.SpeechRecognition || w.webkitSpeechRecognition || null;
-
-    if (!SpeechRecognition) {
-      alert(
-        "Voice search is not supported in this browser. Please type your request."
-      );
-      return;
-    }
-
-    if (!recognitionRef.current) {
-      const recog = new SpeechRecognition();
-      recog.continuous = false;
-      recog.interimResults = false;
-      recog.lang = "en-US";
-
-      recog.onresult = (event: any) => {
-        const transcript = Array.from(event.results)
-          .map((r: any) => r[0].transcript)
-          .join(" ")
-          .trim();
-
-        if (transcript) {
-          setSmartQuery(transcript);
-          onSmartSearch(transcript);
-        }
-      };
-
-      recog.onend = () => {
-        setListening(false);
-      };
-
-      recognitionRef.current = recog;
-    }
-
-    if (listening) {
-      recognitionRef.current.stop();
-      setListening(false);
-    } else {
-      setListening(true);
-      recognitionRef.current.start();
-    }
+  const handleSearchButton = () => {
+    onChange({ ...filters }); // triggers table recompute
   };
 
   return (
@@ -95,14 +34,16 @@ export const FiltersBar: FC<FiltersBarProps> = ({
           alignItems: "flex-start",
         }}
       >
-        {/* Standard filters */}
+        {/*  LEFT COLUMN  */}
         <div>
           {/* MODEL */}
-          <div className="section-title">Model</div>
+          <div className="section-title" style={{ color: "#ffffff" }}>
+            Model
+          </div>
           <select
             value={filters.model}
             onChange={(e) => handleFilterChange({ model: e.target.value })}
-            style={{ width: "100%" }}
+            style={{ width: "100%", color: "#ffffff" }}
           >
             <option value="">All Models</option>
             {models.map((m) => (
@@ -115,14 +56,14 @@ export const FiltersBar: FC<FiltersBarProps> = ({
           {/* CHOOSE YEAR */}
           <div
             className="section-title"
-            style={{ marginTop: 16, color: "#000" }} // black label
+            style={{ marginTop: 16, color: "#ffffff" }}
           >
             Choose Year
           </div>
           <select
             value={filters.year}
             onChange={(e) => handleFilterChange({ year: e.target.value })}
-            style={{ width: "100%" }}
+            style={{ width: "100%", color: "#ffffff" }}
           >
             <option value="ALL">ALL</option>
             <option value="2025">2025</option>
@@ -132,7 +73,7 @@ export const FiltersBar: FC<FiltersBarProps> = ({
           {/* MSRP RANGE */}
           <div
             className="section-title"
-            style={{ marginTop: 16, color: "#000" }} // black label
+            style={{ marginTop: 16, color: "#ffffff" }}
           >
             MSRP Range
           </div>
@@ -144,8 +85,12 @@ export const FiltersBar: FC<FiltersBarProps> = ({
               onChange={(e) =>
                 handleFilterChange({ priceMin: e.target.value || "" })
               }
-              style={{ flex: 1 }}
+              style={{
+                flex: 1,
+                color: "#ffffff",
+              }}
             />
+
             <input
               type="number"
               placeholder="Max"
@@ -153,91 +98,43 @@ export const FiltersBar: FC<FiltersBarProps> = ({
               onChange={(e) =>
                 handleFilterChange({ priceMax: e.target.value || "" })
               }
-              style={{ flex: 1 }}
-            />
-          </div>
-        </div>
-
-        {/* Spacer columns to match your existing layout */}
-        <div />
-        <div />
-
-        {/* SMART SEARCH block */}
-        <div>
-          <div className="section-title">Smart Search</div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              background: "rgba(15,23,42,0.95)",
-              borderRadius: 999,
-              border: "1px solid rgba(148,163,184,0.4)",
-              padding: "6px 12px",
-            }}
-          >
-            <button
-              type="button"
-              onClick={handleMicClick}
-              aria-label="Voice search"
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: "50%",
-                border: `1px solid ${
-                  listening ? "rgba(34,197,94,0.9)" : "rgba(148,163,184,0.7)"
-                }`,
-                background: "transparent",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                flexShrink: 0,
-              }}
-            >
-              {/* Simple mic icon */}
-              <span
-                style={{
-                  width: 10,
-                  height: 16,
-                  borderRadius: 999,
-                  border: "2px solid #e5e7eb",
-                  borderBottom: "none",
-                  position: "relative",
-                }}
-              >
-                <span
-                  style={{
-                    position: "absolute",
-                    left: "50%",
-                    bottom: -6,
-                    width: 14,
-                    height: 8,
-                    borderRadius: 999,
-                    border: "2px solid #e5e7eb",
-                    borderTop: "none",
-                    transform: "translateX(-50%)",
-                  }}
-                />
-              </span>
-            </button>
-
-            <input
-              type="text"
-              placeholder="Tell me what you're looking for."
-              value={smartQuery}
-              onChange={(e) => setSmartQuery(e.target.value)}
-              onKeyDown={handleSmartInputKeyDown}
               style={{
                 flex: 1,
-                border: "none",
-                outline: "none",
-                background: "transparent",
-                color: "#e5e7eb",
-                fontSize: 14,
+                color: "#ffffff",
               }}
             />
           </div>
+
+          {/* SEARCH BUTTON */}
+          <button
+            onClick={handleSearchButton}
+            style={{
+              marginTop: 14,
+              width: "100%",
+              background: "#22c55e",
+              border: "none",
+              padding: "10px 0",
+              borderRadius: 999,
+              fontWeight: 600,
+              color: "#000",
+              cursor: "pointer",
+              fontSize: 14,
+            }}
+          >
+            SEARCH
+          </button>
+        </div>
+
+        {/* SPACERS TO KEEP YOUR ORIGINAL LAYOUT */}
+        <div />
+        <div />
+
+        {/* SMART SEARCH COLUMN (VOICE + TEXT) */}
+        <div>
+          <div className="section-title">Smart Search</div>
+
+          <SmartSearch rows={[]} onResults={() => {}} />
+
           <div style={{ fontSize: 11, marginTop: 6, color: "#9ca3af" }}>
             Try “blue Silverado 1500” or “white Silverado CK10543”.
           </div>
