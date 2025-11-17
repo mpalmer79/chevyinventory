@@ -14,234 +14,249 @@ import { NewArrivalsPanel } from "./components/NewArrivalsPanel";
 import { InventoryTable } from "./components/InventoryTable";
 import { DrilldownTable } from "./components/DrilldownTable";
 import { VehicleDetailDrawer } from "./components/VehicleDetailDrawer";
+import { MicSearchBar } from "./components/MicSearchBar";
 
 const STOP_WORDS = new Set([
-    "i","im","i'm","looking","for","to","the","a","an",
-    "with","show","me","find","need","want","please"
+  "i", "im", "i'm", "looking", "for", "to", "the",
+  "a", "an", "with", "show", "me", "find", "need",
+  "want", "please"
 ]);
 
 const App: FC = () => {
-    const { rows, error, sortedRows, modelPieData } = useInventoryData();
+  const { rows, error, sortedRows, modelPieData } = useInventoryData();
 
-    // ----------------- STATE -----------------
-    const [searchTerm, setSearchTerm] = useState("");
-    const [smartQuery, setSmartQuery] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState<Filters>({
+    model: "",
+    year: "ALL",
+    priceMin: "",
+    priceMax: ""
+  });
 
-    const [filters, setFilters] = useState<Filters>({
-        model: "",
-        year: "ALL",
-        priceMin: "",
-        priceMax: ""
+  const [drillType, setDrillType] = useState<DrillType>(null);
+  const [selectedVehicle, setSelectedVehicle] = useState<InventoryRow | null>(null);
+
+  const modelsList = useMemo(
+    () => Array.from(new Set(rows.map((r) => r.Model))).sort(),
+    [rows]
+  );
+
+  const agingBuckets = useMemo<AgingBuckets>(() => {
+    const b: AgingBuckets = {
+      bucket0_30: 0,
+      bucket31_60: 0,
+      bucket61_90: 0,
+      bucket90_plus: 0,
+    };
+    rows.forEach((r) => {
+      if (r.Age <= 30) b.bucket0_30++;
+      else if (r.Age <= 60) b.bucket31_60++;
+      else if (r.Age <= 90) b.bucket61_90++;
+      else b.bucket90_plus++;
+    });
+    return b;
+  }, [rows]);
+
+  const newArrivalRows = useMemo(
+    () =>
+      rows.filter((r) => r.Age <= 7).sort((a, b) => a.Model.localeCompare(b.Model)),
+    [rows]
+  );
+
+  // ---------------- FILTER + SEARCH ----------------
+  const filteredRows = useMemo(() => {
+    let data = [...sortedRows];
+
+    // Model filter
+    if (filters.model) data = data.filter((r) => r.Model === filters.model);
+
+    // YEAR filter
+    if (filters.year !== "ALL") {
+      const year = Number(filters.year);
+      data = data.filter((r) => r.Year === year);
+    }
+
+    // MSRP filters
+    if (filters.priceMin) {
+      const min = Number(filters.priceMin);
+      if (!Number.isNaN(min)) data = data.filter((r) => r.MSRP >= min);
+    }
+
+    if (filters.priceMax) {
+      const max = Number(filters.priceMax);
+      if (!Number.isNaN(max)) data = data.filter((r) => r.MSRP <= max);
+    }
+
+    // Natural language / mic search
+    if (searchTerm.trim()) {
+      const rawTokens = searchTerm.toLowerCase().split(/\s+/).filter(Boolean);
+      const tokens = rawTokens.filter((t) => !STOP_WORDS.has(t));
+
+      data = data.filter((r) => {
+        const haystack = [
+          r["Stock Number"],
+          r["Short VIN"],
+          r.Make,
+          r.Model,
+          r["Model Number"],
+          r["Exterior Color"],
+          r.Trim,
+          String(r.Year),
+        ]
+          .join(" ")
+          .toLowerCase();
+
+        return tokens.every((token) => haystack.includes(token));
+      });
+    }
+
+    return data;
+  }, [sortedRows, filters, searchTerm]);
+
+  // ---------------- GROUPING ----------------
+  const buildGroups = (items: InventoryRow[]) => {
+    const groups: Record<string, InventoryRow[]> = {};
+
+    items.forEach((r) => {
+      const make = (r.Make || "").trim();
+      const model = (r.Model || "").trim();
+      const modelNumber = (r["Model Number"] || "").trim();
+
+      let key;
+
+      if (model.toUpperCase() === "SILVERADO 1500" && modelNumber) {
+        key = `${make}|${model}|${modelNumber}`;
+      } else {
+        key = `${make}|${model}`;
+      }
+
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(r);
     });
 
-    const [drillType, setDrillType] = useState<DrillType>(null);
-    const [selectedVehicle, setSelectedVehicle] = useState<InventoryRow | null>(null);
+    Object.values(groups).forEach((g) => g.sort((a, b) => b.Age - a.Age));
 
-    // ----------------- MICROPHONE -----------------
-    const handleVoiceSearch = () => {
-        const SpeechRecognition =
-            (window as any).SpeechRecognition ||
-            (window as any).webkitSpeechRecognition;
+    return groups;
+  };
 
-        if (!SpeechRecognition) {
-            alert("Voice search not supported on this device.");
-            return;
-        }
+  const drillData = useMemo(() => {
+    if (!drillType) return null;
 
-        const recog = new SpeechRecognition();
-        recog.continuous = false;
-        recog.interimResults = false;
-        recog.lang = "en-US";
+    let result: InventoryRow[] = [];
 
-        recog.onresult = (event: any) => {
-            const text = event.results[0][0].transcript.trim();
-            setSmartQuery(text);
-            setSearchTerm(text);
-        };
+    switch (drillType) {
+      case "total":
+        return buildGroups(sortedRows);
 
-        recog.onerror = (e: any) => console.error("Speech error:", e);
-        recog.start();
-    };
+      case "new":
+        result = [...newArrivalRows];
+        break;
 
-    // ----------------- FILTERED LIST -----------------
-    const filteredRows = useMemo(() => {
-        let data = [...sortedRows];
+      case "0_30":
+        result = rows.filter((r) => r.Age <= 30);
+        break;
 
-        if (filters.model) {
-            data = data.filter((r) => r.Model === filters.model);
-        }
+      case "31_60":
+        result = rows.filter((r) => r.Age > 30 && r.Age <= 60);
+        break;
 
-        if (filters.year !== "ALL") {
-            const yr = Number(filters.year);
-            data = data.filter((r) => r.Year === yr);
-        }
+      case "61_90":
+        result = rows.filter((r) => r.Age > 60 && r.Age <= 90);
+        break;
 
-        if (filters.priceMin) {
-            data = data.filter((r) => r.MSRP >= Number(filters.priceMin));
-        }
+      case "90_plus":
+        result = rows.filter((r) => r.Age > 90);
+        break;
+    }
 
-        if (filters.priceMax) {
-            data = data.filter((r) => r.MSRP <= Number(filters.priceMax));
-        }
+    return buildGroups(result);
+  }, [drillType, rows, sortedRows, newArrivalRows]);
 
-        if (searchTerm.trim() !== "") {
-            const rawTokens = searchTerm.toLowerCase().split(/\s+/).filter(Boolean);
-            const tokens = rawTokens.filter((t) => !STOP_WORDS.has(t));
+  const handleRowClick = (row: InventoryRow) => setSelectedVehicle(row);
 
-            data = data.filter((r) => {
-                const haystack = [
-                    r["Stock Number"],
-                    r["Short VIN"],
-                    r.Make,
-                    r.Model,
-                    r["Model Number"],
-                    r["Exterior Color"],
-                    r.Trim,
-                    String(r.Year),
-                ]
-                    .join(" ")
-                    .toLowerCase();
+  const handleResetToDefault = () => {
+    setDrillType(null);
+    setSearchTerm("");
+    setFilters({
+      model: "",
+      year: "ALL",
+      priceMin: "",
+      priceMax: ""
+    });
+  };
 
-                return tokens.every((token) => haystack.includes(token));
-            });
-        }
+  // Voice-smart search callback
+  const handleVoiceSearch = (spoken: string) => {
+    setSearchTerm(spoken);
+    setDrillType(null);
+  };
 
-        return data;
-    }, [sortedRows, filters, searchTerm]);
+  return (
+    <div className="app-root">
+      <HeaderBar searchTerm={searchTerm} onSearchChange={setSearchTerm} />
 
-    // ----------------- NEW ARRIVALS -----------------
-    const newArrivalRows = useMemo(
-        () => rows.filter((r) => r.Age <= 7).sort((a, b) => a.Model.localeCompare(b.Model)),
-        [rows]
-    );
+      {/* NEW: voice mic bar outside filters */}
+      <MicSearchBar onVoiceResult={handleVoiceSearch} />
 
-    // ----------------- AGING BUCKETS -----------------
-    const agingBuckets: AgingBuckets = useMemo(() => {
-        const b = { bucket0_30: 0, bucket31_60: 0, bucket61_90: 0, bucket90_plus: 0 };
-        rows.forEach((r) => {
-            if (r.Age <= 30) b.bucket0_30++;
-            else if (r.Age <= 60) b.bucket31_60++;
-            else if (r.Age <= 90) b.bucket61_90++;
-            else b.bucket90_plus++;
-        });
-        return b;
-    }, [rows]);
+      <main className="app-main">
+        {error && (
+          <section className="panel error-panel">
+            <div className="section-title">File Error</div>
+            <p>{error}</p>
+          </section>
+        )}
 
-    // ----------------- DRILLDOWN -----------------
-    const buildGroups = (items: InventoryRow[]) => {
-        const groups: Record<string, InventoryRow[]> = {};
-        items.forEach((r) => {
-            const key = `${r.Make}|${r.Model}|${r["Model Number"]}`;
-            if (!groups[key]) groups[key] = [];
-            groups[key].push(r);
-        });
+        {rows.length > 0 && (
+          <>
+            <FiltersBar
+              models={modelsList}
+              filters={filters}
+              onChange={setFilters}
+            />
 
-        Object.values(groups).forEach((g) =>
-            g.sort((a, b) => b.Age - a.Age)
-        );
+            <KpiBar
+              totalUnits={rows.length}
+              newArrivalCount={newArrivalRows.length}
+              onSelectTotalUnits={() => handleResetToDefault()}
+              onSelectNewArrivals={() => setDrillType("new")}
+            />
 
-        return groups;
-    };
+            <ChartsSection
+              modelPieData={modelPieData}
+              agingBuckets={agingBuckets}
+              agingHandlers={{
+                on0_30: () => setDrillType("0_30"),
+                on31_60: () => setDrillType("31_60"),
+                on61_90: () => setDrillType("61_90"),
+                on90_plus: () => setDrillType("90_plus"),
+              }}
+            />
 
-    const drillData = useMemo(() => {
-        if (!drillType) return null;
+            <InventoryHealthPanel rows={rows} agingBuckets={agingBuckets} />
 
-        let result: InventoryRow[] = [];
+            {!drillType && <NewArrivalsPanel rows={newArrivalRows} />}
 
-        if (drillType === "total") result = [...sortedRows];
-        if (drillType === "new") result = [...newArrivalRows];
-        if (drillType === "0_30") result = rows.filter((r) => r.Age <= 30);
-        if (drillType === "31_60") result = rows.filter((r) => r.Age > 30 && r.Age <= 60);
-        if (drillType === "61_90") result = rows.filter((r) => r.Age > 60 && r.Age <= 90);
-        if (drillType === "90_plus") result = rows.filter((r) => r.Age > 90);
+            {drillType ? (
+              drillData && (
+                <DrilldownTable
+                  groups={drillData}
+                  onBack={handleResetToDefault}
+                  onRowClick={handleRowClick}
+                />
+              )
+            ) : (
+              <InventoryTable rows={filteredRows} onRowClick={handleRowClick} />
+            )}
 
-        result.sort((a, b) => a.Model.localeCompare(b.Model));
-        return buildGroups(result);
-    }, [drillType, rows, sortedRows, newArrivalRows]);
-
-    const resetAll = () => {
-        setDrillType(null);
-        setSearchTerm("");
-        setSmartQuery("");
-        setFilters({ model: "", year: "ALL", priceMin: "", priceMax: "" });
-    };
-
-    const handleRowClick = (row: InventoryRow) => setSelectedVehicle(row);
-
-    // ----------------- UI -----------------
-    return (
-        <div className="app-root">
-            <HeaderBar searchTerm={searchTerm} onSearchChange={setSearchTerm} />
-
-            <main className="app-main">
-                {/* Microphone button outside search bar */}
-                <button
-                    className="mic-float-btn"
-                    onClick={handleVoiceSearch}
-                    aria-label="Voice Search"
-                >
-                    🎤
-                </button>
-
-                {error && (
-                    <section className="panel error-panel">
-                        <div className="section-title">File Error</div>
-                        <p>{error}</p>
-                    </section>
-                )}
-
-                {rows.length > 0 && (
-                    <>
-                        <FiltersBar
-                            models={Array.from(new Set(rows.map((r) => r.Model))).sort()}
-                            filters={filters}
-                            onChange={setFilters}
-                            onSearchClick={() => setSearchTerm(smartQuery)}
-                        />
-
-                        <KpiBar
-                            totalUnits={rows.length}
-                            newArrivalCount={newArrivalRows.length}
-                            onSelectTotalUnits={resetAll}
-                            onSelectNewArrivals={() => setDrillType("new")}
-                        />
-
-                        <ChartsSection
-                            modelPieData={modelPieData}
-                            agingBuckets={agingBuckets}
-                            agingHandlers={{
-                                on0_30: () => setDrillType("0_30"),
-                                on31_60: () => setDrillType("31_60"),
-                                on61_90: () => setDrillType("61_90"),
-                                on90_plus: () => setDrillType("90_plus"),
-                            }}
-                        />
-
-                        <InventoryHealthPanel rows={rows} agingBuckets={agingBuckets} />
-
-                        {!drillType && <NewArrivalsPanel rows={newArrivalRows} />}
-
-                        {drillType ? (
-                            drillData && (
-                                <DrilldownTable
-                                    groups={drillData}
-                                    onBack={resetAll}
-                                    onRowClick={handleRowClick}
-                                />
-                            )
-                        ) : (
-                            <InventoryTable rows={filteredRows} onRowClick={handleRowClick} />
-                        )}
-
-                        <VehicleDetailDrawer
-                            vehicle={selectedVehicle}
-                            onClose={() => setSelectedVehicle(null)}
-                        />
-                    </>
-                )}
-            </main>
-        </div>
-    );
+            <VehicleDetailDrawer
+              vehicle={selectedVehicle}
+              onClose={() => setSelectedVehicle(null)}
+            />
+          </>
+        )}
+      </main>
+    </div>
+  );
 };
 
 export default App;
