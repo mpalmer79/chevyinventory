@@ -1,5 +1,4 @@
-/* Inventory tables */
-
+/* Table shell */
 .table-shell {
   border: 1px solid rgba(148, 163, 184, 0.4);
   border-radius: 14px;
@@ -34,17 +33,15 @@ tbody tr:hover {
   background: rgba(22, 163, 74, 0.08);
 }
 
-/* Clickable rows */
-
+/* Clickable rows in tables */
 .click-row {
   cursor: pointer;
 }
 
-/* Group header row spanning full width (drill-down header rows) */
-
+/* White group header row spanning full width */
 .group-header-row td {
   background: #f9fafb;
-  color: #000000;
+  color: #000000; /* pure black text */
   font-weight: 600;
   padding: 6px 16px;
   text-transform: none;
@@ -60,8 +57,7 @@ tbody tr:hover {
   border-radius: 0 6px 6px 0;
 }
 
-/* Drill-down table group formatting */
-
+/* Drill-down table grouping */
 .drill-group {
   margin-bottom: 28px;
 }
@@ -75,8 +71,7 @@ tbody tr:hover {
   padding-left: 4px;
 }
 
-/* Inventory table column headers */
-
+/* Inventory table column headers + body cells */
 .panel table th {
   text-align: left;
   color: #9ca3af;
