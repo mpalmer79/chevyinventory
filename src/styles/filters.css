@@ -1,54 +1,4 @@
-/* -------- Filters panel + smart search -------- */
-
-.filters-panel {
-  margin-top: 4px;
-}
-
-.filters-layout {
-  display: flex;
-  gap: 24px;
-  align-items: flex-start;
-}
-
-.filters-column {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-width: 320px;
-}
-
-.filter-row {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.filter-row-inline {
-  display: flex;
-  gap: 8px;
-  margin-top: 4px;
-}
-
-.filter-field {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.filter-label {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: #9ca3af;
-}
-
-.invisible-label {
-  visibility: hidden;
-}
-
-/* IMPORTANT: all filter inputs and selects use black text */
-
+/* Filter inputs + selects */
 .filter-select,
 .filter-input {
   width: 100%;
@@ -56,7 +6,7 @@
   border-radius: 8px;
   border: 1px solid rgba(148, 163, 184, 0.35);
   background: rgba(15, 23, 42, 0.9);
-  color: #000000; /* black input text */
+  color: #e5e7eb;
   font-size: 12px;
 }
 
@@ -67,6 +17,7 @@
   box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.25);
 }
 
+/* Checkbox row under filters */
 .checkbox-row {
   margin-top: 4px;
   align-items: center;
@@ -89,75 +40,3 @@
   font-size: 11px;
   color: #9ca3af;
 }
-
-/* Natural language / Smart search column */
-
-.nl-search-column {
-  flex: 1;
-  align-self: stretch;
-}
-
-.nl-search-shell {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 4px;
-}
-
-.mic-button {
-  width: 36px;
-  height: 36px;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.6);
-  background: rgba(15, 23, 42, 0.95);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-}
-
-.mic-button:hover {
-  border-color: #22c55e;
-  box-shadow: 0 0 4px rgba(34, 197, 94, 0.35);
-}
-
-.nl-search-input {
-  flex: 1;
-  padding: 8px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  background: rgba(15, 23, 42, 0.95);
-  color: #e5e7eb;
-  font-size: 13px;
-}
-
-.nl-search-input::placeholder {
-  color: #6b7280;
-}
-
-.nl-search-input:focus {
-  outline: none;
-  border-color: #22c55e;
-  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.25);
-}
-
-.nl-search-hint {
-  margin-top: 4px;
-  font-size: 11px;
-  color: #9ca3af;
-}
-
-/* Force dropdown model list to use black text on white */
-
-select,
-select option {
-  color: #000000 !important;
-  background-color: #ffffff !important;
-}
-
-select:focus,
-select:active {
-  color: #000000 !important;
-}
-
