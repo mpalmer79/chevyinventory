@@ -6,7 +6,7 @@ type FiltersBarProps = {
   models: string[];
   filters: Filters;
   onChange: (filters: Filters) => void;
-  // New: Smart Search callback (voice or typed)
+  // Smart Search callback (voice or typed)
   onSmartSearch: (query: string) => void;
 };
 
@@ -45,7 +45,6 @@ export const FiltersBar: FC<FiltersBarProps> = ({
       w.SpeechRecognition || w.webkitSpeechRecognition || null;
 
     if (!SpeechRecognition) {
-      // Browser does not support Web Speech API – fall back to manual typing
       alert(
         "Voice search is not supported in this browser. Please type your request."
       );
@@ -87,7 +86,7 @@ export const FiltersBar: FC<FiltersBarProps> = ({
   };
 
   return (
-    <section className="panel">
+    <section className="panel filters-panel">
       <div
         style={{
           display: "grid",
@@ -98,6 +97,7 @@ export const FiltersBar: FC<FiltersBarProps> = ({
       >
         {/* Standard filters */}
         <div>
+          {/* MODEL */}
           <div className="section-title">Model</div>
           <select
             value={filters.model}
@@ -112,31 +112,28 @@ export const FiltersBar: FC<FiltersBarProps> = ({
             ))}
           </select>
 
-          <div className="section-title" style={{ marginTop: 16 }}>
-            Year Range
+          {/* CHOOSE YEAR */}
+          <div
+            className="section-title"
+            style={{ marginTop: 16, color: "#000" }} // black label
+          >
+            Choose Year
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <input
-              type="number"
-              placeholder="Min"
-              value={filters.yearMin}
-              onChange={(e) =>
-                handleFilterChange({ yearMin: e.target.value || "" })
-              }
-              style={{ flex: 1 }}
-            />
-            <input
-              type="number"
-              placeholder="Max"
-              value={filters.yearMax}
-              onChange={(e) =>
-                handleFilterChange({ yearMax: e.target.value || "" })
-              }
-              style={{ flex: 1 }}
-            />
-          </div>
+          <select
+            value={filters.year}
+            onChange={(e) => handleFilterChange({ year: e.target.value })}
+            style={{ width: "100%" }}
+          >
+            <option value="ALL">ALL</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+          </select>
 
-          <div className="section-title" style={{ marginTop: 16 }}>
+          {/* MSRP RANGE */}
+          <div
+            className="section-title"
+            style={{ marginTop: 16, color: "#000" }} // black label
+          >
             MSRP Range
           </div>
           <div style={{ display: "flex", gap: 8 }}>
@@ -158,22 +155,6 @@ export const FiltersBar: FC<FiltersBarProps> = ({
               }
               style={{ flex: 1 }}
             />
-          </div>
-
-          <div style={{ marginTop: 16, fontSize: 13 }}>
-            <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <input
-                type="checkbox"
-                checked={filters.atRiskOnly}
-                onChange={(e) =>
-                  handleFilterChange({ atRiskOnly: e.target.checked })
-                }
-              />
-              <span>At Risk Only</span>
-            </label>
-            <div style={{ marginLeft: 18, marginTop: 4, fontSize: 11 }}>
-              90+ days
-            </div>
           </div>
         </div>
 
