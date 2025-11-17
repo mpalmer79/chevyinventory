@@ -15,65 +15,31 @@ import { InventoryTable } from "./components/InventoryTable";
 import { DrilldownTable } from "./components/DrilldownTable";
 import { VehicleDetailDrawer } from "./components/VehicleDetailDrawer";
 
-//
-// STOP WORDS for Smart Search
-//
 const STOP_WORDS = new Set([
-  "i", "im", "i'm", "looking", "for", "to", "the", "a", "an",
-  "with", "show", "me", "find", "need", "want", "please",
+  "i",
+  "im",
+  "i'm",
+  "looking",
+  "for",
+  "to",
+  "the",
+  "a",
+  "an",
+  "with",
+  "show",
+  "me",
+  "find",
+  "need",
+  "want",
+  "please",
+  "inventory",
 ]);
 
-//
-// Normalize text
-//
-const normalize = (str: any) =>
-  (str || "").toString().trim().toLowerCase();
-
-
-//
-// Extract meaningful tokens from user speech/text
-//
-function extractTokens(input: string): string[] {
-  const raw = normalize(input)
-    .split(/\s+/)
-    .filter(Boolean);
-
-  const meaningful = raw.filter((t) => !STOP_WORDS.has(t));
-
-  return meaningful.length > 0 ? meaningful : raw;
-}
-
-//
-// Test if a row matches a Smart Search query
-//
-function matchesSmartSearch(row: InventoryRow, query: string): boolean {
-  if (!query.trim()) return true;
-
-  const tokens = extractTokens(query);
-
-  const haystack = normalize(
-    [
-      row["Stock Number"],
-      row["Short VIN"],
-      row.Make,
-      row.Model,
-      row["Model Number"],
-      row["Exterior Color"],
-      row.Trim,
-      row.Year,
-    ].join(" ")
-  );
-
-  return tokens.every((t) => haystack.includes(t));
-}
-
-//
-// MAIN APP
-//
 const App: FC = () => {
   const { rows, error, sortedRows, modelPieData } = useInventoryData();
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [drillType, setDrillType] = useState<DrillType>(null);
   const [filters, setFilters] = useState<Filters>({
     model: "",
     yearMin: "",
@@ -83,18 +49,21 @@ const App: FC = () => {
     atRiskOnly: false,
   });
 
-  const [drillType, setDrillType] = useState<DrillType>(null);
-  const [selectedVehicle, setSelectedVehicle] =
-    useState<InventoryRow | null>(null);
+  const [selectedVehicle, setSelectedVehicle] = useState<InventoryRow | null>(
+    null
+  );
 
+  // ------------------------------------------------------------
+  // Model List
+  // ------------------------------------------------------------
   const modelsList = useMemo(
     () => Array.from(new Set(rows.map((r) => r.Model))).sort(),
     [rows]
   );
 
-  //
-  // AGING BUCKETS
-  //
+  // ------------------------------------------------------------
+  // Aging Buckets
+  // ------------------------------------------------------------
   const agingBuckets = useMemo<AgingBuckets>(() => {
     const b: AgingBuckets = {
       bucket0_30: 0,
@@ -111,80 +80,94 @@ const App: FC = () => {
     return b;
   }, [rows]);
 
-  //
-  // NEW ARRIVALS
-  //
+  // ------------------------------------------------------------
+  // New Arrivals (sorted by Model)
+  // ------------------------------------------------------------
   const newArrivalRows = useMemo(
-    () => rows.filter((r) => r.Age <= 7).sort((a, b) => a.Model.localeCompare(b.Model)),
+    () =>
+      rows
+        .filter((r) => r.Age <= 7)
+        .sort((a, b) => a.Model.localeCompare(b.Model)),
     [rows]
   );
 
-  //
-  // MASTER FILTER PIPELINE
-  //
+  // ------------------------------------------------------------
+  // FILTER + SEARCH
+  // ------------------------------------------------------------
   const filteredRows = useMemo(() => {
     let data = [...sortedRows];
 
-    // Model filter
     if (filters.model) {
       data = data.filter((r) => r.Model === filters.model);
     }
 
-    // Year range
     if (filters.yearMin) {
-      const y = Number(filters.yearMin);
-      if (!Number.isNaN(y)) {
-        data = data.filter((r) => r.Year >= y);
-      }
+      const minYear = Number(filters.yearMin);
+      if (!isNaN(minYear)) data = data.filter((r) => r.Year >= minYear);
     }
+
     if (filters.yearMax) {
-      const y = Number(filters.yearMax);
-      if (!Number.isNaN(y)) {
-        data = data.filter((r) => r.Year <= y);
-      }
+      const maxYear = Number(filters.yearMax);
+      if (!isNaN(maxYear)) data = data.filter((r) => r.Year <= maxYear);
     }
 
-    // MSRP range
     if (filters.priceMin) {
-      const p = Number(filters.priceMin);
-      if (!Number.isNaN(p)) {
-        data = data.filter((r) => r.MSRP >= p);
-      }
-    }
-    if (filters.priceMax) {
-      const p = Number(filters.priceMax);
-      if (!Number.isNaN(p)) {
-        data = data.filter((r) => r.MSRP <= p);
-      }
+      const min = Number(filters.priceMin);
+      if (!isNaN(min)) data = data.filter((r) => r.MSRP >= min);
     }
 
-    // At-risk filter
+    if (filters.priceMax) {
+      const max = Number(filters.priceMax);
+      if (!isNaN(max)) data = data.filter((r) => r.MSRP <= max);
+    }
+
     if (filters.atRiskOnly) {
       data = data.filter((r) => r.Age > 90);
     }
 
-    // Smart Search + Top Bar Search
+    // Smart Search (natural language)
     if (searchTerm.trim()) {
-      data = data.filter((row) => matchesSmartSearch(row, searchTerm));
+      const rawTokens = searchTerm.toLowerCase().split(/\s+/).filter(Boolean);
+
+      const tokens =
+        rawTokens.filter((t) => !STOP_WORDS.has(t)) || rawTokens;
+
+      data = data.filter((r) => {
+        const haystack = [
+          r["Stock Number"],
+          r["Short VIN"],
+          r.Make,
+          r.Model,
+          r["Model Number"],
+          r["Exterior Color"],
+          r.Trim,
+          String(r.Year),
+        ]
+          .join(" ")
+          .toLowerCase();
+
+        return tokens.every((token) => haystack.includes(token));
+      });
     }
 
     return data;
   }, [sortedRows, filters, searchTerm]);
 
-  //
-  // GROUPING LOGIC FOR DRILL-DOWN
-  //
+  // ------------------------------------------------------------
+  // GROUPING LOGIC
+  // ------------------------------------------------------------
   const buildGroups = (items: InventoryRow[]) => {
     const groups: Record<string, InventoryRow[]> = {};
 
     items.forEach((r) => {
-      const make = normalize(r.Make);
-      const model = normalize(r.Model);
-      const modelNumber = normalize(r["Model Number"]);
+      const make = (r.Make || "").trim();
+      const model = (r.Model || "").trim();
+      const modelNumber = (r["Model Number"] || "").trim();
 
       let key = `${make}|${model}`;
 
-      if (model === "silverado 1500" && modelNumber) {
+      // Silverado 1500 special subgrouping
+      if (model.toUpperCase() === "SILVERADO 1500" && modelNumber) {
         key = `${make}|${model}|${modelNumber}`;
       }
 
@@ -192,57 +175,51 @@ const App: FC = () => {
       groups[key].push(r);
     });
 
-    Object.keys(groups).forEach((k) => {
-      groups[k].sort((a, b) => b.Age - a.Age);
-    });
+    // Sort each group by AGE DESC
+    Object.values(groups).forEach((g) =>
+      g.sort((a, b) => b.Age - a.Age)
+    );
 
     return groups;
   };
 
+  // ------------------------------------------------------------
+  // DRILLDOWN DATA
+  // ------------------------------------------------------------
   const drillData = useMemo(() => {
     if (!drillType) return null;
 
-    let data: InventoryRow[] = [];
+    let result: InventoryRow[] = [];
 
-    switch (drillType) {
-      case "total":
-        data = [...sortedRows];
-        break;
-      case "new":
-        data = [...newArrivalRows];
-        break;
-      case "0_30":
-        data = rows.filter((r) => r.Age <= 30);
-        break;
-      case "31_60":
-        data = rows.filter((r) => r.Age > 30 && r.Age <= 60);
-        break;
-      case "61_90":
-        data = rows.filter((r) => r.Age > 60 && r.Age <= 90);
-        break;
-      case "90_plus":
-        data = rows.filter((r) => r.Age > 90);
-        break;
-    }
+    if (drillType === "total") result = [...sortedRows];
+    if (drillType === "new") result = [...newArrivalRows];
+    if (drillType === "0_30") result = rows.filter((r) => r.Age <= 30);
+    if (drillType === "31_60")
+      result = rows.filter((r) => r.Age > 30 && r.Age <= 60);
+    if (drillType === "61_90")
+      result = rows.filter((r) => r.Age > 60 && r.Age <= 90);
+    if (drillType === "90_plus") result = rows.filter((r) => r.Age > 90);
 
-    data.sort((a, b) => a.Model.localeCompare(b.Model));
-    return buildGroups(data);
+    result.sort((a, b) => a.Model.localeCompare(b.Model));
+    return buildGroups(result);
   }, [drillType, rows, sortedRows, newArrivalRows]);
 
-  //
-  // EVENTS
-  //
+  // ------------------------------------------------------------
+  // VEHICLE DETAIL
+  // ------------------------------------------------------------
   const handleRowClick = (row: InventoryRow) => setSelectedVehicle(row);
   const handleCloseDetail = () => setSelectedVehicle(null);
 
-  // Smart Search — updates the same state used by header search
+  // ------------------------------------------------------------
+  // SMART SEARCH INTEGRATION
+  // ------------------------------------------------------------
   const handleSmartSearch = (query: string) => {
     setSearchTerm(query);
   };
 
-  //
+  // ------------------------------------------------------------
   // RENDER
-  //
+  // ------------------------------------------------------------
   return (
     <div className="app-root">
       <HeaderBar searchTerm={searchTerm} onSearchChange={setSearchTerm} />
@@ -257,6 +234,7 @@ const App: FC = () => {
 
         {rows.length > 0 && (
           <>
+            {/* Filters + SMART SEARCH */}
             <FiltersBar
               models={modelsList}
               filters={filters}
@@ -264,6 +242,7 @@ const App: FC = () => {
               onSmartSearch={handleSmartSearch}
             />
 
+            {/* KPI BAR */}
             <KpiBar
               totalUnits={rows.length}
               newArrivalCount={newArrivalRows.length}
@@ -271,6 +250,7 @@ const App: FC = () => {
               onSelectNewArrivals={() => setDrillType("new")}
             />
 
+            {/* CHARTS */}
             <ChartsSection
               modelPieData={modelPieData}
               agingBuckets={agingBuckets}
@@ -282,10 +262,18 @@ const App: FC = () => {
               }}
             />
 
-            <InventoryHealthPanel rows={rows} agingBuckets={agingBuckets} />
+            {/* INVENTORY HEALTH (HIDDEN DURING DRILLDOWN) */}
+            {!drillType && (
+              <InventoryHealthPanel
+                rows={rows}
+                agingBuckets={agingBuckets}
+              />
+            )}
 
+            {/* NEW ARRIVALS (HIDDEN DURING DRILLDOWN) */}
             {!drillType && <NewArrivalsPanel rows={newArrivalRows} />}
 
+            {/* DRILLDOWN LIST */}
             {drillType ? (
               drillData && (
                 <DrilldownTable
@@ -298,6 +286,7 @@ const App: FC = () => {
               <InventoryTable rows={filteredRows} onRowClick={handleRowClick} />
             )}
 
+            {/* VEHICLE DRAWER */}
             <VehicleDetailDrawer
               vehicle={selectedVehicle}
               onClose={handleCloseDetail}
