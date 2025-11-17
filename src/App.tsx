@@ -15,25 +15,61 @@ import { InventoryTable } from "./components/InventoryTable";
 import { DrilldownTable } from "./components/DrilldownTable";
 import { VehicleDetailDrawer } from "./components/VehicleDetailDrawer";
 
+//
+// STOP WORDS for Smart Search
+//
 const STOP_WORDS = new Set([
-  "i",
-  "im",
-  "i'm",
-  "looking",
-  "for",
-  "to",
-  "the",
-  "a",
-  "an",
-  "with",
-  "show",
-  "me",
-  "find",
-  "need",
-  "want",
-  "please",
+  "i", "im", "i'm", "looking", "for", "to", "the", "a", "an",
+  "with", "show", "me", "find", "need", "want", "please",
 ]);
 
+//
+// Normalize text
+//
+const normalize = (str: any) =>
+  (str || "").toString().trim().toLowerCase();
+
+
+//
+// Extract meaningful tokens from user speech/text
+//
+function extractTokens(input: string): string[] {
+  const raw = normalize(input)
+    .split(/\s+/)
+    .filter(Boolean);
+
+  const meaningful = raw.filter((t) => !STOP_WORDS.has(t));
+
+  return meaningful.length > 0 ? meaningful : raw;
+}
+
+//
+// Test if a row matches a Smart Search query
+//
+function matchesSmartSearch(row: InventoryRow, query: string): boolean {
+  if (!query.trim()) return true;
+
+  const tokens = extractTokens(query);
+
+  const haystack = normalize(
+    [
+      row["Stock Number"],
+      row["Short VIN"],
+      row.Make,
+      row.Model,
+      row["Model Number"],
+      row["Exterior Color"],
+      row.Trim,
+      row.Year,
+    ].join(" ")
+  );
+
+  return tokens.every((t) => haystack.includes(t));
+}
+
+//
+// MAIN APP
+//
 const App: FC = () => {
   const { rows, error, sortedRows, modelPieData } = useInventoryData();
 
@@ -48,15 +84,17 @@ const App: FC = () => {
   });
 
   const [drillType, setDrillType] = useState<DrillType>(null);
-  const [selectedVehicle, setSelectedVehicle] = useState<InventoryRow | null>(
-    null
-  );
+  const [selectedVehicle, setSelectedVehicle] =
+    useState<InventoryRow | null>(null);
 
   const modelsList = useMemo(
     () => Array.from(new Set(rows.map((r) => r.Model))).sort(),
     [rows]
   );
 
+  //
+  // AGING BUCKETS
+  //
   const agingBuckets = useMemo<AgingBuckets>(() => {
     const b: AgingBuckets = {
       bucket0_30: 0,
@@ -73,98 +111,87 @@ const App: FC = () => {
     return b;
   }, [rows]);
 
+  //
+  // NEW ARRIVALS
+  //
   const newArrivalRows = useMemo(
-    () =>
-      rows
-        .filter((r) => r.Age <= 7)
-        .sort((a, b) => a.Model.localeCompare(b.Model)),
+    () => rows.filter((r) => r.Age <= 7).sort((a, b) => a.Model.localeCompare(b.Model)),
     [rows]
   );
 
-  // ---- FILTER + SEARCH (header search + Smart Search both feed searchTerm) ----
+  //
+  // MASTER FILTER PIPELINE
+  //
   const filteredRows = useMemo(() => {
     let data = [...sortedRows];
 
-    if (filters.model) data = data.filter((r) => r.Model === filters.model);
+    // Model filter
+    if (filters.model) {
+      data = data.filter((r) => r.Model === filters.model);
+    }
 
+    // Year range
     if (filters.yearMin) {
-      const minYear = Number(filters.yearMin);
-      if (!Number.isNaN(minYear)) data = data.filter((r) => r.Year >= minYear);
+      const y = Number(filters.yearMin);
+      if (!Number.isNaN(y)) {
+        data = data.filter((r) => r.Year >= y);
+      }
     }
-
     if (filters.yearMax) {
-      const maxYear = Number(filters.yearMax);
-      if (!Number.isNaN(maxYear)) data = data.filter((r) => r.Year <= maxYear);
+      const y = Number(filters.yearMax);
+      if (!Number.isNaN(y)) {
+        data = data.filter((r) => r.Year <= y);
+      }
     }
 
+    // MSRP range
     if (filters.priceMin) {
-      const min = Number(filters.priceMin);
-      if (!Number.isNaN(min)) data = data.filter((r) => r.MSRP >= min);
+      const p = Number(filters.priceMin);
+      if (!Number.isNaN(p)) {
+        data = data.filter((r) => r.MSRP >= p);
+      }
     }
-
     if (filters.priceMax) {
-      const max = Number(filters.priceMax);
-      if (!Number.isNaN(max)) data = data.filter((r) => r.MSRP <= max);
+      const p = Number(filters.priceMax);
+      if (!Number.isNaN(p)) {
+        data = data.filter((r) => r.MSRP <= p);
+      }
     }
 
+    // At-risk filter
     if (filters.atRiskOnly) {
       data = data.filter((r) => r.Age > 90);
     }
 
+    // Smart Search + Top Bar Search
     if (searchTerm.trim()) {
-      const rawTokens = searchTerm
-        .toLowerCase()
-        .split(/\s+/)
-        .filter(Boolean);
-
-      const tokens =
-        rawTokens.filter((t) => !STOP_WORDS.has(t)) || rawTokens;
-
-      data = data.filter((r) => {
-        const haystack = [
-          r["Stock Number"],
-          r["Short VIN"],
-          r.Make,
-          r.Model,
-          r["Model Number"],
-          r["Exterior Color"],
-          r.Trim,
-          String(r.Year),
-        ]
-          .join(" ")
-          .toLowerCase();
-
-        // Every “meaningful” word from the query must appear somewhere
-        return tokens.every((token) => haystack.includes(token));
-      });
+      data = data.filter((row) => matchesSmartSearch(row, searchTerm));
     }
 
     return data;
   }, [sortedRows, filters, searchTerm]);
 
-  // ---- Shared drill-down grouping logic ----
+  //
+  // GROUPING LOGIC FOR DRILL-DOWN
+  //
   const buildGroups = (items: InventoryRow[]) => {
     const groups: Record<string, InventoryRow[]> = {};
 
     items.forEach((r) => {
-      const make = (r.Make || "").toString().trim();
-      const model = (r.Model || "").toString().trim();
-      const modelNumber = (r["Model Number"] || "").toString().trim();
+      const make = normalize(r.Make);
+      const model = normalize(r.Model);
+      const modelNumber = normalize(r["Model Number"]);
 
-      let key: string;
+      let key = `${make}|${model}`;
 
-      // Special handling: SILVERADO 1500 split by Model Number
-      if (model.toUpperCase() === "SILVERADO 1500" && modelNumber) {
+      if (model === "silverado 1500" && modelNumber) {
         key = `${make}|${model}|${modelNumber}`;
-      } else {
-        key = `${make}|${model}`;
       }
 
       if (!groups[key]) groups[key] = [];
       groups[key].push(r);
     });
 
-    // Sort each group by Age descending (oldest first)
     Object.keys(groups).forEach((k) => {
       groups[k].sort((a, b) => b.Age - a.Age);
     });
@@ -175,29 +202,47 @@ const App: FC = () => {
   const drillData = useMemo(() => {
     if (!drillType) return null;
 
-    let result: InventoryRow[] = [];
+    let data: InventoryRow[] = [];
 
-    if (drillType === "total") result = [...sortedRows];
-    if (drillType === "new") result = [...newArrivalRows];
-    if (drillType === "0_30") result = rows.filter((r) => r.Age <= 30);
-    if (drillType === "31_60")
-      result = rows.filter((r) => r.Age > 30 && r.Age <= 60);
-    if (drillType === "61_90")
-      result = rows.filter((r) => r.Age > 60 && r.Age <= 90);
-    if (drillType === "90_plus") result = rows.filter((r) => r.Age > 90);
+    switch (drillType) {
+      case "total":
+        data = [...sortedRows];
+        break;
+      case "new":
+        data = [...newArrivalRows];
+        break;
+      case "0_30":
+        data = rows.filter((r) => r.Age <= 30);
+        break;
+      case "31_60":
+        data = rows.filter((r) => r.Age > 30 && r.Age <= 60);
+        break;
+      case "61_90":
+        data = rows.filter((r) => r.Age > 60 && r.Age <= 90);
+        break;
+      case "90_plus":
+        data = rows.filter((r) => r.Age > 90);
+        break;
+    }
 
-    result.sort((a, b) => a.Model.localeCompare(b.Model));
-    return buildGroups(result);
+    data.sort((a, b) => a.Model.localeCompare(b.Model));
+    return buildGroups(data);
   }, [drillType, rows, sortedRows, newArrivalRows]);
 
+  //
+  // EVENTS
+  //
   const handleRowClick = (row: InventoryRow) => setSelectedVehicle(row);
   const handleCloseDetail = () => setSelectedVehicle(null);
 
-  // Smart Search (mic + text) feeds the same searchTerm as the top header box
+  // Smart Search — updates the same state used by header search
   const handleSmartSearch = (query: string) => {
     setSearchTerm(query);
   };
 
+  //
+  // RENDER
+  //
   return (
     <div className="app-root">
       <HeaderBar searchTerm={searchTerm} onSearchChange={setSearchTerm} />
