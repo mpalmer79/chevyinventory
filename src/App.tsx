@@ -34,6 +34,7 @@ type ModelPieDatum = {
 /* ---------- Constants / helpers ---------- */
 
 const QUIRK_GREEN = "#16a34a";
+const POWDER_BLUE = "#5A6A82"; // powder blue swatch
 const DEFAULT_INVENTORY_PATH = "/inventory.xlsx";
 
 const CHART_COLORS = [
@@ -46,6 +47,14 @@ const CHART_COLORS = [
   "#eab308",
   "#22d3ee",
 ];
+
+// Use powder blue specifically for Silverado 1500; fallback to normal palette for others
+const getModelColor = (name: string, index: number): string => {
+  if (name.toUpperCase() === "SILVERADO 1500") {
+    return POWDER_BLUE;
+  }
+  return CHART_COLORS[index % CHART_COLORS.length];
+};
 
 function formatCurrency(value: number): string {
   if (!Number.isFinite(value)) return "-";
@@ -211,7 +220,7 @@ const ChartsSection: FC<ChartsSectionProps> = ({ modelPieData }) => {
                 {modelPieData.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
-                    fill={CHART_COLORS[index % CHART_COLORS.length]}
+                    fill={getModelColor(entry.name, index)}
                   />
                 ))}
               </Pie>
