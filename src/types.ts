@@ -37,10 +37,7 @@ export type DrillType =
 
 export type Filters = {
   model: string;
-  yearMin: string;
-  yearMax: string;
+  year: string;
   priceMin: string;
   priceMax: string;
-  atRiskOnly: boolean;
 };
-
