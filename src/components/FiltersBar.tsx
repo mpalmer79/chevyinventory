@@ -1,200 +1,247 @@
-// src/components/FiltersBar.tsx
-import React, { FC, useRef, useState } from "react";
-import { Filters } from "../types";
+// src/App.tsx
+import React, { FC, useMemo, useState } from "react";
+import "./style.css";
 
-type FiltersBarProps = {
-  models: string[];
-  filters: Filters;
-  onChange: (filters: Filters) => void;
-  onSmartSearch: (query: string) => void;
-};
+import { useInventoryData } from "./hooks/useInventoryData";
+import { AgingBuckets, DrillType, Filters, InventoryRow } from "./types";
 
-export const FiltersBar: FC<FiltersBarProps> = ({
-  models,
-  filters,
-  onChange,
-  onSmartSearch,
-}) => {
-  const [smartValue, setSmartValue] = useState("");
-  const recognitionRef = useRef<any>(null);
-  const [listening, setListening] = useState(false);
+import { HeaderBar } from "./components/HeaderBar";
+import { FiltersBar } from "./components/FiltersBar";
+import { KpiBar } from "./components/KpiBar";
+import { ChartsSection } from "./components/ChartsSection";
+import { InventoryHealthPanel } from "./components/InventoryHealthPanel";
+import { NewArrivalsPanel } from "./components/NewArrivalsPanel";
+import { InventoryTable } from "./components/InventoryTable";
+import { DrilldownTable } from "./components/DrilldownTable";
+import { VehicleDetailDrawer } from "./components/VehicleDetailDrawer";
 
-  const handleFilterChange = (patch: Partial<Filters>) => {
-    onChange({ ...filters, ...patch });
-  };
+const STOP_WORDS = new Set([
+    "i","im","i'm","looking","for","to","the","a","an",
+    "with","show","me","find","need","want","please"
+]);
 
-  /* ----------------------  Voice Search Trigger  ---------------------- */
-  const handleMicClick = () => {
-    const SpeechRecognition =
-      (window as any).SpeechRecognition ||
-      (window as any).webkitSpeechRecognition;
+const App: FC = () => {
+    const { rows, error, sortedRows, modelPieData } = useInventoryData();
 
-    if (!SpeechRecognition) {
-      alert("Voice search is not supported in this browser.");
-      return;
-    }
+    // ----------------- STATE -----------------
+    const [searchTerm, setSearchTerm] = useState("");
+    const [smartQuery, setSmartQuery] = useState("");
 
-    const recog = new SpeechRecognition();
-    recog.continuous = false;
-    recog.interimResults = false;
-    recog.lang = "en-US";
+    const [filters, setFilters] = useState<Filters>({
+        model: "",
+        year: "ALL",
+        priceMin: "",
+        priceMax: ""
+    });
 
-    recog.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript.trim();
-      setSmartValue(transcript);
-      onSmartSearch(transcript);
+    const [drillType, setDrillType] = useState<DrillType>(null);
+    const [selectedVehicle, setSelectedVehicle] = useState<InventoryRow | null>(null);
+
+    // ----------------- MICROPHONE -----------------
+    const handleVoiceSearch = () => {
+        const SpeechRecognition =
+            (window as any).SpeechRecognition ||
+            (window as any).webkitSpeechRecognition;
+
+        if (!SpeechRecognition) {
+            alert("Voice search not supported on this device.");
+            return;
+        }
+
+        const recog = new SpeechRecognition();
+        recog.continuous = false;
+        recog.interimResults = false;
+        recog.lang = "en-US";
+
+        recog.onresult = (event: any) => {
+            const text = event.results[0][0].transcript.trim();
+            setSmartQuery(text);
+            setSearchTerm(text);
+        };
+
+        recog.onerror = (e: any) => console.error("Speech error:", e);
+        recog.start();
     };
 
-    recog.onend = () => setListening(false);
+    // ----------------- FILTERED LIST -----------------
+    const filteredRows = useMemo(() => {
+        let data = [...sortedRows];
 
-    setListening(true);
-    recog.start();
-    recognitionRef.current = recog;
-  };
+        if (filters.model) {
+            data = data.filter((r) => r.Model === filters.model);
+        }
 
-  const handleSmartSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      onSmartSearch(smartValue.trim());
-    }
-  };
+        if (filters.year !== "ALL") {
+            const yr = Number(filters.year);
+            data = data.filter((r) => r.Year === yr);
+        }
 
-  return (
-    <section className="panel filters-panel">
+        if (filters.priceMin) {
+            data = data.filter((r) => r.MSRP >= Number(filters.priceMin));
+        }
 
-      {/* -------------------- NEW: Voice Search Trigger -------------------- */}
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 12 }}>
-        <button
-          onClick={handleMicClick}
-          aria-label="Voice Search"
-          style={{
-            width: 44,
-            height: 44,
-            borderRadius: "50%",
-            border: listening
-              ? "2px solid #4ade80"
-              : "2px solid rgba(148,163,184,0.6)",
-            background: "rgba(15,23,42,0.85)",
-            color: "#fff",
-            fontSize: 20,
-          }}
-        >
-          🎤
-        </button>
-      </div>
+        if (filters.priceMax) {
+            data = data.filter((r) => r.MSRP <= Number(filters.priceMax));
+        }
 
-      <div className="filters-layout">
+        if (searchTerm.trim() !== "") {
+            const rawTokens = searchTerm.toLowerCase().split(/\s+/).filter(Boolean);
+            const tokens = rawTokens.filter((t) => !STOP_WORDS.has(t));
 
-        {/* LEFT COLUMN: MODEL + YEAR + MSRP */}
-        <div className="filters-column">
-          {/* MODEL */}
-          <div className="filter-row">
-            <label className="filter-label">MODEL</label>
-            <select
-              className="filter-select"
-              value={filters.model}
-              onChange={(e) => handleFilterChange({ model: e.target.value })}
-              style={{ color: "#fff", background: "rgba(15,23,42,0.9)" }}
-            >
-              <option value="">All Models</option>
-              {models.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
-          </div>
+            data = data.filter((r) => {
+                const haystack = [
+                    r["Stock Number"],
+                    r["Short VIN"],
+                    r.Make,
+                    r.Model,
+                    r["Model Number"],
+                    r["Exterior Color"],
+                    r.Trim,
+                    String(r.Year),
+                ]
+                    .join(" ")
+                    .toLowerCase();
 
-          {/* YEAR DROPDOWN */}
-          <div className="filter-row" style={{ marginTop: 14 }}>
-            <label className="filter-label" style={{ color: "#fff" }}>
-              CHOOSE YEAR
-            </label>
-            <select
-              className="filter-select"
-              value={filters.yearMin}
-              onChange={(e) => handleFilterChange({ yearMin: e.target.value })}
-              style={{ color: "#fff", background: "rgba(15,23,42,0.9)" }}
-            >
-              <option value="">ALL</option>
-              <option value="2025">2025</option>
-              <option value="2026">2026</option>
-            </select>
-          </div>
+                return tokens.every((token) => haystack.includes(token));
+            });
+        }
 
-          {/* MSRP RANGE */}
-          <div className="filter-row" style={{ marginTop: 14 }}>
-            <label className="filter-label" style={{ color: "#fff" }}>
-              MSRP RANGE
-            </label>
-            <div className="filter-row-inline">
-              <input
-                type="number"
-                placeholder="Min"
-                className="filter-input"
-                value={filters.priceMin}
-                onChange={(e) =>
-                  handleFilterChange({ priceMin: e.target.value })
-                }
-                style={{ color: "#fff" }}
-              />
-              <input
-                type="number"
-                placeholder="Max"
-                className="filter-input"
-                value={filters.priceMax}
-                onChange={(e) =>
-                  handleFilterChange({ priceMax: e.target.value })
-                }
-                style={{ color: "#fff" }}
-              />
-            </div>
-          </div>
+        return data;
+    }, [sortedRows, filters, searchTerm]);
 
-          {/* NEW SEARCH PILL BUTTON */}
-          <div style={{ marginTop: 14 }}>
-            <button
-              onClick={() =>
-                onSmartSearch(
-                  `${filters.model} ${filters.yearMin} ${filters.priceMin}-${filters.priceMax}`
-                )
-              }
-              style={{
-                width: "100%",
-                padding: "10px 0",
-                background: "#22c55e",
-                color: "#000",
-                fontWeight: 600,
-                borderRadius: 999,
-                border: "none",
-                fontSize: 14,
-                cursor: "pointer",
-              }}
-            >
-              SEARCH
-            </button>
-          </div>
+    // ----------------- NEW ARRIVALS -----------------
+    const newArrivalRows = useMemo(
+        () => rows.filter((r) => r.Age <= 7).sort((a, b) => a.Model.localeCompare(b.Model)),
+        [rows]
+    );
+
+    // ----------------- AGING BUCKETS -----------------
+    const agingBuckets: AgingBuckets = useMemo(() => {
+        const b = { bucket0_30: 0, bucket31_60: 0, bucket61_90: 0, bucket90_plus: 0 };
+        rows.forEach((r) => {
+            if (r.Age <= 30) b.bucket0_30++;
+            else if (r.Age <= 60) b.bucket31_60++;
+            else if (r.Age <= 90) b.bucket61_90++;
+            else b.bucket90_plus++;
+        });
+        return b;
+    }, [rows]);
+
+    // ----------------- DRILLDOWN -----------------
+    const buildGroups = (items: InventoryRow[]) => {
+        const groups: Record<string, InventoryRow[]> = {};
+        items.forEach((r) => {
+            const key = `${r.Make}|${r.Model}|${r["Model Number"]}`;
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(r);
+        });
+
+        Object.values(groups).forEach((g) =>
+            g.sort((a, b) => b.Age - a.Age)
+        );
+
+        return groups;
+    };
+
+    const drillData = useMemo(() => {
+        if (!drillType) return null;
+
+        let result: InventoryRow[] = [];
+
+        if (drillType === "total") result = [...sortedRows];
+        if (drillType === "new") result = [...newArrivalRows];
+        if (drillType === "0_30") result = rows.filter((r) => r.Age <= 30);
+        if (drillType === "31_60") result = rows.filter((r) => r.Age > 30 && r.Age <= 60);
+        if (drillType === "61_90") result = rows.filter((r) => r.Age > 60 && r.Age <= 90);
+        if (drillType === "90_plus") result = rows.filter((r) => r.Age > 90);
+
+        result.sort((a, b) => a.Model.localeCompare(b.Model));
+        return buildGroups(result);
+    }, [drillType, rows, sortedRows, newArrivalRows]);
+
+    const resetAll = () => {
+        setDrillType(null);
+        setSearchTerm("");
+        setSmartQuery("");
+        setFilters({ model: "", year: "ALL", priceMin: "", priceMax: "" });
+    };
+
+    const handleRowClick = (row: InventoryRow) => setSelectedVehicle(row);
+
+    // ----------------- UI -----------------
+    return (
+        <div className="app-root">
+            <HeaderBar searchTerm={searchTerm} onSearchChange={setSearchTerm} />
+
+            <main className="app-main">
+                {/* Microphone button outside search bar */}
+                <button
+                    className="mic-float-btn"
+                    onClick={handleVoiceSearch}
+                    aria-label="Voice Search"
+                >
+                    🎤
+                </button>
+
+                {error && (
+                    <section className="panel error-panel">
+                        <div className="section-title">File Error</div>
+                        <p>{error}</p>
+                    </section>
+                )}
+
+                {rows.length > 0 && (
+                    <>
+                        <FiltersBar
+                            models={Array.from(new Set(rows.map((r) => r.Model))).sort()}
+                            filters={filters}
+                            onChange={setFilters}
+                            onSearchClick={() => setSearchTerm(smartQuery)}
+                        />
+
+                        <KpiBar
+                            totalUnits={rows.length}
+                            newArrivalCount={newArrivalRows.length}
+                            onSelectTotalUnits={resetAll}
+                            onSelectNewArrivals={() => setDrillType("new")}
+                        />
+
+                        <ChartsSection
+                            modelPieData={modelPieData}
+                            agingBuckets={agingBuckets}
+                            agingHandlers={{
+                                on0_30: () => setDrillType("0_30"),
+                                on31_60: () => setDrillType("31_60"),
+                                on61_90: () => setDrillType("61_90"),
+                                on90_plus: () => setDrillType("90_plus"),
+                            }}
+                        />
+
+                        <InventoryHealthPanel rows={rows} agingBuckets={agingBuckets} />
+
+                        {!drillType && <NewArrivalsPanel rows={newArrivalRows} />}
+
+                        {drillType ? (
+                            drillData && (
+                                <DrilldownTable
+                                    groups={drillData}
+                                    onBack={resetAll}
+                                    onRowClick={handleRowClick}
+                                />
+                            )
+                        ) : (
+                            <InventoryTable rows={filteredRows} onRowClick={handleRowClick} />
+                        )}
+
+                        <VehicleDetailDrawer
+                            vehicle={selectedVehicle}
+                            onClose={() => setSelectedVehicle(null)}
+                        />
+                    </>
+                )}
+            </main>
         </div>
-
-        {/* RIGHT COLUMN: Smart Search text box */}
-        <div className="nl-search-column">
-          <label className="filter-label" style={{ color: "#fff" }}>
-            SMART SEARCH
-          </label>
-
-          <input
-            className="nl-search-input"
-            type="text"
-            value={smartValue}
-            placeholder="Type something or press the mic..."
-            onChange={(e) => setSmartValue(e.target.value)}
-            onKeyDown={handleSmartSubmit}
-          />
-
-          <div className="nl-search-hint">
-            Try “blue Silverado 1500” or “Traverse 3LT 2025”.
-          </div>
-        </div>
-      </div>
-    </section>
-  );
+    );
 };
+
+export default App;
