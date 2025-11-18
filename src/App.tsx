@@ -136,7 +136,10 @@ const App: FC = () => {
 
   return (
     <div className="app-root">
-      <HeaderBar />
+      <HeaderBar 
+        searchTerm={searchTerm}
+        onSearchChange={handleSmartSearch}
+      />
 
       <main className="container">
         {error && (
