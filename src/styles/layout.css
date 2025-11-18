@@ -12,9 +12,10 @@
   padding: 16px 18px;
   border: 1px solid rgba(148, 163, 184, 0.3);
   box-shadow: 0 18px 45px rgba(15, 23, 42, 0.7);
+  box-sizing: border-box;
 }
 
-/* Grid for chart + aging block */
+/* Grid for chart + aging block (desktop default) */
 .panel-grid {
   display: grid;
   grid-template-columns: 1.3fr 1fr;
@@ -26,10 +27,9 @@
   margin-top: 4px;
 }
 
-/* Use a grid for the filters panel so the right column can host InventoryHealthPanel */
+/* Desktop: filters panel uses grid so left column is fixed width and right column is flexible */
 .filters-layout {
   display: grid;
-  /* left column: fixed filter controls width; right column: flexible content area */
   grid-template-columns: 280px 1fr;
   gap: 24px;
   align-items: start;
@@ -64,12 +64,11 @@
   gap: 4px;
 }
 
-/* Right-hand column inside the filters panel that holds the InventoryHealthPanel
-   (previously the natural language search area) */
+/* Right-hand column inside the filters panel that holds the InventoryHealthPanel */
 .nl-search-column {
   display: block;
   width: 100%;
-  min-height: 320px; /* reserve vertical space for the Inventory Health card */
+  min-height: 320px; /* reserve vertical space for Inventory Health panel on desktop */
   padding-left: 12px;
   box-sizing: border-box;
 }
@@ -90,7 +89,7 @@
   margin-bottom: 12px;
 }
 
-/* Add this at the end of src/styles/layout.css to reduce interference with Recharts tooltip wrapper */
+/* Recharts tooltips safety */
 .recharts-tooltip-wrapper {
   background: transparent !important;
   box-shadow: none !important;
@@ -103,24 +102,23 @@
   box-shadow: none !important;
 }
 
-/* ----- CENTER PAGE CONTENT (NEW) -----
-   Constrain the main container and common page-grid wrappers so the dashboard
-   sits centered in the viewport. Adjust --page-width to taste (e.g. 1180px). */
-
+/* ----- CENTER PAGE CONTENT (desktop) -----
+   Constrain the main container so the dashboard sits centered in the viewport.
+   --page-width controls the content column width on larger screens. */
 :root {
-  --page-width: 1180px; /* change this value to make the layout wider/narrower */
+  --page-width: 1180px;
   --page-padding: 18px;
 }
 
 /* Center the main content area used by App.tsx */
 .container {
   max-width: var(--page-width);
-  margin: 0 auto;        /* horizontally center the page content */
+  margin: 0 auto;
   padding: var(--page-padding);
   box-sizing: border-box;
 }
 
-/* Constrain the major dashboard grid wrappers and center them */
+/* Constrain the major dashboard wrappers to fill the centered container */
 .kpi-row,
 .panel-grid,
 .filters-layout,
@@ -143,7 +141,7 @@
 .panel-grid {
   max-width: var(--page-width);
   margin: 12px auto;
-  grid-template-columns: 1.35fr 1fr; /* keep original ratio but constrained to max width */
+  grid-template-columns: 1.35fr 1fr;
 }
 
 /* Ensure the filter column does not push the layout off-center */
@@ -160,14 +158,14 @@
   grid-template-columns: 1fr 1fr;
 }
 
-/* Utility: when individual blocks inside panels have side margins, let them wrap */
+/* Utility: avoid overflowing children */
 .panel > * {
   max-width: 100%;
   overflow-wrap: anywhere;
   box-sizing: border-box;
 }
 
-/* If you have specific wide children (charts etc.), make them responsive */
+/* Ensure specific large children are responsive */
 .charts-section,
 .inventory-table,
 .new-arrivals,
@@ -177,40 +175,12 @@
   box-sizing: border-box;
 }
 
-/* Prevent any left-floating or fixed widths from pushing the layout */
+/* Make sure the entire document respects border-box sizing */
 * {
   box-sizing: border-box;
 }
 
-/* Responsive: reduce left/right padding on small screens */
-@media (max-width: 1200px) {
-  :root {
-    --page-width: calc(100% - 48px);
-    --page-padding: 12px;
-  }
-
-  .container {
-    padding: 12px;
-  }
-
-  /* On smaller screens switch to a single column so filters stack above Inventory Health */
-  .filters-layout {
-    display: grid;
-    grid-template-columns: 1fr;
-  }
-
-  .filters-column {
-    max-width: 100%;
-    min-width: 0;
-  }
-
-  .nl-search-column {
-    min-height: 180px;
-    padding-left: 0;
-  }
-}
-
-/* Extra safeguard: ensure the body background stays visible and centered when content is narrower */
+/* Extra safeguard: ensure the body background stays visible and centered */
 body {
   min-height: 100vh;
   display: block;
