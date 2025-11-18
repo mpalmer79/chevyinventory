@@ -51,10 +51,21 @@ const App: FC = () => {
     null
   );
 
-  const modelsList = useMemo(
-    () => Array.from(new Set(rows.map((r) => r.Model))).sort(),
-    [rows]
-  );
+  const modelsList = useMemo(() => {
+    const modelsSet = new Set<string>();
+    
+    rows.forEach((r) => {
+      // Special handling for SILVERADO 1500 - break down by Model Number
+      if (r.Model === "SILVERADO 1500" && r["Model Number"]) {
+        modelsSet.add(`SILVERADO 1500 ${r["Model Number"]}`);
+      } else {
+        // All other models remain as-is
+        modelsSet.add(r.Model);
+      }
+    });
+    
+    return Array.from(modelsSet).sort();
+  }, [rows]);
 
   const agingBuckets = useMemo<AgingBuckets>(() => {
     const b = {
@@ -77,9 +88,20 @@ const App: FC = () => {
   // Apply filters to sorted rows
   const filteredRows = useMemo(() => {
     return sortedRows.filter((row) => {
-      // Filter by model
-      if (filters.model && row.Model !== filters.model) {
-        return false;
+      // Filter by model (with special handling for SILVERADO 1500 + Model Number)
+      if (filters.model) {
+        // Check if this is a composite SILVERADO 1500 selection
+        if (filters.model.startsWith("SILVERADO 1500 ")) {
+          const modelNumber = filters.model.replace("SILVERADO 1500 ", "");
+          if (row.Model !== "SILVERADO 1500" || row["Model Number"] !== modelNumber) {
+            return false;
+          }
+        } else {
+          // Standard model filtering
+          if (row.Model !== filters.model) {
+            return false;
+          }
+        }
       }
 
       // Filter by year
