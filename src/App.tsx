@@ -181,6 +181,9 @@ const App: FC = () => {
     return buildGroups(result);
   }, [drillType, rows, filteredRows, newArrivalRows]);
 
+  // Check if model filter is active
+  const hasModelFilter = !!filters.model;
+
   return (
     <div className="app-root">
       <HeaderBar 
@@ -214,23 +217,29 @@ const App: FC = () => {
               onReset={handleReset}
             />
 
-            <KpiBar
-              totalUnits={filteredRows.length}
-              newArrivalCount={filteredNewArrivals.length}
-              onSelectTotalUnits={handleReset}
-              onSelectNewArrivals={() => setDrillType("new")}
-            />
+            {/* Hide KpiBar when model filter is active */}
+            {!hasModelFilter && (
+              <KpiBar
+                totalUnits={filteredRows.length}
+                newArrivalCount={filteredNewArrivals.length}
+                onSelectTotalUnits={handleReset}
+                onSelectNewArrivals={() => setDrillType("new")}
+              />
+            )}
 
-            <ChartsSection
-              modelPieData={modelPieData}
-              agingBuckets={agingBuckets}
-              agingHandlers={{
-                on0_30: () => setDrillType("0_30"),
-                on31_60: () => setDrillType("31_60"),
-                on61_90: () => setDrillType("61_90"),
-                on90_plus: () => setDrillType("90_plus"),
-              }}
-            />
+            {/* Hide ChartsSection when model filter is active */}
+            {!hasModelFilter && (
+              <ChartsSection
+                modelPieData={modelPieData}
+                agingBuckets={agingBuckets}
+                agingHandlers={{
+                  on0_30: () => setDrillType("0_30"),
+                  on31_60: () => setDrillType("31_60"),
+                  on61_90: () => setDrillType("61_90"),
+                  on90_plus: () => setDrillType("90_plus"),
+                }}
+              />
+            )}
 
             {/* NewArrivalsPanel remains below; it will be hidden when:
                 1. An aging bucket drill is active, OR
