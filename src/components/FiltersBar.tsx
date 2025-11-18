@@ -17,6 +17,7 @@ type FiltersBarProps = {
   drillData: Record<string, InventoryRow[]> | null;
   onSetDrillType: (d: DrillType) => void;
   onRowClick: (r: InventoryRow) => void;
+  onReset: () => void;
 };
 
 export const FiltersBar: FC<FiltersBarProps> = ({
@@ -30,6 +31,7 @@ export const FiltersBar: FC<FiltersBarProps> = ({
   drillData,
   onSetDrillType,
   onRowClick,
+  onReset,
 }) => {
   const handleFilterChange = (patch: Partial<Filters>) => {
     onChange({ ...filters, ...patch });
@@ -84,11 +86,18 @@ export const FiltersBar: FC<FiltersBarProps> = ({
             Stock Number
           </div>
           <input
-            className="filter-input"
+            className="filter-select"
             placeholder="STOCK #"
             value={filters.stockNumber}
             onChange={(e) => handleFilterChange({ stockNumber: e.target.value })}
-            style={{ width: "100%" }}
+            style={{ 
+              width: "100%",
+              borderRadius: 8,
+              background: "#ffffff",
+              color: "#000000",
+              padding: "8px 12px",
+              border: "1px solid rgba(148,163,184,0.3)",
+            }}
           />
 
           <div style={{ marginTop: 12 }}>
@@ -109,6 +118,26 @@ export const FiltersBar: FC<FiltersBarProps> = ({
               }}
             >
               SEARCH
+            </button>
+          </div>
+
+          <div style={{ marginTop: 8 }}>
+            <button 
+              onClick={onReset}
+              style={{
+                background: "#000000",
+                color: "#ffffff",
+                padding: "10px 24px",
+                borderRadius: 20,
+                border: "none",
+                cursor: "pointer",
+                fontWeight: 600,
+                fontSize: 14,
+                letterSpacing: "0.05em",
+                width: "100%",
+              }}
+            >
+              VIEW ALL
             </button>
           </div>
         </div>
