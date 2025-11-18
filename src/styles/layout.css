@@ -26,23 +26,29 @@
   margin-top: 4px;
 }
 
+/* Use a grid for the filters panel so the right column can host InventoryHealthPanel */
 .filters-layout {
-  display: flex;
+  display: grid;
+  /* left column: fixed filter controls width; right column: flexible content area */
+  grid-template-columns: 280px 1fr;
   gap: 24px;
-  align-items: flex-start;
+  align-items: start;
 }
 
+/* left column for filters (drop-downs, search button, etc.) */
 .filters-column {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  max-width: 320px;
+  gap: 12px;
+  max-width: 280px;
+  min-width: 260px;
 }
 
+/* filter row and inline rows */
 .filter-row {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .filter-row-inline {
@@ -58,17 +64,22 @@
   gap: 4px;
 }
 
-/* Natural-language search column in filters panel */
+/* Right-hand column inside the filters panel that holds the InventoryHealthPanel
+   (previously the natural language search area) */
 .nl-search-column {
-  flex: 1;
-  align-self: stretch;
+  display: block;
+  width: 100%;
+  min-height: 320px; /* reserve vertical space for the Inventory Health card */
+  padding-left: 12px;
+  box-sizing: border-box;
 }
 
+/* If you render a natural language search box above inventory health, keep alignment */
 .nl-search-shell {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 4px;
+  margin-bottom: 12px;
 }
 
 /* Drill-down header layout */
@@ -96,7 +107,6 @@
    Constrain the main container and common page-grid wrappers so the dashboard
    sits centered in the viewport. Adjust --page-width to taste (e.g. 1180px). */
 
-/* Page variables */
 :root {
   --page-width: 1180px; /* change this value to make the layout wider/narrower */
   --page-padding: 18px;
@@ -178,8 +188,25 @@
     --page-width: calc(100% - 48px);
     --page-padding: 12px;
   }
+
   .container {
     padding: 12px;
+  }
+
+  /* On smaller screens switch to a single column so filters stack above Inventory Health */
+  .filters-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .filters-column {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .nl-search-column {
+    min-height: 180px;
+    padding-left: 0;
   }
 }
 
