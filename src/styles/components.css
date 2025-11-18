@@ -1,11 +1,26 @@
+/* src/styles/components.css
+   Shared component styles used across the dashboard.
+   This file contains existing styles (filter labels, mic button, NL search input)
+   plus the targeted rule to center the Inventory Health panel title. */
+
+/* Section title used across panels */
+.section-title {
+  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  color: #9ca3af;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
 /* Filter labels + descriptions */
 .filter-label {
   font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
   color: #9ca3af;
+  letter-spacing: 0.12em;
 }
 
+/* Invisible label helper */
 .invisible-label {
   visibility: hidden;
 }
@@ -55,12 +70,177 @@
   font-size: 11px;
   color: #9ca3af;
 }
-/* Center the Inventory Health panel title */
-.inventory-health-panel .section-title {
-  text-align: center;
-  width: 100%;
-  margin-left: 0;
-  margin-right: 0;
-  /* optional spacing tweak so centered title sits nicely */
+
+/* Mobile card helpers (used by InventoryHealthPanel and InventoryTable) */
+.mobile-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mobile-card {
+  background: rgba(15,23,42,0.94);
+  border: 1px solid rgba(148,163,184,0.35);
+  border-radius: 14px;
+  padding: 12px;
+  cursor: pointer;
+}
+
+.mobile-card-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.mc-stock {
+  background: rgba(148,163,184,0.25);
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: white;
+}
+
+.mc-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: white;
+}
+
+.mobile-card-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(148,163,184,0.15);
+  color: #e5e7eb;
+  font-size: 13px;
+}
+
+.mobile-card-row:last-child {
+  border-bottom: none;
+}
+
+/* Back button / drill header styling */
+.back-button {
+  background: transparent;
+  border: 1px solid rgba(148,163,184,0.28);
+  color: #e6f7ef;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.drill-header .drill-title {
+  font-weight: 700;
+  color: #e6f7ef;
+}
+
+/* Inventory health list styles */
+.health-grid {
+  display: flex;
+  gap: 12px;
   margin-bottom: 12px;
 }
+
+.health-card {
+  background: rgba(2,6,23,0.6);
+  border-radius: 12px;
+  padding: 12px;
+  flex: 1;
+  min-width: 160px;
+}
+
+.health-label {
+  color: #9ca3af;
+  font-size: 12px;
+  text-transform: none;
+  margin-bottom: 6px;
+}
+
+.health-value {
+  font-weight: 700;
+  font-size: 20px;
+  color: #e6f7ef;
+}
+
+.health-sub {
+  font-size: 12px;
+  color: #9ca3af;
+  font-weight: 600;
+  margin-left: 6px;
+}
+
+/* Health lists and columns */
+.health-layout {
+  display: flex;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.health-column {
+  flex: 1;
+}
+
+.health-subtitle {
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #e6f7ef;
+}
+
+.health-list {
+  list-style: none;
+  padding-left: 0;
+  color: #e6f7ef;
+  line-height: 1.6;
+}
+
+/* Table shell used for desktop drill view */
+.table-shell {
+  background: transparent;
+}
+
+/* Section title centering for Inventory Health panel
+   This is intentionally specific so other .section-title usages are unaffected. */
+.inventory-health-panel > .section-title,
+.inventory-health-panel .section-title {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center !important;
+  width: 100%;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  box-sizing: border-box;
+  margin-bottom: 12px;
+}
+
+/* If you prefer the title to appear with extra vertical space, uncomment:
+.inventory-health-panel > .section-title { height: 48px; align-items: center; }
+*/
+
+/* small utility tweaks */
+.click-row {
+  cursor: pointer;
+}
+
+.arrival-card {
+  background: rgba(2,6,23,0.7);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.arrival-stock {
+  background: rgba(148,163,184,0.18);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: white;
+}
+
+/* keep color utilities consistent */
+.white-text { color: #ffffff; }
+.muted { color: #9ca3af; }
