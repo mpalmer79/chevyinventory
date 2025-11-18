@@ -43,6 +43,12 @@ export const FiltersBar: FC<FiltersBarProps> = ({
 
   // Check if model filter is active
   const hasModelFilter = !!filters.model;
+  
+  // Check if the selected model is SILVERADO 1500 CK10543
+  const isSpecialModel = filters.model === "SILVERADO 1500 CK10543";
+  
+  // Check if desktop mode (window width >= 768px)
+  const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
 
   return (
     <section className="panel filters-panel">
@@ -145,23 +151,49 @@ export const FiltersBar: FC<FiltersBarProps> = ({
           </div>
         </div>
 
-        {/* RIGHT: natural language search / InventoryHealth placeholder */}
-        {/* Hide InventoryHealthPanel when model filter is active */}
-        {!hasModelFilter && (
-          <div className="nl-search-column" style={{ flex: 1, minHeight: 220 }}>
-            {/* Render the Inventory Health card inside this right-side area.
-                When drillType is set, InventoryHealthPanel will show the drilldown.
-                We pass onSetDrillType to allow the panel to clear (Back). */}
-            <InventoryHealthPanel
-              rows={rows}
-              agingBuckets={agingBuckets}
-              drillType={drillType}
-              drillData={drillData}
-              onBack={() => onSetDrillType(null)}
-              onRowClick={onRowClick}
-            />
-          </div>
-        )}
+        {/* RIGHT: conditional display area */}
+        <div className="nl-search-column" style={{ flex: 1, minHeight: 220 }}>
+          {/* Show special image for SILVERADO 1500 CK10543 on desktop only */}
+          {isSpecialModel && isDesktop ? (
+            <div 
+              style={{
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
+                borderRadius: 12,
+                padding: 20,
+                minHeight: 400,
+              }}
+            >
+              <img 
+                src="/CK10543.jpg" 
+                alt="2026 Chevrolet Silverado 1500 CK10543"
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: "100%",
+                  objectFit: "contain",
+                  borderRadius: 8,
+                  boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+                }}
+              />
+            </div>
+          ) : (
+            /* Show InventoryHealthPanel when model filter is NOT active or not the special model */
+            !hasModelFilter && (
+              <InventoryHealthPanel
+                rows={rows}
+                agingBuckets={agingBuckets}
+                drillType={drillType}
+                drillData={drillData}
+                onBack={() => onSetDrillType(null)}
+                onRowClick={onRowClick}
+              />
+            )
+          )}
+        </div>
       </div>
     </section>
   );
