@@ -43,6 +43,7 @@ const App: FC = () => {
     year: "ALL",
     priceMin: "",
     priceMax: "",
+    stockNumber: "",
   });
 
   const [drillType, setDrillType] = useState<DrillType>(null);
@@ -101,6 +102,15 @@ const App: FC = () => {
         }
       }
 
+      // Filter by stock number
+      if (filters.stockNumber) {
+        const stockNum = filters.stockNumber.toLowerCase().trim();
+        const rowStockNum = row["Stock Number"].toLowerCase().trim();
+        if (!rowStockNum.includes(stockNum)) {
+          return false;
+        }
+      }
+
       return true;
     });
   }, [sortedRows, filters]);
@@ -130,7 +140,7 @@ const App: FC = () => {
   };
 
   const handleReset = () => {
-    setFilters({ model: "", year: "ALL", priceMin: "", priceMax: "" });
+    setFilters({ model: "", year: "ALL", priceMin: "", priceMax: "", stockNumber: "" });
     setSearchTerm("");
     setDrillType(null);
   };
