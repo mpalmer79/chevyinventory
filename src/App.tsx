@@ -9,7 +9,7 @@ import { HeaderBar } from "./components/HeaderBar";
 import { FiltersBar } from "./components/FiltersBar";
 import { KpiBar } from "./components/KpiBar";
 import { ChartsSection } from "./components/ChartsSection";
-import { InventoryHealthPanel } from "./components/InventoryHealthPanel";
+// InventoryHealthPanel is now rendered inside FiltersBar (moved), so no longer rendered here.
 import { NewArrivalsPanel } from "./components/NewArrivalsPanel";
 import { InventoryTable } from "./components/InventoryTable";
 import { DrilldownTable } from "./components/DrilldownTable";
@@ -148,11 +148,19 @@ const App: FC = () => {
 
         {rows.length > 0 && (
           <>
+            {/* Pass inventory and drill props into FiltersBar so the Inventory Health card
+                can render inside the filters panel right-side area (red rectangle). */}
             <FiltersBar
               models={modelsList}
               filters={filters}
               onChange={setFilters}
               onSmartSearch={handleSmartSearch}
+              rows={rows}
+              agingBuckets={agingBuckets}
+              drillType={drillType}
+              drillData={drillData}
+              onSetDrillType={setDrillType}
+              onRowClick={(r) => setSelectedVehicle(r)}
             />
 
             <KpiBar
@@ -173,19 +181,7 @@ const App: FC = () => {
               }}
             />
 
-            {/* InventoryHealthPanel now receives drillType/drillData so it can render a drilldown
-                inside the same panel (replacing the summary when an aging bucket is selected). */}
-            <InventoryHealthPanel
-              rows={rows}
-              agingBuckets={agingBuckets}
-              drillType={drillType}
-              drillData={drillData}
-              onBack={() => setDrillType(null)}
-              onRowClick={(r) => setSelectedVehicle(r)}
-            />
-
-            {/* Hide NewArrivalsPanel when viewing an aging bucket drill so the InventoryHealth panel
-                shows the selected bucket's inventory in-place (per your request). */}
+            {/* NewArrivalsPanel remains below; it will be hidden by the FiltersBar/InventoryHealthPanel logic when a bucket is drilled. */}
             {!(
               drillType === "0_30" ||
               drillType === "31_60" ||
@@ -193,7 +189,6 @@ const App: FC = () => {
               drillType === "90_plus"
             ) && <NewArrivalsPanel rows={newArrivalRows} />}
 
-            {/* Keep the main inventory table and optional drilldown table below */}
             <InventoryTable
               rows={sortedRows}
               onRowClick={(r) => setSelectedVehicle(r)}
