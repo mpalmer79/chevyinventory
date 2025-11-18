@@ -16,8 +16,22 @@ import { DrilldownTable } from "./components/DrilldownTable";
 import { VehicleDetailDrawer } from "./components/VehicleDetailDrawer";
 
 const STOP_WORDS = new Set([
-  "i","im","i'm","looking","for","to","the","a","an","with",
-  "show","me","find","need","want","please"
+  "i",
+  "im",
+  "i'm",
+  "looking",
+  "for",
+  "to",
+  "the",
+  "a",
+  "an",
+  "with",
+  "show",
+  "me",
+  "find",
+  "need",
+  "want",
+  "please",
 ]);
 
 const App: FC = () => {
@@ -28,12 +42,13 @@ const App: FC = () => {
     model: "",
     year: "ALL",
     priceMin: "",
-    priceMax: ""
+    priceMax: "",
   });
 
   const [drillType, setDrillType] = useState<DrillType>(null);
-  const [selectedVehicle, setSelectedVehicle] =
-    useState<InventoryRow | null>(null);
+  const [selectedVehicle, setSelectedVehicle] = useState<InventoryRow | null>(
+    null
+  );
 
   const modelsList = useMemo(
     () => Array.from(new Set(rows.map((r) => r.Model))).sort(),
@@ -56,79 +71,48 @@ const App: FC = () => {
     return b;
   }, [rows]);
 
-  const newArrivalRows = useMemo(
-    () =>
-      rows
-        .filter((r) => r.Age <= 7)
-        .sort((a, b) => a.Model.localeCompare(b.Model)),
-    [rows]
-  );
+  const newArrivalRows = useMemo(() => rows.filter((r) => r.Age <= 7), [rows]);
 
-  // ---------------- FILTER + SMART SEARCH ----------------
-  const filteredRows = useMemo(() => {
-    let data = [...sortedRows];
+  const handleSmartSearch = (text: string) => {
+    setSearchTerm(text);
+    const tokens = text
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((t) => t && !STOP_WORDS.has(t));
 
-    if (filters.model) data = data.filter((r) => r.Model === filters.model);
-
-    if (filters.year !== "ALL") {
-      data = data.filter((r) => r.Year === Number(filters.year));
+    if (tokens.length === 0) {
+      setFilters((f) => ({ ...f, model: "" }));
+      return;
     }
 
-    if (filters.priceMin) {
-      const min = Number(filters.priceMin);
-      if (!Number.isNaN(min)) data = data.filter((r) => r.MSRP >= min);
+    const token = tokens[0];
+    const found = modelsList.find((m) => m.toLowerCase().includes(token));
+    if (found) {
+      setFilters((f) => ({ ...f, model: found }));
     }
+  };
 
-    if (filters.priceMax) {
-      const max = Number(filters.priceMax);
-      if (!Number.isNaN(max)) data = data.filter((r) => r.MSRP <= max);
-    }
+  const handleReset = () => {
+    setFilters({ model: "", year: "ALL", priceMin: "", priceMax: "" });
+    setSearchTerm("");
+    setDrillType(null);
+  };
 
-    if (searchTerm.trim()) {
-      const words = searchTerm.toLowerCase().split(/\s+/);
-      const tokens = words.filter((w) => !STOP_WORDS.has(w));
-
-      data = data.filter((r) => {
-        const haystack = [
-          r["Stock Number"],
-          r["Short VIN"],
-          r.Make,
-          r.Model,
-          r["Model Number"],
-          r["Exterior Color"],
-          r.Trim,
-          String(r.Year),
-        ]
-          .join(" ")
-          .toLowerCase();
-
-        return tokens.every((t) => haystack.includes(t));
-      });
-    }
-
-    return data;
-  }, [sortedRows, filters, searchTerm]);
-
-  // ---------------- GROUPING ----------------
-  const buildGroups = (items: InventoryRow[]) => {
+  // Build grouped drill data for InventoryHealthPanel
+  const buildGroups = (inputRows: InventoryRow[]) => {
     const groups: Record<string, InventoryRow[]> = {};
 
-    items.forEach((r) => {
-      const make = r.Make.trim();
-      const model = r.Model.trim();
-      const modelNumber = r["Model Number"].trim();
-
-      let key =
-        model.toUpperCase() === "SILVERADO 1500" && modelNumber
-          ? `${make}|${model}|${modelNumber}`
-          : `${make}|${model}`;
+    inputRows.forEach((r) => {
+      const modelNumber = r["Model Number"] ? String(r["Model Number"]) : "";
+      const key = r.Make && r.Model
+        ? `${r.Make}|${r.Model}${modelNumber ? `|${modelNumber}` : ""}`
+        : `${r.Make || "Unknown"}|${r.Model || "Unknown"}`;
 
       if (!groups[key]) groups[key] = [];
       groups[key].push(r);
     });
 
     Object.values(groups).forEach((g) => g.sort((a, b) => b.Age - a.Age));
-
     return groups;
   };
 
@@ -141,38 +125,22 @@ const App: FC = () => {
 
     if (drillType === "new") result = [...newArrivalRows];
     if (drillType === "0_30") result = rows.filter((r) => r.Age <= 30);
-    if (drillType === "31_60") result = rows.filter((r) => r.Age > 30 && r.Age <= 60);
-    if (drillType === "61_90") result = rows.filter((r) => r.Age > 60 && r.Age <= 90);
+    if (drillType === "31_60")
+      result = rows.filter((r) => r.Age > 30 && r.Age <= 60);
+    if (drillType === "61_90")
+      result = rows.filter((r) => r.Age > 60 && r.Age <= 90);
     if (drillType === "90_plus") result = rows.filter((r) => r.Age > 90);
 
     return buildGroups(result);
   }, [drillType, rows, sortedRows, newArrivalRows]);
 
-  // ---------------- RESET ----------------
-  const handleReset = () => {
-    setDrillType(null);
-    setSearchTerm("");
-    setFilters({
-      model: "",
-      year: "ALL",
-      priceMin: "",
-      priceMax: ""
-    });
-  };
-
-  // ---------------- SMART SEARCH CALLBACK ----------------
-  const handleSmartSearch = (query: string) => {
-    if (query && query !== "manual-search") setSearchTerm(query);
-    setDrillType(null);
-  };
-
   return (
     <div className="app-root">
-      <HeaderBar searchTerm={searchTerm} onSearchChange={setSearchTerm} />
+      <HeaderBar />
 
-      <main className="app-main">
+      <main className="container">
         {error && (
-          <section className="panel error-panel">
+          <section className="panel">
             <div className="section-title">File Error</div>
             <p>{error}</p>
           </section>
@@ -205,20 +173,37 @@ const App: FC = () => {
               }}
             />
 
-            <InventoryHealthPanel rows={rows} agingBuckets={agingBuckets} />
+            {/* InventoryHealthPanel now receives drillType/drillData so it can render a drilldown
+                inside the same panel (replacing the summary when an aging bucket is selected). */}
+            <InventoryHealthPanel
+              rows={rows}
+              agingBuckets={agingBuckets}
+              drillType={drillType}
+              drillData={drillData}
+              onBack={() => setDrillType(null)}
+              onRowClick={(r) => setSelectedVehicle(r)}
+            />
 
-            {!drillType && <NewArrivalsPanel rows={newArrivalRows} />}
+            {/* Hide NewArrivalsPanel when viewing an aging bucket drill so the InventoryHealth panel
+                shows the selected bucket's inventory in-place (per your request). */}
+            {!(
+              drillType === "0_30" ||
+              drillType === "31_60" ||
+              drillType === "61_90" ||
+              drillType === "90_plus"
+            ) && <NewArrivalsPanel rows={newArrivalRows} />}
 
-            {drillType ? (
-              drillData && (
-                <DrilldownTable
-                  groups={drillData}
-                  onBack={handleReset}
-                  onRowClick={(r) => setSelectedVehicle(r)}
-                />
-              )
-            ) : (
-              <InventoryTable rows={filteredRows} onRowClick={(r) => setSelectedVehicle(r)} />
+            {/* Keep the main inventory table and optional drilldown table below */}
+            <InventoryTable
+              rows={sortedRows}
+              onRowClick={(r) => setSelectedVehicle(r)}
+            />
+
+            {drillType === "total" && drillData && (
+              <DrilldownTable
+                groups={drillData}
+                onRowClick={(r) => setSelectedVehicle(r)}
+              />
             )}
 
             <VehicleDetailDrawer
