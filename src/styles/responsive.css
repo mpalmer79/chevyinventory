@@ -92,4 +92,9 @@
   .nl-search-column { min-height: 140px !important; padding-left: 8px !important; padding-right: 8px !important; }
 }
 
-/* End responsive rules */
+/* Hide mic search on desktop, show only on mobile */
+@media (min-width: 1024px) {
+  .mobile-mic-search {
+    display: none !important;
+  }
+}
