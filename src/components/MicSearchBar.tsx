@@ -46,6 +46,7 @@ export const MicSearchBar: React.FC<Props> = ({ onVoiceResult }) => {
 
   return (
     <div
+      className="mobile-mic-search"
       style={{
         width: "100%",
         maxWidth: 520,
