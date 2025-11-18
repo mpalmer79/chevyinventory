@@ -240,7 +240,7 @@ const App: FC = () => {
               drillType === "61_90" ||
               drillType === "90_plus" ||
               filters.model
-            ) && <NewArrivalsPanel rows={newArrivalRows} />}
+            ) && <NewArrivalsPanel rows={filteredNewArrivals} />}
 
             <InventoryTable
               rows={filteredRows}
