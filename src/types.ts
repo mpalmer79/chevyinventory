@@ -40,4 +40,5 @@ export type Filters = {
   year: string;
   priceMin: string;
   priceMax: string;
+  stockNumber: string;
 };
