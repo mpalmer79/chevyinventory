@@ -55,3 +55,12 @@
   font-size: 11px;
   color: #9ca3af;
 }
+/* Center the Inventory Health panel title */
+.inventory-health-panel .section-title {
+  text-align: center;
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  /* optional spacing tweak so centered title sits nicely */
+  margin-bottom: 12px;
+}
