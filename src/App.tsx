@@ -211,6 +211,7 @@ const App: FC = () => {
               drillData={drillData}
               onSetDrillType={setDrillType}
               onRowClick={(r) => setSelectedVehicle(r)}
+              onReset={handleReset}
             />
 
             <KpiBar
