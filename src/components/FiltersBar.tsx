@@ -76,7 +76,8 @@ export const FiltersBar: FC<FiltersBarProps> = ({
             style={{ borderRadius: 8 }}
           >
             <option value="ALL">ALL</option>
-            {/* years omitted for brevity; keep existing options */}
+            <option value="2026">2026</option>
+            <option value="2025">2025</option>
           </select>
 
           <div className="section-title" style={{ marginTop: 16 }}>
