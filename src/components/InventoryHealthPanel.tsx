@@ -50,9 +50,13 @@ export const InventoryHealthPanel: FC<Props> = ({
     const isMobile = window.innerWidth < 768;
 
     return (
-      <section className="panel">
+      <section className="panel inventory-health-panel">
         <div className="drill-header">
-          {onBack && <button className="back-button" onClick={onBack}>Back</button>}
+          {onBack && (
+            <button className="back-button" onClick={onBack}>
+              Back
+            </button>
+          )}
           <div className="drill-title">Filtered Inventory</div>
         </div>
 
@@ -155,7 +159,7 @@ export const InventoryHealthPanel: FC<Props> = ({
 
   // Default summary view (unchanged)
   return (
-    <section className="panel">
+    <section className="panel inventory-health-panel">
       <div className="section-title">Inventory Health · At a Glance</div>
       <div className="health-grid">
         <div className="health-card">
