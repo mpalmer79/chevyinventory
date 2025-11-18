@@ -1,35 +1,95 @@
 /* Responsive adjustments */
-@media (max-width: 1024px) {
-  .panel-grid {
-    grid-template-columns: 1fr;
+
+/* ---------------- desktop -> tablet break (<=1200) */
+@media (max-width: 1200px) {
+  .container {
+    padding-left: 14px;
+    padding-right: 14px;
   }
 }
 
+/* ---------------- tablet (<=1024) stack panel-grid to single column */
+@media (max-width: 1024px) {
+  .panel-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px;
+  }
+}
+
+/* ---------------- smaller tablets / large phones: stack filters into 1 column (explicitly override grid) */
 @media (max-width: 900px) {
+  /* Force filters-layout into a single column (explicit grid override).
+     Using display:grid here ensures consistent behavior whether desktop used grid or flex. */
   .filters-layout {
-    flex-direction: column;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+    align-items: start !important;
   }
 
   .filters-column {
-    max-width: none;
+    max-width: 100% !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
   }
 
   .nl-search-column {
-    width: 100%;
+    width: 100% !important;
+    min-height: 200px !important;
+    padding-left: 0 !important;
+  }
+
+  /* Ensure container does not apply desktop max-width in narrow screens */
+  .container {
+    max-width: none !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
   }
 }
 
+/* ---------------- mobile (<=768) — stacked single-column layout and mobile-specific tweaks */
 @media (max-width: 768px) {
-  .kpi-row {
-    grid-template-columns: 1fr;
+  .kpi-row { grid-template-columns: 1fr !important; }
+  .panel-grid { grid-template-columns: 1fr !important; }
+
+  /* Make health grid and layout stack vertically */
+  .health-grid { display: flex !important; flex-direction: column !important; gap: 10px !important; }
+  .health-layout { display: flex !important; flex-direction: column !important; gap: 8px !important; }
+
+  /* Adjust padding/spacing for panels on mobile */
+  .panel { padding: 12px !important; border-radius: 12px !important; }
+
+  /* Mobile card list tweaks */
+  .mobile-card { padding: 10px !important; border-radius: 12px !important; }
+  .mobile-card-header { gap: 8px !important; }
+
+  /* Arrival meta stacks vertically */
+  .arrival-meta { flex-direction: column !important; gap: 8px !important; }
+
+  /* Health list wrap behavior */
+  .health-list { word-break: break-word !important; white-space: normal !important; }
+
+  /* Charts & big elements should not overflow */
+  .charts-section, .inventory-table, .new-arrivals, .drill-group {
+    width: 100% !important;
+    overflow: visible !important;
   }
 
-  .panel-grid {
-    grid-template-columns: 1fr;
-  }
+  /* Make section titles slightly smaller on narrow mobile */
+  .section-title { font-size: 13px !important; letter-spacing: 0.12em !important; }
 
-  .arrival-meta {
-    flex-direction: column;
-    gap: 4px;
-  }
+  /* Reduce large KPI numbers to fit */
+  .health-value { font-size: 20px !important; }
 }
+
+/* Extra small screens (<=420) - tighter spacing */
+@media (max-width: 420px) {
+  .section-title { font-size: 12px !important; }
+  .health-value { font-size: 18px !important; }
+  .filters-column { padding-right: 8px !important; padding-left: 8px !important; }
+  .nl-search-column { min-height: 140px !important; padding-left: 8px !important; padding-right: 8px !important; }
+}
+
+/* End responsive rules */
