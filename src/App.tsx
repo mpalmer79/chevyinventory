@@ -105,6 +105,11 @@ const App: FC = () => {
     });
   }, [sortedRows, filters]);
 
+  // Filtered new arrivals - applies filters to new arrivals
+  const filteredNewArrivals = useMemo(() => {
+    return filteredRows.filter((r) => r.Age <= 7);
+  }, [filteredRows]);
+
   const handleSmartSearch = (text: string) => {
     setSearchTerm(text);
     const tokens = text
@@ -200,7 +205,7 @@ const App: FC = () => {
 
             <KpiBar
               totalUnits={filteredRows.length}
-              newArrivalCount={newArrivalRows.length}
+              newArrivalCount={filteredNewArrivals.length}
               onSelectTotalUnits={handleReset}
               onSelectNewArrivals={() => setDrillType("new")}
             />
@@ -216,12 +221,15 @@ const App: FC = () => {
               }}
             />
 
-            {/* NewArrivalsPanel remains below; it will be hidden by the FiltersBar/InventoryHealthPanel logic when a bucket is drilled. */}
+            {/* NewArrivalsPanel remains below; it will be hidden when:
+                1. An aging bucket drill is active, OR
+                2. A model filter is selected */}
             {!(
               drillType === "0_30" ||
               drillType === "31_60" ||
               drillType === "61_90" ||
-              drillType === "90_plus"
+              drillType === "90_plus" ||
+              filters.model
             ) && <NewArrivalsPanel rows={newArrivalRows} />}
 
             <InventoryTable
