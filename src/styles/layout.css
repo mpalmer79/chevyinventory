@@ -78,6 +78,7 @@
   gap: 16px;
   margin-bottom: 12px;
 }
+
 /* Add this at the end of src/styles/layout.css to reduce interference with Recharts tooltip wrapper */
 .recharts-tooltip-wrapper {
   background: transparent !important;
@@ -89,4 +90,103 @@
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
+}
+
+/* ----- CENTER PAGE CONTENT (NEW) -----
+   Constrain the main container and common page-grid wrappers so the dashboard
+   sits centered in the viewport. Adjust --page-width to taste (e.g. 1180px). */
+
+/* Page variables */
+:root {
+  --page-width: 1180px; /* change this value to make the layout wider/narrower */
+  --page-padding: 18px;
+}
+
+/* Center the main content area used by App.tsx */
+.container {
+  max-width: var(--page-width);
+  margin: 0 auto;        /* horizontally center the page content */
+  padding: var(--page-padding);
+  box-sizing: border-box;
+}
+
+/* Constrain the major dashboard grid wrappers and center them */
+.kpi-row,
+.panel-grid,
+.filters-layout,
+.health-layout,
+.nl-search-column,
+.mobile-card-list {
+  max-width: 100%;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* Ensure panels fill available constrained width but don't overflow */
+.panel {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Protect chart/aging section from growing past container */
+.panel-grid {
+  max-width: var(--page-width);
+  margin: 12px auto;
+  grid-template-columns: 1.35fr 1fr; /* keep original ratio but constrained to max width */
+}
+
+/* Ensure the filter column does not push the layout off-center */
+.filters-panel,
+.filters-layout {
+  max-width: var(--page-width);
+  margin: 0 auto;
+}
+
+/* Small tweak for KPI bar so it centers under the search/header */
+.kpi-row {
+  max-width: var(--page-width);
+  margin: 12px auto;
+  grid-template-columns: 1fr 1fr;
+}
+
+/* Utility: when individual blocks inside panels have side margins, let them wrap */
+.panel > * {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  box-sizing: border-box;
+}
+
+/* If you have specific wide children (charts etc.), make them responsive */
+.charts-section,
+.inventory-table,
+.new-arrivals,
+.drill-group,
+.mobile-card-list {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Prevent any left-floating or fixed widths from pushing the layout */
+* {
+  box-sizing: border-box;
+}
+
+/* Responsive: reduce left/right padding on small screens */
+@media (max-width: 1200px) {
+  :root {
+    --page-width: calc(100% - 48px);
+    --page-padding: 12px;
+  }
+  .container {
+    padding: 12px;
+  }
+}
+
+/* Extra safeguard: ensure the body background stays visible and centered when content is narrower */
+body {
+  min-height: 100vh;
+  display: block;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
