@@ -81,22 +81,15 @@ export const FiltersBar: FC<FiltersBarProps> = ({
           </select>
 
           <div className="section-title" style={{ marginTop: 16 }}>
-            MSRP Range
+            Stock Number
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <input
-              className="filter-input"
-              placeholder="Min"
-              value={filters.priceMin}
-              onChange={(e) => handleFilterChange({ priceMin: e.target.value })}
-            />
-            <input
-              className="filter-input"
-              placeholder="Max"
-              value={filters.priceMax}
-              onChange={(e) => handleFilterChange({ priceMax: e.target.value })}
-            />
-          </div>
+          <input
+            className="filter-input"
+            placeholder="STOCK #"
+            value={filters.stockNumber}
+            onChange={(e) => handleFilterChange({ stockNumber: e.target.value })}
+            style={{ width: "100%" }}
+          />
 
           <div style={{ marginTop: 12 }}>
             <button className="btn-search" onClick={handleSearchClick}>
