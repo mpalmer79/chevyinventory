@@ -78,3 +78,15 @@
   gap: 16px;
   margin-bottom: 12px;
 }
+/* Add this at the end of src/styles/layout.css to reduce interference with Recharts tooltip wrapper */
+.recharts-tooltip-wrapper {
+  background: transparent !important;
+  box-shadow: none !important;
+  pointer-events: none !important;
+}
+
+.recharts-default-tooltip {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
