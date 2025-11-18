@@ -73,6 +73,38 @@ const App: FC = () => {
 
   const newArrivalRows = useMemo(() => rows.filter((r) => r.Age <= 7), [rows]);
 
+  // Apply filters to sorted rows
+  const filteredRows = useMemo(() => {
+    return sortedRows.filter((row) => {
+      // Filter by model
+      if (filters.model && row.Model !== filters.model) {
+        return false;
+      }
+
+      // Filter by year
+      if (filters.year !== "ALL" && String(row.Year) !== filters.year) {
+        return false;
+      }
+
+      // Filter by price range
+      if (filters.priceMin) {
+        const minPrice = Number(filters.priceMin);
+        if (!isNaN(minPrice) && row.MSRP < minPrice) {
+          return false;
+        }
+      }
+
+      if (filters.priceMax) {
+        const maxPrice = Number(filters.priceMax);
+        if (!isNaN(maxPrice) && row.MSRP > maxPrice) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [sortedRows, filters]);
+
   const handleSmartSearch = (text: string) => {
     setSearchTerm(text);
     const tokens = text
@@ -119,7 +151,7 @@ const App: FC = () => {
   const drillData = useMemo(() => {
     if (!drillType) return null;
 
-    if (drillType === "total") return buildGroups(sortedRows);
+    if (drillType === "total") return buildGroups(filteredRows);
 
     let result: InventoryRow[] = [];
 
@@ -132,7 +164,7 @@ const App: FC = () => {
     if (drillType === "90_plus") result = rows.filter((r) => r.Age > 90);
 
     return buildGroups(result);
-  }, [drillType, rows, sortedRows, newArrivalRows]);
+  }, [drillType, rows, filteredRows, newArrivalRows]);
 
   return (
     <div className="app-root">
@@ -167,7 +199,7 @@ const App: FC = () => {
             />
 
             <KpiBar
-              totalUnits={rows.length}
+              totalUnits={filteredRows.length}
               newArrivalCount={newArrivalRows.length}
               onSelectTotalUnits={handleReset}
               onSelectNewArrivals={() => setDrillType("new")}
@@ -193,7 +225,7 @@ const App: FC = () => {
             ) && <NewArrivalsPanel rows={newArrivalRows} />}
 
             <InventoryTable
-              rows={sortedRows}
+              rows={filteredRows}
               onRowClick={(r) => setSelectedVehicle(r)}
             />
 
