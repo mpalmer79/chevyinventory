@@ -92,7 +92,22 @@ export const FiltersBar: FC<FiltersBarProps> = ({
           />
 
           <div style={{ marginTop: 12 }}>
-            <button className="btn-search" onClick={handleSearchClick}>
+            <button 
+              className="btn-search" 
+              onClick={handleSearchClick}
+              style={{
+                background: "#000000",
+                color: "#ffffff",
+                padding: "10px 24px",
+                borderRadius: 20,
+                border: "none",
+                cursor: "pointer",
+                fontWeight: 600,
+                fontSize: 14,
+                letterSpacing: "0.05em",
+                width: "100%",
+              }}
+            >
               SEARCH
             </button>
           </div>
