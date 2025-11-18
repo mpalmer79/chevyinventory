@@ -49,6 +49,7 @@ export const HeaderBar: FC<HeaderBarProps> = ({
 
       <div className="header-controls">
         <div
+          className="mobile-search-bar"
           style={{
             display: "flex",
             alignItems: "center",
