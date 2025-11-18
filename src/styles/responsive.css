@@ -1,5 +1,12 @@
 /* Responsive adjustments */
 
+/* Hide mic search bar on desktop, show only on mobile/tablet */
+@media (min-width: 1024px) {
+  .mobile-search-bar {
+    display: none !important;
+  }
+}
+
 /* ---------------- desktop -> tablet break (<=1200) */
 @media (max-width: 1200px) {
   .container {
@@ -92,9 +99,4 @@
   .nl-search-column { min-height: 140px !important; padding-left: 8px !important; padding-right: 8px !important; }
 }
 
-/* Hide mic search on desktop, show only on mobile */
-@media (min-width: 1024px) {
-  .mobile-mic-search {
-    display: none !important;
-  }
-}
+/* End responsive rules */
