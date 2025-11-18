@@ -1,5 +1,5 @@
 // src/components/FiltersBar.tsx
-import React, { FC, useRef, useState } from "react";
+import React, { FC } from "react";
 import { Filters } from "../types";
 
 type FiltersBarProps = {
@@ -15,9 +15,6 @@ export const FiltersBar: FC<FiltersBarProps> = ({
   onChange,
   onSmartSearch,
 }) => {
-  const [listening, setListening] = useState(false);
-  const recognitionRef = useRef<any | null>(null);
-
   const handleFilterChange = (patch: Partial<Filters>) => {
     onChange({ ...filters, ...patch });
   };
@@ -35,37 +32,6 @@ export const FiltersBar: FC<FiltersBarProps> = ({
     });
   };
 
-  // ---- MICROPHONE ----
-  const handleMicClick = () => {
-    const SpeechRecognition =
-      (window as any).webkitSpeechRecognition ||
-      (window as any).SpeechRecognition;
-
-    if (!SpeechRecognition) {
-      alert("Voice search is not supported on this device.");
-      return;
-    }
-
-    if (!recognitionRef.current) {
-      const recog = new SpeechRecognition();
-      recog.lang = "en-US";
-      recog.continuous = false;
-      recog.interimResults = false;
-
-      recog.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript.trim();
-        if (transcript) onSmartSearch(transcript);
-      };
-
-      recog.onend = () => setListening(false);
-
-      recognitionRef.current = recog;
-    }
-
-    setListening(true);
-    recognitionRef.current.start();
-  };
-
   const handleSearchClick = () => {
     onSmartSearch("manual");
   };
@@ -75,7 +41,8 @@ export const FiltersBar: FC<FiltersBarProps> = ({
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "260px 260px 260px 1fr",
+          // reduced to 3 cols so the right-side "VOICE SEARCH" panel is removed
+          gridTemplateColumns: "260px 260px 260px",
           gap: 20,
           alignItems: "flex-start",
         }}
@@ -190,39 +157,11 @@ export const FiltersBar: FC<FiltersBarProps> = ({
           </button>
         </div>
 
-        {/* --- EMPTY SPACERS TO MAINTAIN GRID LAYOUT --- */}
+        {/* --- COLUMN 2: (kept as spacer / for future content) --- */}
         <div></div>
+
+        {/* --- COLUMN 3: (kept as spacer / for future content) --- */}
         <div></div>
-
-        {/* ------------- COLUMN 4: MICROPHONE BUTTON ---------------- */}
-        <div className="filters-column">
-          <div className="section-title">Voice Search</div>
-
-          <button
-            onClick={handleMicClick}
-            style={{
-              width: 58,
-              height: 58,
-              borderRadius: "50%",
-              background: "#0f172a",
-              border: listening
-                ? "2px solid #22c55e"
-                : "2px solid rgba(148,163,184,0.6)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 28,
-              color: "white",
-              cursor: "pointer",
-            }}
-          >
-            🎤
-          </button>
-
-          <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 8 }}>
-            Tap and say a model, trim, or color.
-          </div>
-        </div>
       </div>
     </section>
   );
