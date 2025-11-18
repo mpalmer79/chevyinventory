@@ -41,6 +41,9 @@ export const FiltersBar: FC<FiltersBarProps> = ({
     onSmartSearch("manual");
   };
 
+  // Check if model filter is active
+  const hasModelFilter = !!filters.model;
+
   return (
     <section className="panel filters-panel">
       <div
@@ -143,19 +146,22 @@ export const FiltersBar: FC<FiltersBarProps> = ({
         </div>
 
         {/* RIGHT: natural language search / InventoryHealth placeholder */}
-        <div className="nl-search-column" style={{ flex: 1, minHeight: 220 }}>
-          {/* Render the Inventory Health card inside this right-side area.
-              When drillType is set, InventoryHealthPanel will show the drilldown.
-              We pass onSetDrillType to allow the panel to clear (Back). */}
-          <InventoryHealthPanel
-            rows={rows}
-            agingBuckets={agingBuckets}
-            drillType={drillType}
-            drillData={drillData}
-            onBack={() => onSetDrillType(null)}
-            onRowClick={onRowClick}
-          />
-        </div>
+        {/* Hide InventoryHealthPanel when model filter is active */}
+        {!hasModelFilter && (
+          <div className="nl-search-column" style={{ flex: 1, minHeight: 220 }}>
+            {/* Render the Inventory Health card inside this right-side area.
+                When drillType is set, InventoryHealthPanel will show the drilldown.
+                We pass onSetDrillType to allow the panel to clear (Back). */}
+            <InventoryHealthPanel
+              rows={rows}
+              agingBuckets={agingBuckets}
+              drillType={drillType}
+              drillData={drillData}
+              onBack={() => onSetDrillType(null)}
+              onRowClick={onRowClick}
+            />
+          </div>
+        )}
       </div>
     </section>
   );
