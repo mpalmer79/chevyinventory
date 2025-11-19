@@ -58,6 +58,9 @@ export const FiltersBar: FC<FiltersBarProps> = ({
   } else if (filters.model === "SILVERADO 1500 CK10743") {
     vehicleImage = "/CK10743.jpg";
     vehicleAlt = "2026 Chevrolet Silverado 1500 CK10743";
+  } else if (filters.model === "SILVERADO 1500 CK10753") {
+    vehicleImage = "/CK10753.jpg";
+    vehicleAlt = "2026 Chevrolet Silverado 1500 CK10753";
   } else if (filters.model === "SILVERADO 1500 CK10903") {
     vehicleImage = "/CK10903.jpg";
     vehicleAlt = "2026 Chevrolet Silverado 1500 CK10903";
