@@ -44,29 +44,48 @@ export const FiltersBar: FC<FiltersBarProps> = ({
   // Check if model filter is active
   const hasModelFilter = !!filters.model;
   
-  // Check for special models that display images
-  const isSilverado1500CK10543 = filters.model === "SILVERADO 1500 CK10543";
-  const isColorado = filters.model === "COLORADO";
-  const isTahoe = filters.model === "TAHOE";
-  const isEquinox = filters.model === "EQUINOX";
-  const isEquinoxEV = filters.model === "EQUINOX EV";
-
   // Determine which image to show (if any)
   let vehicleImage = null;
   let vehicleAlt = "";
 
-  if (isSilverado1500CK10543) {
+  // SILVERADO 1500 variants
+  if (filters.model === "SILVERADO 1500 CK10543") {
     vehicleImage = "/CK10543.jpg";
     vehicleAlt = "2026 Chevrolet Silverado 1500 CK10543";
-  } else if (isColorado) {
+  } else if (filters.model === "SILVERADO 1500 CK10703") {
+    vehicleImage = "/CK10703.jpg";
+    vehicleAlt = "2026 Chevrolet Silverado 1500 CK10703";
+  } else if (filters.model === "SILVERADO 1500 CK10743") {
+    vehicleImage = "/CK10743.jpg";
+    vehicleAlt = "2026 Chevrolet Silverado 1500 CK10743";
+  } else if (filters.model === "SILVERADO 1500 CK10903") {
+    vehicleImage = "/CK10903.jpg";
+    vehicleAlt = "2026 Chevrolet Silverado 1500 CK10903";
+  }
+  // SILVERADO 2500HD variants
+  else if (filters.model === "SILVERADO 2500HD CK20743") {
+    vehicleImage = "/CK20743.jpg";
+    vehicleAlt = "2026 Chevrolet Silverado 2500HD CK20743";
+  } else if (filters.model === "SILVERADO 2500HD CK20753") {
+    vehicleImage = "/CK20753.jpg";
+    vehicleAlt = "2026 Chevrolet Silverado 2500HD CK20753";
+  }
+  // Other models
+  else if (filters.model === "COLORADO") {
     vehicleImage = "/14C43.jpg";
     vehicleAlt = "Chevrolet Colorado";
-  } else if (isTahoe) {
+  } else if (filters.model === "TAHOE") {
     vehicleImage = "/TAHOE.jpg";
     vehicleAlt = "Chevrolet Tahoe";
-  } else if (isEquinox || isEquinoxEV) {
+  } else if (filters.model === "EQUINOX" || filters.model === "EQUINOX EV") {
     vehicleImage = "/EQUINOX.jpg";
-    vehicleAlt = isEquinoxEV ? "Chevrolet Equinox EV" : "Chevrolet Equinox";
+    vehicleAlt = filters.model === "EQUINOX EV" ? "Chevrolet Equinox EV" : "Chevrolet Equinox";
+  } else if (filters.model === "CORVETTE") {
+    vehicleImage = "/CORVETTE.jpg";
+    vehicleAlt = "Chevrolet Corvette";
+  } else if (filters.model === "TRAVERSE") {
+    vehicleImage = "/TRAVERSE.jpg";
+    vehicleAlt = "Chevrolet Traverse";
   }
 
   return (
