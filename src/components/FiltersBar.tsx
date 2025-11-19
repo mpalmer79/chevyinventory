@@ -44,8 +44,9 @@ export const FiltersBar: FC<FiltersBarProps> = ({
   // Check if model filter is active
   const hasModelFilter = !!filters.model;
   
-  // Check if the selected model is SILVERADO 1500 CK10543
-  const isSpecialModel = filters.model === "SILVERADO 1500 CK10543";
+  // Check for special models that display images
+  const isSilverado1500CK10543 = filters.model === "SILVERADO 1500 CK10543";
+  const isColorado = filters.model === "COLORADO";
   
   // Check if desktop mode (window width >= 768px)
   const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
@@ -153,8 +154,8 @@ export const FiltersBar: FC<FiltersBarProps> = ({
 
         {/* RIGHT: conditional display area */}
         <div className="nl-search-column" style={{ flex: 1, minHeight: 220 }}>
-          {/* Show special image for SILVERADO 1500 CK10543 on desktop only */}
-          {isSpecialModel && isDesktop ? (
+          {/* Show SILVERADO 1500 CK10543 image on desktop only */}
+          {isSilverado1500CK10543 && isDesktop ? (
             <div 
               style={{
                 width: "100%",
@@ -180,8 +181,35 @@ export const FiltersBar: FC<FiltersBarProps> = ({
                 }}
               />
             </div>
+          ) : /* Show COLORADO image on desktop only */
+          isColorado && isDesktop ? (
+            <div 
+              style={{
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
+                borderRadius: 12,
+                padding: 20,
+                minHeight: 400,
+              }}
+            >
+              <img 
+                src="/14C43.jpg" 
+                alt="Chevrolet Colorado"
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: "100%",
+                  objectFit: "contain",
+                  borderRadius: 8,
+                  boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+                }}
+              />
+            </div>
           ) : (
-            /* Show InventoryHealthPanel when model filter is NOT active or not the special model */
+            /* Show InventoryHealthPanel when model filter is NOT active or not a special model */
             !hasModelFilter && (
               <InventoryHealthPanel
                 rows={rows}
