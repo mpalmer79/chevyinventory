@@ -48,6 +48,8 @@ export const FiltersBar: FC<FiltersBarProps> = ({
   const isSilverado1500CK10543 = filters.model === "SILVERADO 1500 CK10543";
   const isColorado = filters.model === "COLORADO";
   const isTahoe = filters.model === "TAHOE";
+  const isEquinox = filters.model === "EQUINOX";
+  const isEquinoxEV = filters.model === "EQUINOX EV";
 
   // Determine which image to show (if any)
   let vehicleImage = null;
@@ -62,6 +64,9 @@ export const FiltersBar: FC<FiltersBarProps> = ({
   } else if (isTahoe) {
     vehicleImage = "/TAHOE.jpg";
     vehicleAlt = "Chevrolet Tahoe";
+  } else if (isEquinox || isEquinoxEV) {
+    vehicleImage = "/EQUINOX.jpg";
+    vehicleAlt = isEquinoxEV ? "Chevrolet Equinox EV" : "Chevrolet Equinox";
   }
 
   return (
