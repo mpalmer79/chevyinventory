@@ -58,7 +58,12 @@ const App: FC = () => {
       // Special handling for SILVERADO 1500 - break down by Model Number
       if (r.Model === "SILVERADO 1500" && r["Model Number"]) {
         modelsSet.add(`SILVERADO 1500 ${r["Model Number"]}`);
-      } else {
+      } 
+      // Special handling for SILVERADO 2500 - break down by Model Number
+      else if (r.Model === "SILVERADO 2500HD" && r["Model Number"]) {
+        modelsSet.add(`SILVERADO 2500HD ${r["Model Number"]}`);
+      }
+      else {
         // All other models remain as-is
         modelsSet.add(r.Model);
       }
@@ -88,7 +93,7 @@ const App: FC = () => {
   // Apply filters to sorted rows
   const filteredRows = useMemo(() => {
     return sortedRows.filter((row) => {
-      // Filter by model (with special handling for SILVERADO 1500 + Model Number)
+      // Filter by model (with special handling for SILVERADO 1500 and SILVERADO 2500HD + Model Number)
       if (filters.model) {
         // Check if this is a composite SILVERADO 1500 selection
         if (filters.model.startsWith("SILVERADO 1500 ")) {
@@ -96,7 +101,15 @@ const App: FC = () => {
           if (row.Model !== "SILVERADO 1500" || row["Model Number"] !== modelNumber) {
             return false;
           }
-        } else {
+        } 
+        // Check if this is a composite SILVERADO 2500HD selection
+        else if (filters.model.startsWith("SILVERADO 2500HD ")) {
+          const modelNumber = filters.model.replace("SILVERADO 2500HD ", "");
+          if (row.Model !== "SILVERADO 2500HD" || row["Model Number"] !== modelNumber) {
+            return false;
+          }
+        }
+        else {
           // Standard model filtering
           if (row.Model !== filters.model) {
             return false;
