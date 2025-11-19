@@ -7,6 +7,9 @@
   }
 }
 
+/* Vehicle images now display on both mobile and desktop */
+/* Removed desktop-only restriction for .vehicle-image-container */
+
 /* ---------------- desktop -> tablet break (<=1200) */
 @media (max-width: 1200px) {
   .container {
@@ -46,6 +49,12 @@
     width: 100% !important;
     min-height: 200px !important;
     padding-left: 0 !important;
+  }
+
+  /* Make vehicle images responsive on mobile */
+  .vehicle-image-container {
+    min-height: 250px !important;
+    padding: 12px !important;
   }
 
   /* Ensure container does not apply desktop max-width in narrow screens */
@@ -89,6 +98,12 @@
 
   /* Reduce large KPI numbers to fit */
   .health-value { font-size: 20px !important; }
+
+  /* Vehicle images on mobile - smaller sizing */
+  .vehicle-image-container {
+    min-height: 200px !important;
+    padding: 10px !important;
+  }
 }
 
 /* Extra small screens (<=420) - tighter spacing */
@@ -97,6 +112,12 @@
   .health-value { font-size: 18px !important; }
   .filters-column { padding-right: 8px !important; padding-left: 8px !important; }
   .nl-search-column { min-height: 140px !important; padding-left: 8px !important; padding-right: 8px !important; }
+  
+  /* Even smaller vehicle images on very small screens */
+  .vehicle-image-container {
+    min-height: 180px !important;
+    padding: 8px !important;
+  }
 }
 
 /* End responsive rules */
