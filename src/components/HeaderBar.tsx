@@ -12,10 +12,16 @@ export const HeaderBar: FC<HeaderBarProps> = ({
 }) => {
   return (
     <header className="app-header">
-      <div className="brand-block">
+      <a 
+        href="https://www.quirkchevynh.com" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="brand-block"
+        style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}
+      >
         <div className="brand-main">QUIRK CHEVROLET</div>
         <div className="brand-sub">MANCHESTER NH</div>
-      </div>
+      </a>
     </header>
   );
 };
