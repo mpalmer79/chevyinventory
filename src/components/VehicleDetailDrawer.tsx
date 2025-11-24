@@ -2,6 +2,7 @@
 import React, { FC } from "react";
 import { InventoryRow } from "../types";
 import { formatCurrency } from "../inventoryHelpers";
+import { isInTransit, formatAge } from "../utils/inventoryUtils";
 
 type Props = {
   vehicle: InventoryRow | null;
@@ -11,9 +12,11 @@ type Props = {
 export const VehicleDetailDrawer: FC<Props> = ({ vehicle, onClose }) => {
   if (!vehicle) return null;
 
+  const ageText = isInTransit(vehicle) ? "IN TRANSIT" : `${vehicle.Age} days in stock`;
+
   const summary = `${vehicle.Year} ${vehicle.Make} ${vehicle.Model} ${vehicle.Trim}, ${vehicle["Exterior Color"]}, stock #${vehicle["Stock Number"]}, MSRP ${formatCurrency(
     vehicle.MSRP
-  )}, ${vehicle.Age} days in stock.`;
+  )}, ${ageText}.`;
 
   const handleCopy = async () => {
     try {
@@ -41,8 +44,8 @@ export const VehicleDetailDrawer: FC<Props> = ({ vehicle, onClose }) => {
             <span>{vehicle["Stock Number"]}</span>
           </div>
           <div className="detail-row">
-            <span className="detail-label">Short VIN</span>
-            <span>{vehicle["Short VIN"]}</span>
+            <span className="detail-label">VIN</span>
+            <span>{vehicle.VIN}</span>
           </div>
           <div className="detail-row">
             <span className="detail-label">Exterior Color</span>
@@ -57,8 +60,10 @@ export const VehicleDetailDrawer: FC<Props> = ({ vehicle, onClose }) => {
             <span>{vehicle.Cylinders}</span>
           </div>
           <div className="detail-row">
-            <span className="detail-label">Age in Stock</span>
-            <span>{vehicle.Age} days</span>
+            <span className="detail-label">Status</span>
+            <span style={isInTransit(vehicle) ? { color: "#fbbf24", fontWeight: 600 } : undefined}>
+              {formatAge(vehicle)}
+            </span>
           </div>
           <div className="detail-row">
             <span className="detail-label">MSRP</span>
@@ -75,4 +80,3 @@ export const VehicleDetailDrawer: FC<Props> = ({ vehicle, onClose }) => {
     </div>
   );
 };
-
