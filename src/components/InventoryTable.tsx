@@ -1,6 +1,7 @@
 // src/components/InventoryTable.tsx
 import React, { FC, useMemo } from "react";
 import { InventoryRow } from "../types";
+import { generateVehicleUrl } from "../utils/vehicleUrl";
 
 type Props = {
   rows: InventoryRow[];
@@ -48,6 +49,15 @@ export const InventoryTable: FC<Props> = ({ rows, onRowClick }) => {
     return groups;
   }, [rows]);
 
+  // Handle stock number click - open in new tab
+  const handleStockClick = (e: React.MouseEvent, row: InventoryRow) => {
+    e.stopPropagation(); // Don't trigger row click
+    const url = generateVehicleUrl(row);
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  };
+
   // ---------- MOBILE CARD VIEW (<768px) ----------
   const isMobile = window.innerWidth < 768;
   if (isMobile) {
@@ -82,7 +92,17 @@ export const InventoryTable: FC<Props> = ({ rows, onRowClick }) => {
                   onClick={() => onRowClick(r)}
                 >
                   <div className="mobile-card-header">
-                    <span className="mc-stock">#{r["Stock Number"]}</span>
+                    <span
+                      className="mc-stock stock-link"
+                      onClick={(e) => handleStockClick(e, r)}
+                      style={{
+                        color: "#4fc3f7",
+                        textDecoration: "underline",
+                        cursor: "pointer",
+                      }}
+                    >
+                      #{r["Stock Number"]}
+                    </span>
                     <span className="mc-title">
                       {r.Year} {r.Model}
                     </span>
@@ -166,7 +186,19 @@ export const InventoryTable: FC<Props> = ({ rows, onRowClick }) => {
                   className="click-row"
                   onClick={() => onRowClick(r)}
                 >
-                  <td>{r["Stock Number"]}</td>
+                  <td>
+                    <span
+                      className="stock-link"
+                      onClick={(e) => handleStockClick(e, r)}
+                      style={{
+                        color: "#4fc3f7",
+                        textDecoration: "underline",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {r["Stock Number"]}
+                    </span>
+                  </td>
                   <td>{r.Year}</td>
                   <td>{r.Model}</td>
                   <td>{r["Exterior Color"]}</td>
