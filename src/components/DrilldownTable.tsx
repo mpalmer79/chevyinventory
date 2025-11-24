@@ -1,6 +1,8 @@
 // src/components/DrilldownTable.tsx
 import React, { FC } from "react";
 import { InventoryRow } from "../types";
+import { generateVehicleUrl } from "../utils/vehicleUrl";
+import { isInTransit, formatAgeShort, sortByAgeDescending } from "../utils/inventoryUtils";
 
 type Props = {
   groups: Record<string, InventoryRow[]>;
@@ -16,6 +18,15 @@ export const DrilldownTable: FC<Props> = ({
   const groupKeys = Object.keys(groups);
   const isMobile = window.innerWidth < 768;
 
+  // Handle stock number click - open in new tab
+  const handleStockClick = (e: React.MouseEvent, row: InventoryRow) => {
+    e.stopPropagation();
+    const url = generateVehicleUrl(row);
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  };
+
   return (
     <section className="panel">
       <div className="drill-header">
@@ -28,7 +39,7 @@ export const DrilldownTable: FC<Props> = ({
         const make = parts[0];
         const model = parts[1];
         const modelNumber = parts[2] || null;
-        const rows = groups[key];
+        const rows = sortByAgeDescending(groups[key]); // Sort within group
         const title = modelNumber
           ? `${make} ${model} ${modelNumber} - ${rows.length}`
           : `${make} ${model} - ${rows.length}`;
@@ -47,7 +58,17 @@ export const DrilldownTable: FC<Props> = ({
                     onClick={() => onRowClick(r)}
                   >
                     <div className="mobile-card-header">
-                      <span className="mc-stock">#{r["Stock Number"]}</span>
+                      <span
+                        className="mc-stock stock-link"
+                        onClick={(e) => handleStockClick(e, r)}
+                        style={{
+                          color: "#4fc3f7",
+                          textDecoration: "underline",
+                          cursor: "pointer",
+                        }}
+                      >
+                        #{r["Stock Number"]}
+                      </span>
                       <span className="mc-title">
                         {r.Year} {r.Model}
                       </span>
@@ -70,7 +91,9 @@ export const DrilldownTable: FC<Props> = ({
 
                     <div className="mobile-card-row">
                       <span>Age</span>
-                      <span>{r.Age} days</span>
+                      <span style={isInTransit(r) ? { color: "#fbbf24", fontWeight: 600 } : undefined}>
+                        {formatAgeShort(r)}{!isInTransit(r) && " days"}
+                      </span>
                     </div>
 
                     <div className="mobile-card-row">
@@ -102,13 +125,27 @@ export const DrilldownTable: FC<Props> = ({
                       className="click-row"
                       onClick={() => onRowClick(r)}
                     >
-                      <td>{r["Stock Number"]}</td>
+                      <td>
+                        <span
+                          className="stock-link"
+                          onClick={(e) => handleStockClick(e, r)}
+                          style={{
+                            color: "#4fc3f7",
+                            textDecoration: "underline",
+                            cursor: "pointer",
+                          }}
+                        >
+                          {r["Stock Number"]}
+                        </span>
+                      </td>
                       <td>{r.Year}</td>
                       <td>{r.Model}</td>
                       <td>{r["Exterior Color"]}</td>
                       <td>{r.Trim}</td>
                       <td>{r["Model Number"]}</td>
-                      <td>{r.Age}</td>
+                      <td style={isInTransit(r) ? { color: "#fbbf24", fontWeight: 600 } : undefined}>
+                        {formatAgeShort(r)}
+                      </td>
                       <td>${Number(r.MSRP).toLocaleString()}</td>
                     </tr>
                   ))}
