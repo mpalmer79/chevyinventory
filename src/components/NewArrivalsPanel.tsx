@@ -11,6 +11,9 @@ type Props = {
 export const NewArrivalsPanel: FC<Props> = ({ rows }) => {
   if (!rows.length) return null;
 
+  // Sort by age descending (oldest first within new arrivals)
+  const sortedRows = [...rows].sort((a, b) => b.Age - a.Age);
+
   // Handle stock number click - open in new tab
   const handleStockClick = (e: React.MouseEvent, row: InventoryRow) => {
     e.stopPropagation();
@@ -24,7 +27,7 @@ export const NewArrivalsPanel: FC<Props> = ({ rows }) => {
     <section className="panel">
       <div className="section-title">New Arrivals · Last 7 Days</div>
       <div className="new-arrivals">
-        {rows.map((row) => (
+        {sortedRows.map((row) => (
           <div className="arrival-card" key={row["Stock Number"]}>
             <div className="arrival-main">
               <span
