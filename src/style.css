@@ -1,5 +1,4 @@
 /* src/style.css – aggregate all split CSS files */
-
 @import "./styles/base.css";
 @import "./styles/layout.css";
 @import "./styles/components.css";
@@ -9,6 +8,20 @@
 @import "./styles/tables.css";
 @import "./styles/responsive.css";
 @import "./styles/utils.css";
+
+/* ----- 3-COLUMN KPI ROW ----- */
+.kpi-row-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .kpi-row-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ----- MOBILE INVENTORY CARDS ----- */
 @media (max-width: 768px) {
   .mobile-card-list {
@@ -16,7 +29,6 @@
     flex-direction: column;
     gap: 12px;
   }
-
   .mobile-card {
     background: rgba(15,23,42,0.94);
     border: 1px solid rgba(148,163,184,0.35);
@@ -24,13 +36,11 @@
     padding: 12px;
     cursor: pointer;
   }
-
   .mobile-card-header {
     display: flex;
     justify-content: space-between;
     margin-bottom: 8px;
   }
-
   .mc-stock {
     background: rgba(148,163,184,0.25);
     padding: 2px 8px;
@@ -38,13 +48,11 @@
     font-size: 12px;
     color: white;
   }
-
   .mc-title {
     font-weight: 600;
     font-size: 14px;
     color: white;
   }
-
   .mobile-card-row {
     display: flex;
     justify-content: space-between;
@@ -53,9 +61,7 @@
     color: #e5e7eb;
     font-size: 13px;
   }
-
   .mobile-card-row:last-child {
     border-bottom: none;
   }
 }
-
