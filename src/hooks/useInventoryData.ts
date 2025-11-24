@@ -13,21 +13,32 @@ export function useInventoryData() {
       const workbook = XLSX.read(data, { type: "array" });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
-      const json: any[] = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+      
+      // Read as array of arrays since there's no header row
+      const rawData: any[][] = XLSX.utils.sheet_to_json(worksheet, { 
+        header: 1,
+        defval: "" 
+      });
 
-      const parsed: InventoryRow[] = json.map((row: any) => ({
-        "Stock Number": row["Stock Number"],
-        Year: Number(row["Year"]),
-        Make: row["Make"],
-        Model: row["Model"],
-        "Exterior Color": row["Exterior Color"],
-        Trim: row["Trim"],
-        "Model Number": row["Model Number"],
-        Cylinders: Number(row["Cylinders"]),
-        "Short VIN": row["Short VIN"],
-        Age: Number(row["Age"]),
-        MSRP: Number(row["MSRP"]),
-      }));
+      // Map columns by index:
+      // 0: Stock Number, 1: Year, 2: Make, 3: Model, 4: Exterior Color,
+      // 5: Trim, 6: Model Number, 7: Cylinders, 8: Age, 9: MSRP, 10: Status, 11: VIN
+      const parsed: InventoryRow[] = rawData
+        .filter((row: any[]) => row.length >= 10 && row[0]) // Skip empty rows
+        .map((row: any[]) => ({
+          "Stock Number": String(row[0] || ""),
+          Year: Number(row[1]) || 0,
+          Make: String(row[2] || ""),
+          Model: String(row[3] || ""),
+          "Exterior Color": String(row[4] || ""),
+          Trim: String(row[5] || ""),
+          "Model Number": String(row[6] || ""),
+          Cylinders: Number(row[7]) || 0,
+          Age: Number(row[8]) || 0,
+          MSRP: Number(row[9]) || 0,
+          Status: String(row[10] || ""),
+          VIN: String(row[11] || ""),
+        }));
 
       setRows(parsed);
       setError(null);
