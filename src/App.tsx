@@ -9,11 +9,11 @@ import { HeaderBar } from "./components/HeaderBar";
 import { FiltersBar } from "./components/FiltersBar";
 import { KpiBar } from "./components/KpiBar";
 import { ChartsSection } from "./components/ChartsSection";
-// InventoryHealthPanel is now rendered inside FiltersBar (moved), so no longer rendered here.
 import { NewArrivalsPanel } from "./components/NewArrivalsPanel";
 import { InventoryTable } from "./components/InventoryTable";
 import { DrilldownTable } from "./components/DrilldownTable";
 import { VehicleDetailDrawer } from "./components/VehicleDetailDrawer";
+import { isInTransit, sortByAgeDescending } from "./utils/inventoryUtils";
 
 const STOP_WORDS = new Set([
   "i",
@@ -55,16 +55,13 @@ const App: FC = () => {
     const modelsSet = new Set<string>();
     
     rows.forEach((r) => {
-      // Special handling for SILVERADO 1500 - break down by Model Number
       if (r.Model === "SILVERADO 1500" && r["Model Number"]) {
         modelsSet.add(`SILVERADO 1500 ${r["Model Number"]}`);
       } 
-      // Special handling for SILVERADO 2500 - break down by Model Number
       else if (r.Model === "SILVERADO 2500HD" && r["Model Number"]) {
         modelsSet.add(`SILVERADO 2500HD ${r["Model Number"]}`);
       }
       else {
-        // All other models remain as-is
         modelsSet.add(r.Model);
       }
     });
@@ -79,7 +76,9 @@ const App: FC = () => {
       bucket61_90: 0,
       bucket90_plus: 0,
     };
+    // Only count ON DEALER LOT vehicles for aging buckets
     rows.forEach((r) => {
+      if (isInTransit(r)) return; // Skip in-transit for aging buckets
       if (r.Age <= 30) b.bucket0_30++;
       else if (r.Age <= 60) b.bucket31_60++;
       else if (r.Age <= 90) b.bucket61_90++;
@@ -88,21 +87,26 @@ const App: FC = () => {
     return b;
   }, [rows]);
 
-  const newArrivalRows = useMemo(() => rows.filter((r) => r.Age <= 7), [rows]);
+  const newArrivalRows = useMemo(() => 
+    rows.filter((r) => r.Age <= 7 && !isInTransit(r)), 
+    [rows]
+  );
+
+  const inTransitRows = useMemo(() => 
+    rows.filter((r) => isInTransit(r)), 
+    [rows]
+  );
 
   // Apply filters to sorted rows
   const filteredRows = useMemo(() => {
     return sortedRows.filter((row) => {
-      // Filter by model (with special handling for SILVERADO 1500 and SILVERADO 2500HD + Model Number)
       if (filters.model) {
-        // Check if this is a composite SILVERADO 1500 selection
         if (filters.model.startsWith("SILVERADO 1500 ")) {
           const modelNumber = filters.model.replace("SILVERADO 1500 ", "");
           if (row.Model !== "SILVERADO 1500" || row["Model Number"] !== modelNumber) {
             return false;
           }
         } 
-        // Check if this is a composite SILVERADO 2500HD selection
         else if (filters.model.startsWith("SILVERADO 2500HD ")) {
           const modelNumber = filters.model.replace("SILVERADO 2500HD ", "");
           if (row.Model !== "SILVERADO 2500HD" || row["Model Number"] !== modelNumber) {
@@ -110,19 +114,16 @@ const App: FC = () => {
           }
         }
         else {
-          // Standard model filtering
           if (row.Model !== filters.model) {
             return false;
           }
         }
       }
 
-      // Filter by year
       if (filters.year !== "ALL" && String(row.Year) !== filters.year) {
         return false;
       }
 
-      // Filter by price range
       if (filters.priceMin) {
         const minPrice = Number(filters.priceMin);
         if (!isNaN(minPrice) && row.MSRP < minPrice) {
@@ -137,7 +138,6 @@ const App: FC = () => {
         }
       }
 
-      // Filter by stock number
       if (filters.stockNumber) {
         const stockNum = filters.stockNumber.toLowerCase().trim();
         const rowStockNum = row["Stock Number"].toLowerCase().trim();
@@ -150,9 +150,14 @@ const App: FC = () => {
     });
   }, [sortedRows, filters]);
 
-  // Filtered new arrivals - applies filters to new arrivals
+  // Filtered new arrivals - applies filters to new arrivals (exclude IN TRANSIT)
   const filteredNewArrivals = useMemo(() => {
-    return filteredRows.filter((r) => r.Age <= 7);
+    return filteredRows.filter((r) => r.Age <= 7 && !isInTransit(r));
+  }, [filteredRows]);
+
+  // Filtered in-transit
+  const filteredInTransit = useMemo(() => {
+    return filteredRows.filter((r) => isInTransit(r));
   }, [filteredRows]);
 
   const handleSmartSearch = (text: string) => {
@@ -180,7 +185,7 @@ const App: FC = () => {
     setDrillType(null);
   };
 
-  // Build grouped drill data for InventoryHealthPanel
+  // Build grouped drill data
   const buildGroups = (inputRows: InventoryRow[]) => {
     const groups: Record<string, InventoryRow[]> = {};
 
@@ -194,7 +199,11 @@ const App: FC = () => {
       groups[key].push(r);
     });
 
-    Object.values(groups).forEach((g) => g.sort((a, b) => b.Age - a.Age));
+    // Sort each group using the utility function
+    Object.keys(groups).forEach((key) => {
+      groups[key] = sortByAgeDescending(groups[key]);
+    });
+    
     return groups;
   };
 
@@ -202,19 +211,18 @@ const App: FC = () => {
     if (!drillType) return null;
 
     if (drillType === "total") return buildGroups(filteredRows);
+    if (drillType === "in_transit") return buildGroups(inTransitRows);
 
     let result: InventoryRow[] = [];
 
     if (drillType === "new") result = [...newArrivalRows];
-    if (drillType === "0_30") result = rows.filter((r) => r.Age <= 30);
-    if (drillType === "31_60")
-      result = rows.filter((r) => r.Age > 30 && r.Age <= 60);
-    if (drillType === "61_90")
-      result = rows.filter((r) => r.Age > 60 && r.Age <= 90);
-    if (drillType === "90_plus") result = rows.filter((r) => r.Age > 90);
+    if (drillType === "0_30") result = rows.filter((r) => r.Age <= 30 && !isInTransit(r));
+    if (drillType === "31_60") result = rows.filter((r) => r.Age > 30 && r.Age <= 60 && !isInTransit(r));
+    if (drillType === "61_90") result = rows.filter((r) => r.Age > 60 && r.Age <= 90 && !isInTransit(r));
+    if (drillType === "90_plus") result = rows.filter((r) => r.Age > 90 && !isInTransit(r));
 
     return buildGroups(result);
-  }, [drillType, rows, filteredRows, newArrivalRows]);
+  }, [drillType, rows, filteredRows, newArrivalRows, inTransitRows]);
 
   // Check if model filter is active
   const hasModelFilter = !!filters.model;
@@ -236,8 +244,6 @@ const App: FC = () => {
 
         {rows.length > 0 && (
           <>
-            {/* Pass inventory and drill props into FiltersBar so the Inventory Health card
-                can render inside the filters panel right-side area (red rectangle). */}
             <FiltersBar
               models={modelsList}
               filters={filters}
@@ -257,13 +263,24 @@ const App: FC = () => {
               <KpiBar
                 totalUnits={filteredRows.length}
                 newArrivalCount={filteredNewArrivals.length}
+                inTransitCount={filteredInTransit.length}
                 onSelectTotalUnits={handleReset}
                 onSelectNewArrivals={() => setDrillType("new")}
+                onSelectInTransit={() => setDrillType("in_transit")}
               />
             )}
 
-            {/* Hide ChartsSection when model filter is active */}
-            {!hasModelFilter && (
+            {/* Show IN TRANSIT drilldown directly below KPI bar */}
+            {drillType === "in_transit" && drillData && (
+              <DrilldownTable
+                groups={drillData}
+                onBack={() => setDrillType(null)}
+                onRowClick={(r) => setSelectedVehicle(r)}
+              />
+            )}
+
+            {/* Hide ChartsSection when model filter is active or in_transit drill is active */}
+            {!hasModelFilter && drillType !== "in_transit" && (
               <ChartsSection
                 modelPieData={modelPieData}
                 agingBuckets={agingBuckets}
@@ -276,25 +293,28 @@ const App: FC = () => {
               />
             )}
 
-            {/* NewArrivalsPanel remains below; it will be hidden when:
-                1. An aging bucket drill is active, OR
-                2. A model filter is selected */}
+            {/* NewArrivalsPanel - hidden during drills or model filter */}
             {!(
               drillType === "0_30" ||
               drillType === "31_60" ||
               drillType === "61_90" ||
               drillType === "90_plus" ||
+              drillType === "in_transit" ||
               filters.model
             ) && <NewArrivalsPanel rows={filteredNewArrivals} />}
 
-            <InventoryTable
-              rows={filteredRows}
-              onRowClick={(r) => setSelectedVehicle(r)}
-            />
+            {/* Hide main inventory table when in_transit drill is active */}
+            {drillType !== "in_transit" && (
+              <InventoryTable
+                rows={filteredRows}
+                onRowClick={(r) => setSelectedVehicle(r)}
+              />
+            )}
 
             {drillType === "total" && drillData && (
               <DrilldownTable
                 groups={drillData}
+                onBack={() => setDrillType(null)}
                 onRowClick={(r) => setSelectedVehicle(r)}
               />
             )}
