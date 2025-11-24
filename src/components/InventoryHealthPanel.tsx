@@ -1,11 +1,12 @@
 // src/components/InventoryHealthPanel.tsx
 import React, { FC } from "react";
 import { AgingBuckets, InventoryRow } from "../types";
+import { generateVehicleUrl } from "../utils/vehicleUrl";
+import { isInTransit, formatAgeShort, sortByAgeDescending } from "../utils/inventoryUtils";
 
 type Props = {
   rows: InventoryRow[];
   agingBuckets: AgingBuckets;
-  // new props to allow showing drilldown inside this panel
   drillType?: string | null;
   drillData?: Record<string, InventoryRow[]> | null;
   onBack?: () => void;
@@ -22,15 +23,25 @@ export const InventoryHealthPanel: FC<Props> = ({
 }) => {
   if (!rows.length) return null;
 
-  // Summary calculations (existing)
+  // Handle stock number click - open in new tab
+  const handleStockClick = (e: React.MouseEvent, row: InventoryRow) => {
+    e.stopPropagation();
+    const url = generateVehicleUrl(row);
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  };
+
+  // Summary calculations
   const total = rows.length;
   const freshPct = total ? (agingBuckets.bucket0_30 / total) * 100 : 0;
   const atRiskPct = total ? (agingBuckets.bucket90_plus / total) * 100 : 0;
 
-  // Increase from 3 to 10 oldest units
-  const oldest = [...rows].sort((a, b) => b.Age - a.Age).slice(0, 10);
+  // Get 10 oldest units (excluding IN TRANSIT for "oldest on lot")
+  const onLotRows = rows.filter((r) => !isInTransit(r));
+  const oldest = sortByAgeDescending(onLotRows).slice(0, 10);
 
-  // If drillType is set and we have drillData, render the drilldown groups inside this panel
+  // If drillType is set and we have drillData, render the drilldown groups
   if (drillType && drillData) {
     const groupKeys = Object.keys(drillData || {});
     const isMobile = window.innerWidth < 768;
@@ -51,7 +62,7 @@ export const InventoryHealthPanel: FC<Props> = ({
           const make = parts[0];
           const model = parts[1];
           const modelNumber = parts[2] || null;
-          const rowsForGroup = drillData[key];
+          const rowsForGroup = sortByAgeDescending(drillData[key]);
           const title = modelNumber
             ? `${make} ${model} ${modelNumber} - ${rowsForGroup.length}`
             : `${make} ${model} - ${rowsForGroup.length}`;
@@ -69,7 +80,17 @@ export const InventoryHealthPanel: FC<Props> = ({
                       onClick={() => onRowClick && onRowClick(r)}
                     >
                       <div className="mobile-card-header">
-                        <span className="mc-stock">#{r["Stock Number"]}</span>
+                        <span
+                          className="mc-stock stock-link"
+                          onClick={(e) => handleStockClick(e, r)}
+                          style={{
+                            color: "#4fc3f7",
+                            textDecoration: "underline",
+                            cursor: "pointer",
+                          }}
+                        >
+                          #{r["Stock Number"]}
+                        </span>
                         <span className="mc-title">
                           {r.Year} {r.Model}
                         </span>
@@ -92,7 +113,9 @@ export const InventoryHealthPanel: FC<Props> = ({
 
                       <div className="mobile-card-row">
                         <span>Age</span>
-                        <span>{r.Age} days</span>
+                        <span style={isInTransit(r) ? { color: "#fbbf24", fontWeight: 600 } : undefined}>
+                          {formatAgeShort(r)}{!isInTransit(r) && " days"}
+                        </span>
                       </div>
 
                       <div className="mobile-card-row">
@@ -123,13 +146,27 @@ export const InventoryHealthPanel: FC<Props> = ({
                         className="click-row"
                         onClick={() => onRowClick && onRowClick(r)}
                       >
-                        <td>{r["Stock Number"]}</td>
+                        <td>
+                          <span
+                            className="stock-link"
+                            onClick={(e) => handleStockClick(e, r)}
+                            style={{
+                              color: "#4fc3f7",
+                              textDecoration: "underline",
+                              cursor: "pointer",
+                            }}
+                          >
+                            {r["Stock Number"]}
+                          </span>
+                        </td>
                         <td>{r.Year}</td>
                         <td>{r.Model}</td>
                         <td>{r["Exterior Color"]}</td>
                         <td>{r.Trim}</td>
                         <td>{r["Model Number"]}</td>
-                        <td>{r.Age} days</td>
+                        <td style={isInTransit(r) ? { color: "#fbbf24", fontWeight: 600 } : undefined}>
+                          {formatAgeShort(r)}
+                        </td>
                         <td>${Number(r.MSRP).toLocaleString()}</td>
                       </tr>
                     ))}
@@ -143,7 +180,7 @@ export const InventoryHealthPanel: FC<Props> = ({
     );
   }
 
-  // Default summary view - now showing only Oldest Units on Lot (expanded)
+  // Default summary view
   return (
     <section className="panel inventory-health-panel">
       <div className="section-title">Inventory Health · At a Glance</div>
@@ -170,7 +207,18 @@ export const InventoryHealthPanel: FC<Props> = ({
           <ul className="health-list">
             {oldest.map((r) => (
               <li key={r["Stock Number"]}>
-                {r["Stock Number"]}  {r.Year} {r.Model} {r.Trim}  {r.Age} days
+                <span
+                  className="stock-link"
+                  onClick={(e) => handleStockClick(e, r)}
+                  style={{
+                    color: "#4fc3f7",
+                    textDecoration: "underline",
+                    cursor: "pointer",
+                  }}
+                >
+                  {r["Stock Number"]}
+                </span>
+                {"  "}{r.Year} {r.Model} {r.Trim}  {r.Age} days
               </li>
             ))}
           </ul>
