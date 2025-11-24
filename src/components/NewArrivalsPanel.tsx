@@ -3,6 +3,7 @@ import React, { FC } from "react";
 import { InventoryRow } from "../types";
 import { formatCurrency } from "../inventoryHelpers";
 import { generateVehicleUrl } from "../utils/vehicleUrl";
+import { isInTransit, formatAge, sortByAgeDescending } from "../utils/inventoryUtils";
 
 type Props = {
   rows: InventoryRow[];
@@ -11,8 +12,8 @@ type Props = {
 export const NewArrivalsPanel: FC<Props> = ({ rows }) => {
   if (!rows.length) return null;
 
-  // Sort by age descending (oldest first within new arrivals)
-  const sortedRows = [...rows].sort((a, b) => b.Age - a.Age);
+  // Sort by age descending (IN TRANSIT at bottom)
+  const sortedRows = sortByAgeDescending(rows);
 
   // Handle stock number click - open in new tab
   const handleStockClick = (e: React.MouseEvent, row: InventoryRow) => {
@@ -50,8 +51,11 @@ export const NewArrivalsPanel: FC<Props> = ({ rows }) => {
               <span className="arrival-pill">
                 {row["Exterior Color"] || "Color TBD"}
               </span>
-              <span className="arrival-pill">
-                {row.Age} day{row.Age === 1 ? "" : "s"} in stock
+              <span 
+                className="arrival-pill"
+                style={isInTransit(row) ? { color: "#fbbf24", fontWeight: 600 } : undefined}
+              >
+                {isInTransit(row) ? "IN TRANSIT" : `${row.Age} day${row.Age === 1 ? "" : "s"} in stock`}
               </span>
               <span className="arrival-price">
                 {formatCurrency(row.MSRP)}
