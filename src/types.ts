@@ -9,9 +9,10 @@ export type InventoryRow = {
   Trim: string;
   "Model Number": string;
   Cylinders: number;
-  "Short VIN": string;
   Age: number;
   MSRP: number;
+  Status: string;
+  VIN: string;
 };
 
 export type ModelPieDatum = {
