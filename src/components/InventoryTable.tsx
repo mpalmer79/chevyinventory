@@ -2,6 +2,7 @@
 import React, { FC, useMemo } from "react";
 import { InventoryRow } from "../types";
 import { generateVehicleUrl } from "../utils/vehicleUrl";
+import { isInTransit, formatAgeShort, sortByAgeDescending } from "../utils/inventoryUtils";
 
 type Props = {
   rows: InventoryRow[];
@@ -17,7 +18,7 @@ type GroupedRows = {
 export const InventoryTable: FC<Props> = ({ rows, onRowClick }) => {
   if (!rows.length) return null;
 
-  // Group rows by Year and Model
+  // Group rows by Year and Model, then sort within each group
   const groupedRows = useMemo(() => {
     const groups: GroupedRows[] = [];
     const groupMap: Record<string, InventoryRow[]> = {};
@@ -31,13 +32,13 @@ export const InventoryTable: FC<Props> = ({ rows, onRowClick }) => {
       groupMap[key].push(row);
     });
 
-    // Convert to array and sort by Year (desc) then Model (asc)
+    // Convert to array, sort each group's rows, then sort groups
     Object.entries(groupMap).forEach(([key, groupRows]) => {
       const [year, model] = key.split("|");
       groups.push({
         year: parseInt(year),
         model,
-        rows: groupRows,
+        rows: sortByAgeDescending(groupRows), // Sort within group
       });
     });
 
@@ -51,7 +52,7 @@ export const InventoryTable: FC<Props> = ({ rows, onRowClick }) => {
 
   // Handle stock number click - open in new tab
   const handleStockClick = (e: React.MouseEvent, row: InventoryRow) => {
-    e.stopPropagation(); // Don't trigger row click
+    e.stopPropagation();
     const url = generateVehicleUrl(row);
     if (url) {
       window.open(url, "_blank", "noopener,noreferrer");
@@ -125,7 +126,9 @@ export const InventoryTable: FC<Props> = ({ rows, onRowClick }) => {
 
                   <div className="mobile-card-row">
                     <span>Age</span>
-                    <span>{r.Age} days</span>
+                    <span style={isInTransit(r) ? { color: "#fbbf24", fontWeight: 600 } : undefined}>
+                      {formatAgeShort(r)}{!isInTransit(r) && " days"}
+                    </span>
                   </div>
 
                   <div className="mobile-card-row">
@@ -204,7 +207,9 @@ export const InventoryTable: FC<Props> = ({ rows, onRowClick }) => {
                   <td>{r["Exterior Color"]}</td>
                   <td>{r.Trim}</td>
                   <td>{r["Model Number"]}</td>
-                  <td>{r.Age}</td>
+                  <td style={isInTransit(r) ? { color: "#fbbf24", fontWeight: 600 } : undefined}>
+                    {formatAgeShort(r)}
+                  </td>
                   <td>${Number(r.MSRP).toLocaleString()}</td>
                 </tr>
               ))}
