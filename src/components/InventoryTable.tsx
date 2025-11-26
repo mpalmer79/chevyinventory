@@ -12,20 +12,37 @@ type Props = {
 type GroupedRows = {
   year: number;
   model: string;
+  modelNumber: string;
+  displayName: string;
   rows: InventoryRow[];
+};
+
+// Helper to determine if a model should be subgrouped by Model Number
+const shouldSubgroup = (model: string): boolean => {
+  return model === "SILVERADO 1500" || 
+         model === "SILVERADO 2500HD" || 
+         model === "SILVERADO 3500HD";
 };
 
 export const InventoryTable: FC<Props> = ({ rows, onRowClick }) => {
   if (!rows.length) return null;
 
-  // Group rows by Year and Model, then sort within each group
+  // Group rows by Year, Model, and Model Number (for Silverado variants)
   const groupedRows = useMemo(() => {
     const groups: GroupedRows[] = [];
     const groupMap: Record<string, InventoryRow[]> = {};
 
     // First, group all rows
     rows.forEach((row) => {
-      const key = `${row.Year}|${row.Model}`;
+      let key: string;
+      
+      // For Silverado models, include Model Number in grouping key
+      if (shouldSubgroup(row.Model) && row["Model Number"]) {
+        key = `${row.Year}|${row.Model}|${row["Model Number"]}`;
+      } else {
+        key = `${row.Year}|${row.Model}|`;
+      }
+      
       if (!groupMap[key]) {
         groupMap[key] = [];
       }
@@ -34,17 +51,28 @@ export const InventoryTable: FC<Props> = ({ rows, onRowClick }) => {
 
     // Convert to array, sort each group's rows, then sort groups
     Object.entries(groupMap).forEach(([key, groupRows]) => {
-      const [year, model] = key.split("|");
+      const [year, model, modelNumber] = key.split("|");
+      
+      // Create display name - include model number for Silverado variants
+      let displayName = model;
+      if (shouldSubgroup(model) && modelNumber) {
+        displayName = `${model} ${modelNumber}`;
+      }
+      
       groups.push({
         year: parseInt(year),
         model,
-        rows: sortByAgeDescending(groupRows), // Sort within group
+        modelNumber: modelNumber || "",
+        displayName,
+        rows: sortByAgeDescending(groupRows),
       });
     });
 
+    // Sort groups: newest year first, then alphabetically by model, then by model number
     groups.sort((a, b) => {
-      if (b.year !== a.year) return b.year - a.year; // Newest year first
-      return a.model.localeCompare(b.model); // Then alphabetical by model
+      if (b.year !== a.year) return b.year - a.year;
+      if (a.model !== b.model) return a.model.localeCompare(b.model);
+      return a.modelNumber.localeCompare(b.modelNumber);
     });
 
     return groups;
@@ -68,7 +96,7 @@ export const InventoryTable: FC<Props> = ({ rows, onRowClick }) => {
 
         <div className="mobile-card-list">
           {groupedRows.map((group) => (
-            <React.Fragment key={`${group.year}-${group.model}`}>
+            <React.Fragment key={`${group.year}-${group.model}-${group.modelNumber}`}>
               {/* Group Header */}
               <div
                 style={{
@@ -82,7 +110,7 @@ export const InventoryTable: FC<Props> = ({ rows, onRowClick }) => {
                   borderRadius: 8,
                 }}
               >
-                {group.year} {group.model} - {group.rows.length}
+                {group.year} {group.displayName} - {group.rows.length}
               </div>
 
               {/* Group Rows */}
@@ -163,7 +191,7 @@ export const InventoryTable: FC<Props> = ({ rows, onRowClick }) => {
 
         <tbody>
           {groupedRows.map((group) => (
-            <React.Fragment key={`${group.year}-${group.model}`}>
+            <React.Fragment key={`${group.year}-${group.model}-${group.modelNumber}`}>
               {/* Group Header Row */}
               <tr>
                 <td
@@ -178,7 +206,7 @@ export const InventoryTable: FC<Props> = ({ rows, onRowClick }) => {
                     borderTop: "2px solid #1e293b",
                   }}
                 >
-                  {group.year} {group.model} - {group.rows.length}
+                  {group.year} {group.displayName} - {group.rows.length}
                 </td>
               </tr>
 
