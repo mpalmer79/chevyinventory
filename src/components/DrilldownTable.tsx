@@ -3,6 +3,7 @@ import React, { FC } from "react";
 import { InventoryRow } from "../types";
 import { generateVehicleUrl } from "../utils/vehicleUrl";
 import { isInTransit, formatAgeShort, sortByAgeDescending } from "../utils/inventoryUtils";
+import { useIsMobile } from "../hooks/useMediaQuery";
 
 type Props = {
   groups: Record<string, InventoryRow[]>;
@@ -10,13 +11,9 @@ type Props = {
   onRowClick: (row: InventoryRow) => void;
 };
 
-export const DrilldownTable: FC<Props> = ({
-  groups,
-  onBack,
-  onRowClick,
-}) => {
+export const DrilldownTable: FC<Props> = ({ groups, onBack, onRowClick }) => {
+  const isMobile = useIsMobile();
   const groupKeys = Object.keys(groups);
-  const isMobile = window.innerWidth < 768;
 
   // Handle stock number click - open in new tab
   const handleStockClick = (e: React.MouseEvent, row: InventoryRow) => {
@@ -28,30 +25,46 @@ export const DrilldownTable: FC<Props> = ({
   };
 
   return (
-    <section className="panel">
+    <section className="panel drilldown-section">
       <div className="drill-header">
-        <button className="back-button" onClick={onBack}>Back</button>
-        <div className="drill-title">Filtered Inventory</div>
+        <button className="back-button" onClick={onBack}>
+          ← Back
+        </button>
+        <div className="drill-title">Drilldown View</div>
       </div>
 
       {groupKeys.map((key) => {
         const parts = key.split("|");
-        const make = parts[0];
-        const model = parts[1];
-        const modelNumber = parts[2] || null;
-        const rows = sortByAgeDescending(groups[key]); // Sort within group
+        const make = parts[0] ?? "";
+        const model = parts[1] ?? "";
+        const modelNumber = parts[2] ?? null;
+        const groupRows = groups[key];
+        if (!groupRows) return null;
+        const rowsForGroup = sortByAgeDescending(groupRows);
         const title = modelNumber
-          ? `${make} ${model} ${modelNumber} - ${rows.length}`
-          : `${make} ${model} - ${rows.length}`;
+          ? `${make} ${model} ${modelNumber} - ${rowsForGroup.length}`
+          : `${make} ${model} - ${rowsForGroup.length}`;
 
         return (
-          <div key={key} className="drill-group">
-            <div className="drill-group-title">{title}</div>
+          <div key={key} className="drill-group" style={{ marginTop: 16 }}>
+            <div
+              className="drill-group-title"
+              style={{
+                background: "#ffffff",
+                color: "#000000",
+                padding: "12px 16px",
+                fontWeight: 700,
+                fontSize: 15,
+                borderRadius: 8,
+                marginBottom: 8,
+              }}
+            >
+              {title}
+            </div>
 
-            {/* ----- MOBILE CARDS ----- */}
             {isMobile ? (
               <div className="mobile-card-list">
-                {rows.map((r) => (
+                {rowsForGroup.map((r) => (
                   <div
                     key={r["Stock Number"]}
                     className="mobile-card"
@@ -104,8 +117,7 @@ export const DrilldownTable: FC<Props> = ({
                 ))}
               </div>
             ) : (
-              // DESKTOP TABLE
-              <table className="table-shell" style={{ marginTop: 12 }}>
+              <table className="table-shell">
                 <thead>
                   <tr>
                     <th>Stock #</th>
@@ -119,7 +131,7 @@ export const DrilldownTable: FC<Props> = ({
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map((r) => (
+                  {rowsForGroup.map((r) => (
                     <tr
                       key={r["Stock Number"]}
                       className="click-row"
