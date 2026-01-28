@@ -1,13 +1,14 @@
+// src/index.jsx
 import React from "react";
-import { createRoot } from "react-dom/client";
-import "./index.css";
+import ReactDOM from "react-dom/client";
 import App from "./App";
+import { ThemeProvider } from "./context/ThemeContext";
+import "./styles/theme.css";
 
-const container = document.getElementById("root");
-if (!container) throw new Error("Root container not found");
-
-createRoot(container).render(
+ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <App />
+    <ThemeProvider>
+      <App />
+    </ThemeProvider>
   </React.StrictMode>
 );
