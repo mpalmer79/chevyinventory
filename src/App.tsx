@@ -5,6 +5,7 @@ import "./style.css";
 import { useInventoryData } from "./hooks/useInventoryData";
 import { AgingBuckets, DrillType, Filters, InventoryRow } from "./types";
 
+import { ErrorBoundary, SectionErrorBoundary } from "./components/ErrorBoundary";
 import { HeaderBar } from "./components/HeaderBar";
 import { FiltersBar } from "./components/FiltersBar";
 import { KpiBar } from "./components/KpiBar";
@@ -228,105 +229,121 @@ const App: FC = () => {
   const hasModelFilter = !!filters.model;
 
   return (
-    <div className="app-root">
-      <HeaderBar 
-        searchTerm={searchTerm}
-        onSearchChange={handleSmartSearch}
-      />
+    <ErrorBoundary>
+      <div className="app-root">
+        <HeaderBar 
+          searchTerm={searchTerm}
+          onSearchChange={handleSmartSearch}
+        />
 
-      <main className="container">
-        {error && (
-          <section className="panel">
-            <div className="section-title">File Error</div>
-            <p>{error}</p>
-          </section>
-        )}
+        <main className="container">
+          {error && (
+            <section className="panel">
+              <div className="section-title">File Error</div>
+              <p>{error}</p>
+            </section>
+          )}
 
-        {rows.length > 0 && (
-          <>
-            <FiltersBar
-              models={modelsList}
-              filters={filters}
-              onChange={setFilters}
-              onSmartSearch={handleSmartSearch}
-              rows={rows}
-              agingBuckets={agingBuckets}
-              drillType={drillType}
-              drillData={drillData}
-              onSetDrillType={setDrillType}
-              onRowClick={(r) => setSelectedVehicle(r)}
-              onReset={handleReset}
-            />
-
-            {/* Hide KpiBar when model filter is active */}
-            {!hasModelFilter && (
-              <KpiBar
-                totalUnits={filteredRows.length}
-                newArrivalCount={filteredNewArrivals.length}
-                inTransitCount={filteredInTransit.length}
-                onSelectTotalUnits={handleReset}
-                onSelectNewArrivals={() => setDrillType("new")}
-                onSelectInTransit={() => setDrillType("in_transit")}
-              />
-            )}
-
-            {/* Show IN TRANSIT drilldown directly below KPI bar */}
-            {drillType === "in_transit" && drillData && (
-              <DrilldownTable
-                groups={drillData}
-                onBack={() => setDrillType(null)}
-                onRowClick={(r) => setSelectedVehicle(r)}
-              />
-            )}
-
-            {/* Hide ChartsSection when model filter is active or in_transit drill is active */}
-            {!hasModelFilter && drillType !== "in_transit" && (
-              <ChartsSection
-                modelPieData={modelPieData}
+          {rows.length > 0 && (
+            <>
+              <FiltersBar
+                models={modelsList}
+                filters={filters}
+                onChange={setFilters}
+                onSmartSearch={handleSmartSearch}
+                rows={rows}
                 agingBuckets={agingBuckets}
-                agingHandlers={{
-                  on0_30: () => setDrillType("0_30"),
-                  on31_60: () => setDrillType("31_60"),
-                  on61_90: () => setDrillType("61_90"),
-                  on90_plus: () => setDrillType("90_plus"),
-                }}
-              />
-            )}
-
-            {/* NewArrivalsPanel - hidden during drills or model filter */}
-            {!(
-              drillType === "0_30" ||
-              drillType === "31_60" ||
-              drillType === "61_90" ||
-              drillType === "90_plus" ||
-              drillType === "in_transit" ||
-              filters.model
-            ) && <NewArrivalsPanel rows={filteredNewArrivals} />}
-
-            {/* Hide main inventory table when in_transit drill is active */}
-            {drillType !== "in_transit" && (
-              <InventoryTable
-                rows={filteredRows}
+                drillType={drillType}
+                drillData={drillData}
+                onSetDrillType={setDrillType}
                 onRowClick={(r) => setSelectedVehicle(r)}
+                onReset={handleReset}
               />
-            )}
 
-            {drillType === "total" && drillData && (
-              <DrilldownTable
-                groups={drillData}
-                onBack={() => setDrillType(null)}
-                onRowClick={(r) => setSelectedVehicle(r)}
+              {/* Hide KpiBar when model filter is active */}
+              {!hasModelFilter && (
+                <SectionErrorBoundary section="KPI metrics">
+                  <KpiBar
+                    totalUnits={filteredRows.length}
+                    newArrivalCount={filteredNewArrivals.length}
+                    inTransitCount={filteredInTransit.length}
+                    onSelectTotalUnits={handleReset}
+                    onSelectNewArrivals={() => setDrillType("new")}
+                    onSelectInTransit={() => setDrillType("in_transit")}
+                  />
+                </SectionErrorBoundary>
+              )}
+
+              {/* Show IN TRANSIT drilldown directly below KPI bar */}
+              {drillType === "in_transit" && drillData && (
+                <SectionErrorBoundary section="in-transit inventory">
+                  <DrilldownTable
+                    groups={drillData}
+                    onBack={() => setDrillType(null)}
+                    onRowClick={(r) => setSelectedVehicle(r)}
+                  />
+                </SectionErrorBoundary>
+              )}
+
+              {/* Hide ChartsSection when model filter is active or in_transit drill is active */}
+              {!hasModelFilter && drillType !== "in_transit" && (
+                <SectionErrorBoundary section="charts">
+                  <ChartsSection
+                    modelPieData={modelPieData}
+                    agingBuckets={agingBuckets}
+                    agingHandlers={{
+                      on0_30: () => setDrillType("0_30"),
+                      on31_60: () => setDrillType("31_60"),
+                      on61_90: () => setDrillType("61_90"),
+                      on90_plus: () => setDrillType("90_plus"),
+                    }}
+                  />
+                </SectionErrorBoundary>
+              )}
+
+              {/* NewArrivalsPanel - hidden during drills or model filter */}
+              {!(
+                drillType === "0_30" ||
+                drillType === "31_60" ||
+                drillType === "61_90" ||
+                drillType === "90_plus" ||
+                drillType === "in_transit" ||
+                filters.model
+              ) && (
+                <SectionErrorBoundary section="new arrivals">
+                  <NewArrivalsPanel rows={filteredNewArrivals} />
+                </SectionErrorBoundary>
+              )}
+
+              {/* Hide main inventory table when in_transit drill is active */}
+              {drillType !== "in_transit" && (
+                <SectionErrorBoundary section="inventory table">
+                  <InventoryTable
+                    rows={filteredRows}
+                    onRowClick={(r) => setSelectedVehicle(r)}
+                  />
+                </SectionErrorBoundary>
+              )}
+
+              {drillType === "total" && drillData && (
+                <SectionErrorBoundary section="drilldown">
+                  <DrilldownTable
+                    groups={drillData}
+                    onBack={() => setDrillType(null)}
+                    onRowClick={(r) => setSelectedVehicle(r)}
+                  />
+                </SectionErrorBoundary>
+              )}
+
+              <VehicleDetailDrawer
+                vehicle={selectedVehicle}
+                onClose={() => setSelectedVehicle(null)}
               />
-            )}
-
-            <VehicleDetailDrawer
-              vehicle={selectedVehicle}
-              onClose={() => setSelectedVehicle(null)}
-            />
-          </>
-        )}
-      </main>
-    </div>
+            </>
+          )}
+        </main>
+      </div>
+    </ErrorBoundary>
   );
 };
 
