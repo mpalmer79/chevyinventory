@@ -98,9 +98,9 @@ describe("sortByAgeDescending", () => {
 
     const sorted = sortByAgeDescending(rows);
 
-    expect(sorted[0]["Stock Number"]).toBe("B"); // 30 days
-    expect(sorted[1]["Stock Number"]).toBe("C"); // 20 days
-    expect(sorted[2]["Stock Number"]).toBe("A"); // 10 days
+    expect(sorted[0]?.["Stock Number"]).toBe("B"); // 30 days
+    expect(sorted[1]?.["Stock Number"]).toBe("C"); // 20 days
+    expect(sorted[2]?.["Stock Number"]).toBe("A"); // 10 days
   });
 
   it("places IN TRANSIT vehicles at the bottom", () => {
@@ -112,9 +112,9 @@ describe("sortByAgeDescending", () => {
 
     const sorted = sortByAgeDescending(rows);
 
-    expect(sorted[0]["Stock Number"]).toBe("B"); // 30 days, on lot
-    expect(sorted[1]["Stock Number"]).toBe("C"); // 10 days, on lot
-    expect(sorted[2]["Stock Number"]).toBe("A"); // in transit (at bottom)
+    expect(sorted[0]?.["Stock Number"]).toBe("B"); // 30 days, on lot
+    expect(sorted[1]?.["Stock Number"]).toBe("C"); // 10 days, on lot
+    expect(sorted[2]?.["Stock Number"]).toBe("A"); // in transit (at bottom)
   });
 
   it("sorts multiple IN TRANSIT vehicles by age among themselves", () => {
@@ -126,9 +126,9 @@ describe("sortByAgeDescending", () => {
 
     const sorted = sortByAgeDescending(rows);
 
-    expect(sorted[0]["Stock Number"]).toBe("C"); // on lot first
-    expect(sorted[1]["Stock Number"]).toBe("B"); // transit, 15 days
-    expect(sorted[2]["Stock Number"]).toBe("A"); // transit, 5 days
+    expect(sorted[0]?.["Stock Number"]).toBe("C"); // on lot first
+    expect(sorted[1]?.["Stock Number"]).toBe("B"); // transit, 15 days
+    expect(sorted[2]?.["Stock Number"]).toBe("A"); // transit, 5 days
   });
 
   it("does not mutate the original array", () => {
@@ -136,11 +136,11 @@ describe("sortByAgeDescending", () => {
       createMockRow({ "Stock Number": "A", Age: 10 }),
       createMockRow({ "Stock Number": "B", Age: 30 }),
     ];
-    const originalFirst = rows[0]["Stock Number"];
+    const originalFirst = rows[0]?.["Stock Number"];
 
     sortByAgeDescending(rows);
 
-    expect(rows[0]["Stock Number"]).toBe(originalFirst);
+    expect(rows[0]?.["Stock Number"]).toBe(originalFirst);
   });
 
   it("handles empty array", () => {
@@ -159,9 +159,9 @@ describe("sortByModelThenAge", () => {
 
     const sorted = sortByModelThenAge(rows);
 
-    expect(sorted[0].Model).toBe("EQUINOX");
-    expect(sorted[1].Model).toBe("SILVERADO 1500");
-    expect(sorted[2].Model).toBe("TAHOE");
+    expect(sorted[0]?.Model).toBe("EQUINOX");
+    expect(sorted[1]?.Model).toBe("SILVERADO 1500");
+    expect(sorted[2]?.Model).toBe("TAHOE");
   });
 
   it("sorts by age descending within same model", () => {
@@ -173,9 +173,9 @@ describe("sortByModelThenAge", () => {
 
     const sorted = sortByModelThenAge(rows);
 
-    expect(sorted[0]["Stock Number"]).toBe("B"); // 30 days
-    expect(sorted[1]["Stock Number"]).toBe("C"); // 20 days
-    expect(sorted[2]["Stock Number"]).toBe("A"); // 10 days
+    expect(sorted[0]?.["Stock Number"]).toBe("B"); // 30 days
+    expect(sorted[1]?.["Stock Number"]).toBe("C"); // 20 days
+    expect(sorted[2]?.["Stock Number"]).toBe("A"); // 10 days
   });
 
   it("places IN TRANSIT at bottom of each model group", () => {
@@ -187,8 +187,8 @@ describe("sortByModelThenAge", () => {
 
     const sorted = sortByModelThenAge(rows);
 
-    expect(sorted[0].Model).toBe("EQUINOX");
-    expect(sorted[1]["Stock Number"]).toBe("B"); // TAHOE on lot
-    expect(sorted[2]["Stock Number"]).toBe("A"); // TAHOE in transit
+    expect(sorted[0]?.Model).toBe("EQUINOX");
+    expect(sorted[1]?.["Stock Number"]).toBe("B"); // TAHOE on lot
+    expect(sorted[2]?.["Stock Number"]).toBe("A"); // TAHOE in transit
   });
 });
