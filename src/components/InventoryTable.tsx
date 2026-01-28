@@ -1,5 +1,5 @@
 // src/components/InventoryTable.tsx
-import React, { FC, useMemo, memo } from "react";
+import React, { FC, useMemo } from "react";
 import { InventoryRow } from "../types";
 import { generateVehicleUrl } from "../utils/vehicleUrl";
 import { isInTransit, formatAgeShort, sortByAgeDescending } from "../utils/inventoryUtils";
@@ -49,12 +49,15 @@ export const InventoryTable: FC<Props> = ({ rows, onRowClick }) => {
       if (!groupMap[key]) {
         groupMap[key] = [];
       }
-      groupMap[key].push(row);
+      groupMap[key]?.push(row);
     });
 
     // Convert to array, sort each group's rows, then sort groups
     Object.entries(groupMap).forEach(([key, groupRows]) => {
-      const [year, model, modelNumber] = key.split("|");
+      const parts = key.split("|");
+      const year = parts[0] ?? "0";
+      const model = parts[1] ?? "";
+      const modelNumber = parts[2] ?? "";
       
       // Create display name - include model number for Silverado variants
       let displayName = model;
