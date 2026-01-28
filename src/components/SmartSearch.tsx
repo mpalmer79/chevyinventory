@@ -2,12 +2,6 @@
 import React, { useRef } from "react";
 import { InventoryRow } from "../types";
 
-// Extend Window interface for Speech Recognition API
-interface SpeechRecognitionWindow extends Window {
-  SpeechRecognition?: typeof SpeechRecognition;
-  webkitSpeechRecognition?: typeof SpeechRecognition;
-}
-
 interface Props {
   rows: InventoryRow[];
   onResults: (r: InventoryRow[]) => void;
@@ -17,10 +11,11 @@ export const SmartSearch: React.FC<Props> = ({ rows, onResults }) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleVoiceSearch = () => {
-    // Web Speech API with vendor prefix support
-    const windowWithSpeech = window as SpeechRecognitionWindow;
     const SpeechRecognitionAPI =
-      windowWithSpeech.SpeechRecognition || windowWithSpeech.webkitSpeechRecognition;
+      (window as Window & { SpeechRecognition?: new () => SpeechRecognition; webkitSpeechRecognition?: new () => SpeechRecognition })
+        .SpeechRecognition ||
+      (window as Window & { webkitSpeechRecognition?: new () => SpeechRecognition })
+        .webkitSpeechRecognition;
 
     if (!SpeechRecognitionAPI) {
       alert("Voice search not supported in this browser.");
@@ -30,14 +25,13 @@ export const SmartSearch: React.FC<Props> = ({ rows, onResults }) => {
     const recognition = new SpeechRecognitionAPI();
     recognition.lang = "en-US";
 
-    recognition.onresult = (event) => {
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
       const transcript = event.results[0]?.[0]?.transcript ?? "";
       if (inputRef.current) {
         inputRef.current.value = transcript;
       }
 
       const lower = transcript.toLowerCase();
-
       const results = rows.filter((r) => {
         return (
           r.Model.toLowerCase().includes(lower) ||
@@ -45,12 +39,11 @@ export const SmartSearch: React.FC<Props> = ({ rows, onResults }) => {
           r["Exterior Color"].toLowerCase().includes(lower)
         );
       });
-
       onResults(results);
     };
 
-    recognition.onerror = (e) => {
-      console.error("Speech error:", e.error);
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      console.error("Speech error:", event.error);
     };
 
     recognition.start();
@@ -58,7 +51,6 @@ export const SmartSearch: React.FC<Props> = ({ rows, onResults }) => {
 
   const handleManualSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value.toLowerCase();
-
     const results = rows.filter((r) => {
       return (
         r.Model.toLowerCase().includes(input) ||
@@ -66,16 +58,12 @@ export const SmartSearch: React.FC<Props> = ({ rows, onResults }) => {
         r["Exterior Color"].toLowerCase().includes(input)
       );
     });
-
     onResults(results);
   };
 
   return (
     <div className="smart-search-container">
-      <button className="mic-btn" onClick={handleVoiceSearch}>
-        🎤
-      </button>
-
+      <button className="mic-btn" onClick={handleVoiceSearch}>🎤</button>
       <input
         ref={inputRef}
         type="text"
@@ -83,7 +71,6 @@ export const SmartSearch: React.FC<Props> = ({ rows, onResults }) => {
         className="smart-search-input"
         onChange={handleManualSearch}
       />
-
       <div className="smart-search-tips">
         Try "blue Silverado 1500" or "white Silverado CK10543".
       </div>
