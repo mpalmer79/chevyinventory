@@ -1,9 +1,10 @@
 // src/components/InventoryTable.tsx
-import React, { FC, useMemo } from "react";
+import React, { FC, useMemo, memo } from "react";
 import { InventoryRow } from "../types";
 import { generateVehicleUrl } from "../utils/vehicleUrl";
 import { isInTransit, formatAgeShort, sortByAgeDescending } from "../utils/inventoryUtils";
 import { useIsMobile } from "../hooks/useMediaQuery";
+import { VirtualizedTable } from "./VirtualizedTable";
 
 type Props = {
   rows: InventoryRow[];
@@ -18,48 +19,49 @@ type GroupedRows = {
   rows: InventoryRow[];
 };
 
-// Helper to determine if a model should be subgrouped by Model Number
 const shouldSubgroup = (model: string): boolean => {
   return model === "SILVERADO 1500" || 
          model === "SILVERADO 2500HD" || 
          model === "SILVERADO 3500HD";
 };
 
-export const InventoryTable: FC<Props> = ({ rows, onRowClick }) => {
+// Threshold for using virtualization
+const VIRTUALIZATION_THRESHOLD = 100;
+
+export const InventoryTable: FC<Props> = memo(({ rows, onRowClick }) => {
   const isMobile = useIsMobile();
   
   if (!rows.length) return null;
+
+  // Use virtualized table for large datasets on desktop
+  if (!isMobile && rows.length > VIRTUALIZATION_THRESHOLD) {
+    return <VirtualizedTable rows={rows} onRowClick={onRowClick} />;
+  }
 
   // Group rows by Year, Model, and Model Number (for Silverado variants)
   const groupedRows = useMemo(() => {
     const groups: GroupedRows[] = [];
     const groupMap: Record<string, InventoryRow[]> = {};
 
-    // First, group all rows
     rows.forEach((row) => {
       let key: string;
-      
-      // For Silverado models, include Model Number in grouping key
       if (shouldSubgroup(row.Model) && row["Model Number"]) {
         key = `${row.Year}|${row.Model}|${row["Model Number"]}`;
       } else {
         key = `${row.Year}|${row.Model}|`;
       }
-      
       if (!groupMap[key]) {
         groupMap[key] = [];
       }
       groupMap[key]?.push(row);
     });
 
-    // Convert to array, sort each group's rows, then sort groups
     Object.entries(groupMap).forEach(([key, groupRows]) => {
       const parts = key.split("|");
       const year = parts[0] ?? "0";
       const model = parts[1] ?? "";
       const modelNumber = parts[2] ?? "";
       
-      // Create display name - include model number for Silverado variants
       let displayName = model;
       if (shouldSubgroup(model) && modelNumber) {
         displayName = `${model} ${modelNumber}`;
@@ -74,7 +76,6 @@ export const InventoryTable: FC<Props> = ({ rows, onRowClick }) => {
       });
     });
 
-    // Sort groups: newest year first, then alphabetically by model, then by model number
     groups.sort((a, b) => {
       if (b.year !== a.year) return b.year - a.year;
       if (a.model !== b.model) return a.model.localeCompare(b.model);
@@ -84,7 +85,6 @@ export const InventoryTable: FC<Props> = ({ rows, onRowClick }) => {
     return groups;
   }, [rows]);
 
-  // Handle stock number click - open in new tab
   const handleStockClick = (e: React.MouseEvent, row: InventoryRow) => {
     e.stopPropagation();
     const url = generateVehicleUrl(row);
@@ -102,7 +102,6 @@ export const InventoryTable: FC<Props> = ({ rows, onRowClick }) => {
         <div className="mobile-card-list">
           {groupedRows.map((group) => (
             <React.Fragment key={`${group.year}-${group.model}-${group.modelNumber}`}>
-              {/* Group Header */}
               <div
                 style={{
                   background: "#ffffff",
@@ -118,7 +117,6 @@ export const InventoryTable: FC<Props> = ({ rows, onRowClick }) => {
                 {group.year} {group.displayName} - {group.rows.length}
               </div>
 
-              {/* Group Rows */}
               {group.rows.map((r) => (
                 <div
                   key={r["Stock Number"]}
@@ -177,7 +175,7 @@ export const InventoryTable: FC<Props> = ({ rows, onRowClick }) => {
     );
   }
 
-  // ---------- DESKTOP TABLE VIEW ----------
+  // ---------- DESKTOP TABLE VIEW (small datasets) ----------
   return (
     <section className="panel table-shell">
       <table>
@@ -197,7 +195,6 @@ export const InventoryTable: FC<Props> = ({ rows, onRowClick }) => {
         <tbody>
           {groupedRows.map((group) => (
             <React.Fragment key={`${group.year}-${group.model}-${group.modelNumber}`}>
-              {/* Group Header Row */}
               <tr>
                 <td
                   colSpan={8}
@@ -215,7 +212,6 @@ export const InventoryTable: FC<Props> = ({ rows, onRowClick }) => {
                 </td>
               </tr>
 
-              {/* Group Data Rows */}
               {group.rows.map((r) => (
                 <tr
                   key={r["Stock Number"]}
@@ -252,4 +248,6 @@ export const InventoryTable: FC<Props> = ({ rows, onRowClick }) => {
       </table>
     </section>
   );
-};
+});
+
+InventoryTable.displayName = "InventoryTable";
