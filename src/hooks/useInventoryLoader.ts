@@ -30,7 +30,6 @@ export function useInventoryLoader() {
     const worksheet = workbook.Sheets[sheetName];
     if (!worksheet) throw new Error("Worksheet not found");
 
-    // Parse with headers - this automatically skips the header row
     const rawData = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet);
 
     return rawData
@@ -46,7 +45,7 @@ export function useInventoryLoader() {
         Cylinders: Number(row["Cylinders"]) || 0,
         Age: Number(row["Age"]) || 0,
         MSRP: Number(row["MSRP"]) || 0,
-        Status: String(row["Status"] ?? ""),
+        Status: String(row["Category"] ?? ""),  // Changed from "Status" to "Category"
         VIN: String(row["VIN"] ?? ""),
       }));
   }, []);
