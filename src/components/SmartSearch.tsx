@@ -2,6 +2,12 @@
 import React, { useRef } from "react";
 import { InventoryRow } from "../types";
 
+// Extend Window interface for Speech Recognition API
+interface SpeechRecognitionWindow extends Window {
+  SpeechRecognition?: typeof SpeechRecognition;
+  webkitSpeechRecognition?: typeof SpeechRecognition;
+}
+
 interface Props {
   rows: InventoryRow[];
   onResults: (r: InventoryRow[]) => void;
@@ -11,20 +17,20 @@ export const SmartSearch: React.FC<Props> = ({ rows, onResults }) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleVoiceSearch = () => {
-    // Required for Android Chrome: must exist directly in the click handler
-    const SpeechRecognition =
-      (window as unknown as { SpeechRecognition?: typeof window.SpeechRecognition; webkitSpeechRecognition?: typeof window.SpeechRecognition }).SpeechRecognition || 
-      (window as unknown as { webkitSpeechRecognition?: typeof window.SpeechRecognition }).webkitSpeechRecognition;
+    // Web Speech API with vendor prefix support
+    const windowWithSpeech = window as SpeechRecognitionWindow;
+    const SpeechRecognitionAPI =
+      windowWithSpeech.SpeechRecognition || windowWithSpeech.webkitSpeechRecognition;
 
-    if (!SpeechRecognition) {
+    if (!SpeechRecognitionAPI) {
       alert("Voice search not supported in this browser.");
       return;
     }
 
-    const recognition = new SpeechRecognition();
+    const recognition = new SpeechRecognitionAPI();
     recognition.lang = "en-US";
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
+    recognition.onresult = (event) => {
       const transcript = event.results[0]?.[0]?.transcript ?? "";
       if (inputRef.current) {
         inputRef.current.value = transcript;
@@ -43,11 +49,11 @@ export const SmartSearch: React.FC<Props> = ({ rows, onResults }) => {
       onResults(results);
     };
 
-    recognition.onerror = (e: SpeechRecognitionErrorEvent) => {
+    recognition.onerror = (e) => {
       console.error("Speech error:", e.error);
     };
 
-    recognition.start(); // Must be directly connected to user gesture
+    recognition.start();
   };
 
   const handleManualSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
