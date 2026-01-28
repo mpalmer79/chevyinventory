@@ -12,19 +12,18 @@ export const SmartSearch: React.FC<Props> = ({ rows, onResults }) => {
 
   const handleVoiceSearch = () => {
     // Required for Android Chrome: must exist directly in the click handler
-    const SpeechRecognition =
-      (window as unknown as { SpeechRecognition?: typeof window.SpeechRecognition; webkitSpeechRecognition?: typeof window.SpeechRecognition }).SpeechRecognition || 
-      (window as unknown as { webkitSpeechRecognition?: typeof window.SpeechRecognition }).webkitSpeechRecognition;
+    const SpeechRecognitionConstructor =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
 
-    if (!SpeechRecognition) {
+    if (!SpeechRecognitionConstructor) {
       alert("Voice search not supported in this browser.");
       return;
     }
 
-    const recognition = new SpeechRecognition();
+    const recognition = new SpeechRecognitionConstructor();
     recognition.lang = "en-US";
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
+    recognition.onresult = (event) => {
       const transcript = event.results[0]?.[0]?.transcript ?? "";
       if (inputRef.current) {
         inputRef.current.value = transcript;
@@ -43,7 +42,7 @@ export const SmartSearch: React.FC<Props> = ({ rows, onResults }) => {
       onResults(results);
     };
 
-    recognition.onerror = (e: SpeechRecognitionErrorEvent) => {
+    recognition.onerror = (e) => {
       console.error("Speech error:", e.error);
     };
 

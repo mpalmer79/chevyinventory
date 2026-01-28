@@ -51,13 +51,10 @@ export default defineConfig(({ mode }) => ({
         },
       },
     },
-    // Minification settings
-    minify: "terser",
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-      },
+    // Minification settings - using esbuild (included with Vite)
+    minify: "esbuild",
+    esbuild: {
+      drop: ["console", "debugger"],
     },
   },
   server: {
