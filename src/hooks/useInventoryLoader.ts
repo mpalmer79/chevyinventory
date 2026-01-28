@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import * as XLSX from "xlsx";
 import { InventoryRow } from "../types";
 import { useInventoryStore } from "../store/inventoryStore";
@@ -14,15 +14,14 @@ interface CachedData {
 }
 
 export function useInventoryLoader() {
-  const {
-    setRows,
-    setLoading,
-    setStale,
-    setError,
-    setLastUpdated,
-    setRefreshing,
-    rows,
-  } = useInventoryStore();
+  const setRows = useInventoryStore((s) => s.setRows);
+  const setLoading = useInventoryStore((s) => s.setLoading);
+  const setStale = useInventoryStore((s) => s.setStale);
+  const setError = useInventoryStore((s) => s.setError);
+  const setLastUpdated = useInventoryStore((s) => s.setLastUpdated);
+  const setRefreshing = useInventoryStore((s) => s.setRefreshing);
+  
+  const hasFetched = useRef(false);
 
   const parseArrayBuffer = useCallback((data: ArrayBuffer): InventoryRow[] => {
     const workbook = XLSX.read(data, { type: "array" });
@@ -104,24 +103,26 @@ export function useInventoryLoader() {
       saveToCache(parsed);
     } catch (err) {
       console.error("Inventory load failed:", err);
-      if (rows.length === 0) {
-        setError("Error loading inventory data.");
-      }
+      setError("Error loading inventory data.");
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [loadFromCache, parseArrayBuffer, saveToCache, setRows, setLoading, setStale, setError, setLastUpdated, setRefreshing, rows.length]);
+  }, [loadFromCache, parseArrayBuffer, saveToCache, setRows, setLoading, setStale, setError, setLastUpdated, setRefreshing]);
 
   const refetch = useCallback(async () => {
     setRefreshing(true);
     await fetchInventory(false);
   }, [fetchInventory, setRefreshing]);
 
+  // Initial load - only once
   useEffect(() => {
+    if (hasFetched.current) return;
+    hasFetched.current = true;
     fetchInventory();
   }, [fetchInventory]);
 
+  // Background refresh interval
   useEffect(() => {
     const interval = setInterval(() => {
       const lastUpdated = useInventoryStore.getState().lastUpdated;
@@ -129,12 +130,11 @@ export function useInventoryLoader() {
         const age = Date.now() - lastUpdated.getTime();
         if (age > STALE_TIME) {
           setStale(true);
-          fetchInventory(false);
         }
       }
     }, STALE_TIME);
     return () => clearInterval(interval);
-  }, [fetchInventory, setStale]);
+  }, [setStale]);
 
   return { refetch };
 }
