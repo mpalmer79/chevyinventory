@@ -12,10 +12,18 @@ export function useInventoryData() {
     try {
       const workbook = XLSX.read(data, { type: "array" });
       const sheetName = workbook.SheetNames[0];
+      if (!sheetName) {
+        setError("No sheets found in workbook");
+        return;
+      }
       const worksheet = workbook.Sheets[sheetName];
+      if (!worksheet) {
+        setError("Worksheet not found");
+        return;
+      }
       
       // Read as array of arrays since there's no header row
-      const rawData: any[][] = XLSX.utils.sheet_to_json(worksheet, { 
+      const rawData: unknown[][] = XLSX.utils.sheet_to_json(worksheet, { 
         header: 1,
         defval: "" 
       });
@@ -24,20 +32,20 @@ export function useInventoryData() {
       // 0: Stock Number, 1: Year, 2: Make, 3: Model, 4: Exterior Color,
       // 5: Trim, 6: Model Number, 7: Cylinders, 8: Age, 9: MSRP, 10: Status, 11: VIN
       const parsed: InventoryRow[] = rawData
-        .filter((row: any[]) => row.length >= 10 && row[0]) // Skip empty rows
-        .map((row: any[]) => ({
-          "Stock Number": String(row[0] || ""),
+        .filter((row): row is unknown[] => Array.isArray(row) && row.length >= 10 && row[0] != null)
+        .map((row) => ({
+          "Stock Number": String(row[0] ?? ""),
           Year: Number(row[1]) || 0,
-          Make: String(row[2] || ""),
-          Model: String(row[3] || ""),
-          "Exterior Color": String(row[4] || ""),
-          Trim: String(row[5] || ""),
-          "Model Number": String(row[6] || ""),
+          Make: String(row[2] ?? ""),
+          Model: String(row[3] ?? ""),
+          "Exterior Color": String(row[4] ?? ""),
+          Trim: String(row[5] ?? ""),
+          "Model Number": String(row[6] ?? ""),
           Cylinders: Number(row[7]) || 0,
           Age: Number(row[8]) || 0,
           MSRP: Number(row[9]) || 0,
-          Status: String(row[10] || ""),
-          VIN: String(row[11] || ""),
+          Status: String(row[10] ?? ""),
+          VIN: String(row[11] ?? ""),
         }));
 
       setRows(parsed);
@@ -73,7 +81,7 @@ export function useInventoryData() {
   const modelPieData = useMemo<ModelPieDatum[]>(() => {
     const countByModel: Record<string, number> = {};
     rows.forEach((r) => {
-      countByModel[r.Model] = (countByModel[r.Model] || 0) + 1;
+      countByModel[r.Model] = (countByModel[r.Model] ?? 0) + 1;
     });
 
     return Object.entries(countByModel)
