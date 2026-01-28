@@ -957,15 +957,16 @@ tbody tr.click-row {
   }
 
   .header-hero {
-    height: 250px;
-    padding: 20px 16px;
-    flex-direction: column;
-    gap: 16px;
+    height: 350px;
+    padding: 0 16px 30px 16px;
   }
 
   .header-content {
-    flex-direction: column;
-    gap: 16px;
+    max-width: 100%;
+  }
+
+  .header-search {
+    max-width: 280px;
   }
 
   .header-left {
