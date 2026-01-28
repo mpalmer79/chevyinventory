@@ -1,8 +1,9 @@
 // src/components/InventoryHealthPanel.tsx
-import React, { FC } from "react";
+import React, { FC, memo } from "react";
 import { AgingBuckets, InventoryRow } from "../types";
 import { generateVehicleUrl } from "../utils/vehicleUrl";
 import { isInTransit, formatAgeShort, sortByAgeDescending } from "../utils/inventoryUtils";
+import { useIsMobile } from "../hooks/useMediaQuery";
 
 type Props = {
   rows: InventoryRow[];
@@ -21,6 +22,8 @@ export const InventoryHealthPanel: FC<Props> = ({
   onBack,
   onRowClick,
 }) => {
+  const isMobile = useIsMobile();
+  
   if (!rows.length) return null;
 
   // Handle stock number click - open in new tab
@@ -44,7 +47,6 @@ export const InventoryHealthPanel: FC<Props> = ({
   // If drillType is set and we have drillData, render the drilldown groups
   if (drillType && drillData) {
     const groupKeys = Object.keys(drillData || {});
-    const isMobile = window.innerWidth < 768;
 
     return (
       <section className="panel inventory-health-panel">
