@@ -22,7 +22,7 @@ export function generateVehicleUrl(row: InventoryRow): string {
   // Extract drive type from trim (AWD, 4WD, RWD, FWD)
   const trim = row.Trim || "";
   const driveMatch = trim.match(/\b(AWD|4WD|RWD|FWD)\b/i);
-  let driveType = driveMatch ? driveMatch[1].toLowerCase() : "";
+  let driveType = driveMatch?.[1]?.toLowerCase() ?? "";
   
   // Remove drive type from trim for the URL
   let trimClean = trim
