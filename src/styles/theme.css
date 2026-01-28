@@ -222,7 +222,7 @@ body {
    ============================================ */
 
 .header {
-  background: url("/chevy-showroom.png") center/cover no-repeat;
+  background: url("/chevy-showroom.png") center top/cover no-repeat;
   color: #ffffff;
   position: relative;
   overflow: hidden;
@@ -230,71 +230,77 @@ body {
 
 .header-hero {
   position: relative;
-  height: 350px;
+  height: 500px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 32px;
-  background: rgba(0, 0, 0, 0.3);
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 32px 40px 32px;
 }
+
+/* Light watermark overlay */
+.header-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.08);
+  z-index: 0;
+}
+
+/* Bottom fade gradient */
+.header-hero::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 150px;
+  background: linear-gradient(to bottom, transparent 0%, var(--bg-secondary) 100%);
+  z-index: 1;
+}
+
 .header-content {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
+  gap: 16px;
   width: 100%;
+  max-width: 500px;
 }
 
 .header-left {
-  display: flex;
-  align-items: center;
-  gap: 24px;
+  display: none;
 }
 
 .header-logo {
-  height: 48px;
-  width: auto;
+  display: none;
 }
 
 .header-title {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.header-title h1 {
-  font-size: var(--text-2xl);
-  font-weight: 700;
-  color: #ffffff;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.header-title span {
-  font-size: var(--text-sm);
-  color: rgba(255, 255, 255, 0.8);
+  display: none;
 }
 
 .header-right {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+  display: none;
 }
 
 .header-search {
   position: relative;
-  width: 300px;
+  width: 100%;
+  max-width: 400px;
 }
 
 .header-search input {
   width: 100%;
-  padding: 12px 16px 12px 44px;
+  padding: 14px 18px 14px 48px;
   border: none;
   border-radius: var(--radius-full);
   background: rgba(255, 255, 255, 0.95);
   color: var(--text-primary);
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   transition: box-shadow var(--transition-fast);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .header-search input::placeholder {
@@ -303,12 +309,12 @@ body {
 
 .header-search input:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 }
 
 .header-search-icon {
   position: absolute;
-  left: 14px;
+  left: 16px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--text-muted);
@@ -319,26 +325,30 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.9);
   border: none;
-  color: #ffffff;
+  color: var(--text-primary);
   cursor: pointer;
   transition: background var(--transition-fast);
+  font-size: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
 }
 
 .theme-toggle:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 1);
 }
 
 .dark .theme-toggle {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(30, 41, 59, 0.9);
+  color: #f8fafc;
 }
 
 .dark .theme-toggle:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(30, 41, 59, 1);
 }
 
 /* ============================================
