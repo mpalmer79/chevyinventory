@@ -174,9 +174,11 @@ const App: FC = () => {
     }
 
     const token = tokens[0];
-    const found = modelsList.find((m) => m.toLowerCase().includes(token));
-    if (found) {
-      setFilters((f) => ({ ...f, model: found }));
+    if (token) {
+      const found = modelsList.find((m) => m.toLowerCase().includes(token));
+      if (found) {
+        setFilters((f) => ({ ...f, model: found }));
+      }
     }
   };
 
@@ -197,12 +199,15 @@ const App: FC = () => {
         : `${r.Make || "Unknown"}|${r.Model || "Unknown"}`;
 
       if (!groups[key]) groups[key] = [];
-      groups[key].push(r);
+      groups[key]?.push(r);
     });
 
     // Sort each group using the utility function
     Object.keys(groups).forEach((key) => {
-      groups[key] = sortByAgeDescending(groups[key]);
+      const group = groups[key];
+      if (group) {
+        groups[key] = sortByAgeDescending(group);
+      }
     });
     
     return groups;
