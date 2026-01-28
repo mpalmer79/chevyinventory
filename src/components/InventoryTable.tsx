@@ -1,8 +1,9 @@
 // src/components/InventoryTable.tsx
-import React, { FC, useMemo } from "react";
+import React, { FC, useMemo, memo } from "react";
 import { InventoryRow } from "../types";
 import { generateVehicleUrl } from "../utils/vehicleUrl";
 import { isInTransit, formatAgeShort, sortByAgeDescending } from "../utils/inventoryUtils";
+import { useIsMobile } from "../hooks/useMediaQuery";
 
 type Props = {
   rows: InventoryRow[];
@@ -25,6 +26,8 @@ const shouldSubgroup = (model: string): boolean => {
 };
 
 export const InventoryTable: FC<Props> = ({ rows, onRowClick }) => {
+  const isMobile = useIsMobile();
+  
   if (!rows.length) return null;
 
   // Group rows by Year, Model, and Model Number (for Silverado variants)
@@ -88,7 +91,6 @@ export const InventoryTable: FC<Props> = ({ rows, onRowClick }) => {
   };
 
   // ---------- MOBILE CARD VIEW (<768px) ----------
-  const isMobile = window.innerWidth < 768;
   if (isMobile) {
     return (
       <section className="panel">
