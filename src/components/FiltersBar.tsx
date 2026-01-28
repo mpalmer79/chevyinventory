@@ -5,6 +5,7 @@ import { InventoryHealthPanel } from "./InventoryHealthPanel";
 import { ThemeToggle } from "./ui/ThemeToggle";
 
 interface Props {
+  makes: string[];
   models: string[];
   filters: Filters;
   onChange: (f: Partial<Filters>) => void;
@@ -21,13 +22,13 @@ interface Props {
 }
 
 export const FiltersBar: FC<Props> = memo(({
+  makes,
   models,
   filters,
   onChange,
   rows,
   agingBuckets,
   onRowClick,
-  onReset,
   searchTerm,
   onSearchChange,
 }) => {
@@ -38,6 +39,22 @@ export const FiltersBar: FC<Props> = memo(({
   return (
     <div className="panel mb-6">
       <div className="filters-bar">
+        <div className="filter-group">
+          <label className="filter-label">Make</label>
+          <select
+            className="filter-select"
+            value={filters.make}
+            onChange={(e) => onChange({ make: e.target.value })}
+          >
+            <option value="">All Makes</option>
+            {makes.map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="filter-group">
           <label className="filter-label">Model</label>
           <select
@@ -95,9 +112,6 @@ export const FiltersBar: FC<Props> = memo(({
         <div className="filter-actions">
           <button className="btn btn-primary" onClick={() => {}}>
             Search
-          </button>
-          <button className="btn btn-secondary" onClick={onReset}>
-            View All
           </button>
           <ThemeToggle />
         </div>

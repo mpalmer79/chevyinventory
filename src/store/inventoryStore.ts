@@ -27,6 +27,7 @@ interface InventoryState {
 }
 
 const DEFAULT_FILTERS: Filters = {
+  make: "",
   model: "",
   year: "ALL",
   priceMin: "",
