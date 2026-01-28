@@ -20,7 +20,7 @@ export const getModelColor = (name: string, index: number): string => {
   if (name.toUpperCase() === "SILVERADO 1500") {
     return POWDER_BLUE;
   }
-  return CHART_COLORS[index % CHART_COLORS.length];
+  return CHART_COLORS[index % CHART_COLORS.length] ?? QUIRK_GREEN;
 };
 
 export function formatCurrency(value: number): string {
@@ -44,7 +44,7 @@ export function exportToCsv(filename: string, rows: InventoryRow[]): void {
     "Trim",
     "Model Number",
     "Cylinders",
-    "Short VIN",
+    "VIN",
     "Age",
     "MSRP",
   ];
@@ -69,7 +69,7 @@ export function exportToCsv(filename: string, rows: InventoryRow[]): void {
         r.Trim,
         r["Model Number"],
         r.Cylinders,
-        r["Short VIN"],
+        r.VIN,
         r.Age,
         r.MSRP,
       ]
@@ -90,4 +90,3 @@ export function exportToCsv(filename: string, rows: InventoryRow[]): void {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 }
-
