@@ -1,5 +1,5 @@
 import React, { FC, useCallback, useMemo } from "react";
-import "./style.css";
+import "./index.css";
 
 import { useInventoryStore } from "./store/inventoryStore";
 import { useInventoryLoader } from "./hooks/useInventoryLoader";
