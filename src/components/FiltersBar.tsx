@@ -1,16 +1,14 @@
 // src/components/FiltersBar.tsx
-import React, { FC } from "react";
+import React, { FC, memo } from "react";
 import { Filters, InventoryRow, AgingBuckets, DrillType } from "../types";
 import { InventoryHealthPanel } from "./InventoryHealthPanel";
-import { formatCurrency } from "../inventoryHelpers";
+import { OptimizedImage } from "./OptimizedImage";
 
 type FiltersBarProps = {
   models: string[];
   filters: Filters;
   onChange: (filters: Filters) => void;
   onSmartSearch: (query: string) => void;
-
-  // new props to support rendering the Inventory Health card inside the filters panel
   rows: InventoryRow[];
   agingBuckets: AgingBuckets;
   drillType: DrillType;
@@ -20,7 +18,24 @@ type FiltersBarProps = {
   onReset: () => void;
 };
 
-export const FiltersBar: FC<FiltersBarProps> = ({
+// Vehicle image mapping
+const VEHICLE_IMAGES: Record<string, { src: string; alt: string }> = {
+  "SILVERADO 1500 CK10543": { src: "/CK10543.jpg", alt: "2026 Chevrolet Silverado 1500 CK10543" },
+  "SILVERADO 1500 CK10703": { src: "/CK10703.jpg", alt: "2026 Chevrolet Silverado 1500 CK10703" },
+  "SILVERADO 1500 CK10743": { src: "/CK10743.jpg", alt: "2026 Chevrolet Silverado 1500 CK10743" },
+  "SILVERADO 1500 CK10753": { src: "/CK10753.jpg", alt: "2026 Chevrolet Silverado 1500 CK10753" },
+  "SILVERADO 1500 CK10903": { src: "/CK10903.jpg", alt: "2026 Chevrolet Silverado 1500 CK10903" },
+  "SILVERADO 2500HD CK20743": { src: "/CK20743.jpg", alt: "2026 Chevrolet Silverado 2500HD CK20743" },
+  "SILVERADO 2500HD CK20753": { src: "/CK20753.jpg", alt: "2026 Chevrolet Silverado 2500HD CK20753" },
+  "COLORADO": { src: "/14C43.jpg", alt: "Chevrolet Colorado" },
+  "TAHOE": { src: "/TAHOE.jpg", alt: "Chevrolet Tahoe" },
+  "EQUINOX": { src: "/EQUINOX.jpg", alt: "Chevrolet Equinox" },
+  "EQUINOX EV": { src: "/EQUINOX.jpg", alt: "Chevrolet Equinox EV" },
+  "CORVETTE": { src: "/CORVETTE.jpg", alt: "Chevrolet Corvette" },
+  "TRAVERSE": { src: "/TRAVERSE.jpg", alt: "Chevrolet Traverse" },
+};
+
+export const FiltersBar: FC<FiltersBarProps> = memo(({
   models,
   filters,
   onChange,
@@ -41,55 +56,10 @@ export const FiltersBar: FC<FiltersBarProps> = ({
     onSmartSearch("manual");
   };
 
-  // Check if model filter is active
   const hasModelFilter = !!filters.model;
   
-  // Determine which image to show (if any)
-  let vehicleImage = null;
-  let vehicleAlt = "";
-
-  // SILVERADO 1500 variants
-  if (filters.model === "SILVERADO 1500 CK10543") {
-    vehicleImage = "/CK10543.jpg";
-    vehicleAlt = "2026 Chevrolet Silverado 1500 CK10543";
-  } else if (filters.model === "SILVERADO 1500 CK10703") {
-    vehicleImage = "/CK10703.jpg";
-    vehicleAlt = "2026 Chevrolet Silverado 1500 CK10703";
-  } else if (filters.model === "SILVERADO 1500 CK10743") {
-    vehicleImage = "/CK10743.jpg";
-    vehicleAlt = "2026 Chevrolet Silverado 1500 CK10743";
-  } else if (filters.model === "SILVERADO 1500 CK10753") {
-    vehicleImage = "/CK10753.jpg";
-    vehicleAlt = "2026 Chevrolet Silverado 1500 CK10753";
-  } else if (filters.model === "SILVERADO 1500 CK10903") {
-    vehicleImage = "/CK10903.jpg";
-    vehicleAlt = "2026 Chevrolet Silverado 1500 CK10903";
-  }
-  // SILVERADO 2500HD variants
-  else if (filters.model === "SILVERADO 2500HD CK20743") {
-    vehicleImage = "/CK20743.jpg";
-    vehicleAlt = "2026 Chevrolet Silverado 2500HD CK20743";
-  } else if (filters.model === "SILVERADO 2500HD CK20753") {
-    vehicleImage = "/CK20753.jpg";
-    vehicleAlt = "2026 Chevrolet Silverado 2500HD CK20753";
-  }
-  // Other models
-  else if (filters.model === "COLORADO") {
-    vehicleImage = "/14C43.jpg";
-    vehicleAlt = "Chevrolet Colorado";
-  } else if (filters.model === "TAHOE") {
-    vehicleImage = "/TAHOE.jpg";
-    vehicleAlt = "Chevrolet Tahoe";
-  } else if (filters.model === "EQUINOX" || filters.model === "EQUINOX EV") {
-    vehicleImage = "/EQUINOX.jpg";
-    vehicleAlt = filters.model === "EQUINOX EV" ? "Chevrolet Equinox EV" : "Chevrolet Equinox";
-  } else if (filters.model === "CORVETTE") {
-    vehicleImage = "/CORVETTE.jpg";
-    vehicleAlt = "Chevrolet Corvette";
-  } else if (filters.model === "TRAVERSE") {
-    vehicleImage = "/TRAVERSE.jpg";
-    vehicleAlt = "Chevrolet Traverse";
-  }
+  // Get vehicle image info
+  const vehicleImageInfo = VEHICLE_IMAGES[filters.model] ?? null;
 
   return (
     <section className="panel filters-panel">
@@ -192,10 +162,9 @@ export const FiltersBar: FC<FiltersBarProps> = ({
           </div>
         </div>
 
-        {/* RIGHT: conditional display area (mobile-friendly) */}
+        {/* RIGHT: conditional display area */}
         <div className="nl-search-column" style={{ flex: 1, minHeight: 220 }}>
-          {/* Show vehicle image if one of the special models is selected */}
-          {vehicleImage ? (
+          {vehicleImageInfo ? (
             <div 
               className="vehicle-image-container"
               style={{
@@ -210,20 +179,19 @@ export const FiltersBar: FC<FiltersBarProps> = ({
                 minHeight: 400,
               }}
             >
-              <img 
-                src={vehicleImage}
-                alt={vehicleAlt}
+              <OptimizedImage 
+                src={vehicleImageInfo.src}
+                alt={vehicleImageInfo.alt}
                 style={{
                   maxWidth: "100%",
                   maxHeight: "100%",
-                  objectFit: "contain",
                   borderRadius: 8,
                   boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
                 }}
+                placeholder="blur"
               />
             </div>
           ) : (
-            /* Show InventoryHealthPanel when no model filter is active */
             !hasModelFilter && (
               <InventoryHealthPanel
                 rows={rows}
@@ -239,4 +207,6 @@ export const FiltersBar: FC<FiltersBarProps> = ({
       </div>
     </section>
   );
-};
+});
+
+FiltersBar.displayName = "FiltersBar";
