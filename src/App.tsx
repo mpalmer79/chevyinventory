@@ -44,9 +44,14 @@ const App: FC = () => {
   const resetAll = useInventoryStore((s) => s.resetAll);
   const setRefreshing = useInventoryStore((s) => s.setRefreshing);
 
+  // Filter out invalid rows first
+  const validRows = useMemo(() => {
+    return rows.filter((r) => r["Stock Number"] && r.Model && r.Year > 0);
+  }, [rows]);
+
   const modelsList = useMemo(() => {
     const modelsSet = new Set<string>();
-    rows.forEach((r) => {
+    validRows.forEach((r) => {
       if (r.Model === "SILVERADO 1500" && r["Model Number"]) {
         modelsSet.add(`SILVERADO 1500 ${r["Model Number"]}`);
       } else if (r.Model === "SILVERADO 2500HD" && r["Model Number"]) {
@@ -56,11 +61,11 @@ const App: FC = () => {
       }
     });
     return Array.from(modelsSet).sort();
-  }, [rows]);
+  }, [validRows]);
 
   const agingBuckets = useMemo<AgingBuckets>(() => {
     const b = { bucket0_30: 0, bucket31_60: 0, bucket61_90: 0, bucket90_plus: 0 };
-    rows.forEach((r) => {
+    validRows.forEach((r) => {
       if (isInTransit(r)) return;
       if (r.Age <= 30) b.bucket0_30++;
       else if (r.Age <= 60) b.bucket31_60++;
@@ -68,14 +73,14 @@ const App: FC = () => {
       else b.bucket90_plus++;
     });
     return b;
-  }, [rows]);
+  }, [validRows]);
 
   const sortedRows = useMemo(() => {
-    return [...rows].sort((a, b) => {
+    return [...validRows].sort((a, b) => {
       if (a.Model !== b.Model) return a.Model.localeCompare(b.Model);
       return b.Age - a.Age;
     });
-  }, [rows]);
+  }, [validRows]);
 
   const filteredRows = useMemo(() => {
     return sortedRows.filter((row) => {
@@ -109,7 +114,7 @@ const App: FC = () => {
   }, [sortedRows, filters]);
 
   const filteredNewArrivals = useMemo(() => {
-    return filteredRows.filter((r) => r.Age <= 7 && !isInTransit(r));
+    return filteredRows.filter((r) => r.Age > 0 && r.Age <= 7 && !isInTransit(r));
   }, [filteredRows]);
 
   const filteredInTransit = useMemo(() => {
@@ -118,17 +123,22 @@ const App: FC = () => {
 
   const modelPieData = useMemo(() => {
     const countByModel: Record<string, number> = {};
-    rows.forEach((r) => {
+    validRows.forEach((r) => {
       countByModel[r.Model] = (countByModel[r.Model] ?? 0) + 1;
     });
     return Object.entries(countByModel)
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value)
       .slice(0, 8);
-  }, [rows]);
+  }, [validRows]);
 
-  const newArrivalRows = useMemo(() => rows.filter((r) => r.Age <= 7 && !isInTransit(r)), [rows]);
-  const inTransitRows = useMemo(() => rows.filter((r) => isInTransit(r)), [rows]);
+  const newArrivalRows = useMemo(() => {
+    return validRows.filter((r) => r.Age > 0 && r.Age <= 7 && !isInTransit(r));
+  }, [validRows]);
+
+  const inTransitRows = useMemo(() => {
+    return validRows.filter((r) => isInTransit(r));
+  }, [validRows]);
 
   const drillData = useMemo(() => {
     if (!drillType) return null;
@@ -155,13 +165,13 @@ const App: FC = () => {
 
     let result: InventoryRow[] = [];
     if (drillType === "new") result = [...newArrivalRows];
-    if (drillType === "0_30") result = rows.filter((r) => r.Age <= 30 && !isInTransit(r));
-    if (drillType === "31_60") result = rows.filter((r) => r.Age > 30 && r.Age <= 60 && !isInTransit(r));
-    if (drillType === "61_90") result = rows.filter((r) => r.Age > 60 && r.Age <= 90 && !isInTransit(r));
-    if (drillType === "90_plus") result = rows.filter((r) => r.Age > 90 && !isInTransit(r));
+    if (drillType === "0_30") result = validRows.filter((r) => r.Age <= 30 && !isInTransit(r));
+    if (drillType === "31_60") result = validRows.filter((r) => r.Age > 30 && r.Age <= 60 && !isInTransit(r));
+    if (drillType === "61_90") result = validRows.filter((r) => r.Age > 60 && r.Age <= 90 && !isInTransit(r));
+    if (drillType === "90_plus") result = validRows.filter((r) => r.Age > 90 && !isInTransit(r));
 
     return buildGroups(result);
-  }, [drillType, rows, filteredRows, newArrivalRows, inTransitRows]);
+  }, [drillType, validRows, filteredRows, newArrivalRows, inTransitRows]);
 
   const hasModelFilter = !!filters.model;
 
@@ -184,7 +194,7 @@ const App: FC = () => {
     await refetch();
   }, [refetch, setRefreshing]);
 
-  if (isLoading && rows.length === 0) {
+  if (isLoading && validRows.length === 0) {
     return (
       <div className="app-root">
         <HeaderBar searchTerm="" onSearchChange={() => {}} />
@@ -216,14 +226,14 @@ const App: FC = () => {
             </section>
           )}
 
-          {rows.length > 0 && (
+          {validRows.length > 0 && (
             <>
               <FiltersBar
                 models={modelsList}
                 filters={filters}
                 onChange={setFilters}
                 onSmartSearch={handleSmartSearch}
-                rows={rows}
+                rows={validRows}
                 agingBuckets={agingBuckets}
                 drillType={drillType}
                 drillData={drillData}
