@@ -6,6 +6,8 @@ A modern, real-time inventory management dashboard built for Quirk Chevrolet in 
 ![React](https://img.shields.io/badge/React-18.3.1-61dafb.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.7.3-3178c6.svg)
 ![Vite](https://img.shields.io/badge/Vite-6.0.7-646cff.svg)
+![Zustand](https://img.shields.io/badge/Zustand-5.0.3-orange.svg)
+![Netlify](https://img.shields.io/badge/Netlify-Deployed-00C7B7.svg)
 
 **Live Site:** [chevynhinventory.netlify.app](https://chevynhinventory.netlify.app/)
 
