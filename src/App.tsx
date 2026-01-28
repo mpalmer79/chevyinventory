@@ -51,9 +51,23 @@ const App: FC = () => {
     return rows.filter((r) => r["Stock Number"] && r.Model && r.Year > 0);
   }, [rows]);
 
+  const makesList = useMemo(() => {
+    const makesSet = new Set<string>();
+    validRows.forEach((r) => {
+      if (r.Make) {
+        makesSet.add(r.Make);
+      }
+    });
+    return Array.from(makesSet).sort();
+  }, [validRows]);
+
   const modelsList = useMemo(() => {
     const modelsSet = new Set<string>();
-    validRows.forEach((r) => {
+    // Filter by selected make if one is selected
+    const rowsToProcess = filters.make
+      ? validRows.filter((r) => r.Make === filters.make)
+      : validRows;
+    rowsToProcess.forEach((r) => {
       if (r.Model === "SILVERADO 1500" && r["Model Number"]) {
         modelsSet.add(`SILVERADO 1500 ${r["Model Number"]}`);
       } else if (r.Model === "SILVERADO 2500HD" && r["Model Number"]) {
@@ -63,7 +77,7 @@ const App: FC = () => {
       }
     });
     return Array.from(modelsSet).sort();
-  }, [validRows]);
+  }, [validRows, filters.make]);
 
   const agingBuckets = useMemo<AgingBuckets>(() => {
     const b = { bucket0_30: 0, bucket31_60: 0, bucket61_90: 0, bucket90_plus: 0 };
@@ -86,6 +100,7 @@ const App: FC = () => {
 
   const filteredRows = useMemo(() => {
     return sortedRows.filter((row) => {
+      if (filters.make && row.Make !== filters.make) return false;
       if (filters.model) {
         if (filters.model.startsWith("SILVERADO 1500 ")) {
           const modelNumber = filters.model.replace("SILVERADO 1500 ", "");
@@ -231,6 +246,7 @@ const App: FC = () => {
           {validRows.length > 0 && (
             <>
               <FiltersBar
+                makes={makesList}
                 models={modelsList}
                 filters={filters}
                 onChange={setFilters}
