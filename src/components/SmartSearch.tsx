@@ -2,10 +2,47 @@
 import React, { useRef } from "react";
 import { InventoryRow } from "../types";
 
+// Web Speech API type definitions
+interface SpeechRecognitionResult {
+  readonly transcript: string;
+  readonly confidence: number;
+}
+
+interface SpeechRecognitionResultList {
+  readonly length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResults {
+  readonly length: number;
+  item(index: number): SpeechRecognitionResultList;
+  [index: number]: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionEvent {
+  readonly results: SpeechRecognitionResults;
+}
+
+interface SpeechRecognitionErrorEvent {
+  readonly error: string;
+}
+
+interface SpeechRecognitionInstance {
+  lang: string;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  start(): void;
+}
+
+interface SpeechRecognitionConstructor {
+  new (): SpeechRecognitionInstance;
+}
+
 // Extend Window interface for Speech Recognition API
 interface SpeechRecognitionWindow extends Window {
-  SpeechRecognition?: typeof SpeechRecognition;
-  webkitSpeechRecognition?: typeof SpeechRecognition;
+  SpeechRecognition?: SpeechRecognitionConstructor;
+  webkitSpeechRecognition?: SpeechRecognitionConstructor;
 }
 
 interface Props {
@@ -30,7 +67,7 @@ export const SmartSearch: React.FC<Props> = ({ rows, onResults }) => {
     const recognition = new SpeechRecognitionAPI();
     recognition.lang = "en-US";
 
-    recognition.onresult = (event) => {
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
       const transcript = event.results[0]?.[0]?.transcript ?? "";
       if (inputRef.current) {
         inputRef.current.value = transcript;
@@ -49,7 +86,7 @@ export const SmartSearch: React.FC<Props> = ({ rows, onResults }) => {
       onResults(results);
     };
 
-    recognition.onerror = (e) => {
+    recognition.onerror = (e: SpeechRecognitionErrorEvent) => {
       console.error("Speech error:", e.error);
     };
 
