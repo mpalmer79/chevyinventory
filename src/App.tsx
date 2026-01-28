@@ -13,6 +13,7 @@ import { FiltersBar } from "./components/FiltersBar";
 import { KpiBar } from "./components/KpiBar";
 import { ChartsSection } from "./components/ChartsSection";
 import { NewArrivalsPanel } from "./components/NewArrivalsPanel";
+import { OldestUnitsPanel } from "./components/OldestUnitsPanel";
 import { InventoryTable } from "./components/InventoryTable";
 import { DrilldownTable } from "./components/DrilldownTable";
 import { VehicleDetailDrawer } from "./components/VehicleDetailDrawer";
@@ -293,6 +294,20 @@ const App: FC = () => {
               ) && (
                 <SectionErrorBoundary section="new arrivals">
                   <NewArrivalsPanel rows={filteredNewArrivals} />
+                </SectionErrorBoundary>
+              )}
+
+              {/* Oldest Units - Now between New Arrivals and Inventory Table */}
+              {!(
+                drillType === "0_30" ||
+                drillType === "31_60" ||
+                drillType === "61_90" ||
+                drillType === "90_plus" ||
+                drillType === "in_transit" ||
+                filters.model
+              ) && (
+                <SectionErrorBoundary section="oldest units">
+                  <OldestUnitsPanel rows={validRows} onRowClick={setSelectedVehicle} />
                 </SectionErrorBoundary>
               )}
 
