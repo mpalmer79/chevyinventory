@@ -30,26 +30,24 @@ export function useInventoryLoader() {
     const worksheet = workbook.Sheets[sheetName];
     if (!worksheet) throw new Error("Worksheet not found");
 
-    const rawData: unknown[][] = XLSX.utils.sheet_to_json(worksheet, {
-      header: 1,
-      defval: "",
-    });
+    // Parse with headers - this automatically skips the header row
+    const rawData = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet);
 
     return rawData
-      .filter((row): row is unknown[] => Array.isArray(row) && row.length >= 10 && row[0] != null)
+      .filter((row) => row["Stock Number"] != null && String(row["Stock Number"]).trim() !== "")
       .map((row) => ({
-        "Stock Number": String(row[0] ?? ""),
-        Year: Number(row[1]) || 0,
-        Make: String(row[2] ?? ""),
-        Model: String(row[3] ?? ""),
-        "Exterior Color": String(row[4] ?? ""),
-        Trim: String(row[5] ?? ""),
-        "Model Number": String(row[6] ?? ""),
-        Cylinders: Number(row[7]) || 0,
-        Age: Number(row[8]) || 0,
-        MSRP: Number(row[9]) || 0,
-        Status: String(row[10] ?? ""),
-        VIN: String(row[11] ?? ""),
+        "Stock Number": String(row["Stock Number"] ?? ""),
+        Year: Number(row["Year"]) || 0,
+        Make: String(row["Make"] ?? ""),
+        Model: String(row["Model"] ?? ""),
+        "Exterior Color": String(row["Exterior Color"] ?? ""),
+        Trim: String(row["Trim"] ?? ""),
+        "Model Number": String(row["Model Number"] ?? ""),
+        Cylinders: Number(row["Cylinders"]) || 0,
+        Age: Number(row["Age"]) || 0,
+        MSRP: Number(row["MSRP"]) || 0,
+        Status: String(row["Status"] ?? ""),
+        VIN: String(row["VIN"] ?? ""),
       }));
   }, []);
 
@@ -115,14 +113,12 @@ export function useInventoryLoader() {
     await fetchInventory(false);
   }, [fetchInventory, setRefreshing]);
 
-  // Initial load - only once
   useEffect(() => {
     if (hasFetched.current) return;
     hasFetched.current = true;
     fetchInventory();
   }, [fetchInventory]);
 
-  // Background refresh interval
   useEffect(() => {
     const interval = setInterval(() => {
       const lastUpdated = useInventoryStore.getState().lastUpdated;
