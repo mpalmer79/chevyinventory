@@ -2,6 +2,7 @@
 import React, { FC, memo } from "react";
 import { Filters, DrillType, AgingBuckets, InventoryRow } from "../types";
 import { InventoryHealthPanel } from "./InventoryHealthPanel";
+import { ThemeToggle } from "./ui/ThemeToggle";
 
 interface Props {
   models: string[];
@@ -15,6 +16,8 @@ interface Props {
   onSetDrillType: (type: DrillType) => void;
   onRowClick: (row: InventoryRow) => void;
   onReset: () => void;
+  searchTerm: string;
+  onSearchChange: (value: string) => void;
 }
 
 export const FiltersBar: FC<Props> = memo(({
@@ -25,6 +28,8 @@ export const FiltersBar: FC<Props> = memo(({
   agingBuckets,
   onRowClick,
   onReset,
+  searchTerm,
+  onSearchChange,
 }) => {
   const years = Array.from(new Set(rows.map((r) => r.Year)))
     .filter((y) => y > 0)
@@ -76,6 +81,17 @@ export const FiltersBar: FC<Props> = memo(({
           />
         </div>
 
+        <div className="filter-group filter-search-group">
+          <label className="filter-label">Search Inventory</label>
+          <input
+            type="text"
+            className="filter-input filter-search-input"
+            placeholder="Search inventory..."
+            value={searchTerm}
+            onChange={(e) => onSearchChange(e.target.value)}
+          />
+        </div>
+
         <div className="filter-actions">
           <button className="btn btn-primary" onClick={() => {}}>
             Search
@@ -83,6 +99,7 @@ export const FiltersBar: FC<Props> = memo(({
           <button className="btn btn-secondary" onClick={onReset}>
             View All
           </button>
+          <ThemeToggle />
         </div>
       </div>
 
