@@ -23,11 +23,13 @@ Object.defineProperty(window, "matchMedia", {
 });
 
 // Mock ResizeObserver
-global.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+class ResizeObserverMock {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+
+window.ResizeObserver = ResizeObserverMock;
 
 // Mock clipboard API
 Object.assign(navigator, {
@@ -35,6 +37,3 @@ Object.assign(navigator, {
     writeText: vi.fn().mockResolvedValue(undefined),
   },
 });
-
-// Suppress console errors in tests (optional - comment out for debugging)
-// vi.spyOn(console, 'error').mockImplementation(() => {});
