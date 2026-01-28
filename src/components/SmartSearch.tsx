@@ -13,7 +13,8 @@ export const SmartSearch: React.FC<Props> = ({ rows, onResults }) => {
   const handleVoiceSearch = () => {
     // Required for Android Chrome: must exist directly in the click handler
     const SpeechRecognition =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      (window as unknown as { SpeechRecognition?: typeof window.SpeechRecognition; webkitSpeechRecognition?: typeof window.SpeechRecognition }).SpeechRecognition || 
+      (window as unknown as { webkitSpeechRecognition?: typeof window.SpeechRecognition }).webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
       alert("Voice search not supported in this browser.");
@@ -23,9 +24,11 @@ export const SmartSearch: React.FC<Props> = ({ rows, onResults }) => {
     const recognition = new SpeechRecognition();
     recognition.lang = "en-US";
 
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      inputRef.current!.value = transcript;
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      const transcript = event.results[0]?.[0]?.transcript ?? "";
+      if (inputRef.current) {
+        inputRef.current.value = transcript;
+      }
 
       const lower = transcript.toLowerCase();
 
@@ -33,14 +36,14 @@ export const SmartSearch: React.FC<Props> = ({ rows, onResults }) => {
         return (
           r.Model.toLowerCase().includes(lower) ||
           r["Model Number"].toLowerCase().includes(lower) ||
-          r.Exterior.toLowerCase().includes(lower)
+          r["Exterior Color"].toLowerCase().includes(lower)
         );
       });
 
       onResults(results);
     };
 
-    recognition.onerror = (e: any) => {
+    recognition.onerror = (e: SpeechRecognitionErrorEvent) => {
       console.error("Speech error:", e.error);
     };
 
@@ -54,7 +57,7 @@ export const SmartSearch: React.FC<Props> = ({ rows, onResults }) => {
       return (
         r.Model.toLowerCase().includes(input) ||
         r["Model Number"].toLowerCase().includes(input) ||
-        r.Exterior.toLowerCase().includes(input)
+        r["Exterior Color"].toLowerCase().includes(input)
       );
     });
 
@@ -76,7 +79,7 @@ export const SmartSearch: React.FC<Props> = ({ rows, onResults }) => {
       />
 
       <div className="smart-search-tips">
-        Try “blue Silverado 1500” or “white Silverado CK10543”.
+        Try "blue Silverado 1500" or "white Silverado CK10543".
       </div>
     </div>
   );
