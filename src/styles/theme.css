@@ -221,8 +221,8 @@ body {
    HEADER
    ============================================ */
 .header {
-  background: url("/chevy-showroom.png") center/contain no-repeat;
-  background-color: #f5f5f5;
+  background: url("/chevy-showroom.png") center center/100% auto no-repeat;
+  background-color: #f8fafc;
   color: #ffffff;
   position: relative;
   overflow: hidden;
