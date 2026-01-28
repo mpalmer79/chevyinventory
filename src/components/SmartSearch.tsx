@@ -11,11 +11,8 @@ export const SmartSearch: React.FC<Props> = ({ rows, onResults }) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleVoiceSearch = () => {
-    const SpeechRecognitionAPI =
-      (window as Window & { SpeechRecognition?: new () => SpeechRecognition; webkitSpeechRecognition?: new () => SpeechRecognition })
-        .SpeechRecognition ||
-      (window as Window & { webkitSpeechRecognition?: new () => SpeechRecognition })
-        .webkitSpeechRecognition;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
     if (!SpeechRecognitionAPI) {
       alert("Voice search not supported in this browser.");
@@ -25,8 +22,9 @@ export const SmartSearch: React.FC<Props> = ({ rows, onResults }) => {
     const recognition = new SpeechRecognitionAPI();
     recognition.lang = "en-US";
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const transcript = event.results[0]?.[0]?.transcript ?? "";
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    recognition.onresult = (event: any) => {
+      const transcript = event.results?.[0]?.[0]?.transcript ?? "";
       if (inputRef.current) {
         inputRef.current.value = transcript;
       }
@@ -42,7 +40,8 @@ export const SmartSearch: React.FC<Props> = ({ rows, onResults }) => {
       onResults(results);
     };
 
-    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    recognition.onerror = (event: any) => {
       console.error("Speech error:", event.error);
     };
 
