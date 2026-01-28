@@ -1,5 +1,5 @@
 // src/components/InventoryHealthPanel.tsx
-import React, { FC, memo } from "react";
+import React, { FC } from "react";
 import { AgingBuckets, InventoryRow } from "../types";
 import { generateVehicleUrl } from "../utils/vehicleUrl";
 import { isInTransit, formatAgeShort, sortByAgeDescending } from "../utils/inventoryUtils";
@@ -46,7 +46,7 @@ export const InventoryHealthPanel: FC<Props> = ({
 
   // If drillType is set and we have drillData, render the drilldown groups
   if (drillType && drillData) {
-    const groupKeys = Object.keys(drillData || {});
+    const groupKeys = Object.keys(drillData);
 
     return (
       <section className="panel inventory-health-panel">
@@ -61,10 +61,12 @@ export const InventoryHealthPanel: FC<Props> = ({
 
         {groupKeys.map((key) => {
           const parts = key.split("|");
-          const make = parts[0];
-          const model = parts[1];
-          const modelNumber = parts[2] || null;
-          const rowsForGroup = sortByAgeDescending(drillData[key]);
+          const make = parts[0] ?? "";
+          const model = parts[1] ?? "";
+          const modelNumber = parts[2] ?? null;
+          const groupRows = drillData[key];
+          if (!groupRows) return null;
+          const rowsForGroup = sortByAgeDescending(groupRows);
           const title = modelNumber
             ? `${make} ${model} ${modelNumber} - ${rowsForGroup.length}`
             : `${make} ${model} - ${rowsForGroup.length}`;
