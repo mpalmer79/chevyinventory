@@ -222,8 +222,8 @@ body {
    ============================================ */
 
 .header {
-  background: var(--header-bg);
-  color: var(--header-text);
+  background: url("/header2.jpg") center/cover no-repeat;
+  color: #ffffff;
   position: relative;
   overflow: hidden;
 }
@@ -235,17 +235,8 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0 32px;
+  background: rgba(0, 0, 0, 0.3);
 }
-
-.header-hero::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: url("/header1.jpg") center/cover no-repeat;
-  opacity: 0.15;
-  z-index: 0;
-}
-
 .header-content {
   position: relative;
   z-index: 1;
