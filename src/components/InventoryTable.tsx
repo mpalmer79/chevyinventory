@@ -25,21 +25,15 @@ const shouldSubgroup = (model: string): boolean => {
          model === "SILVERADO 3500HD";
 };
 
-// Threshold for using virtualization
 const VIRTUALIZATION_THRESHOLD = 100;
 
 export const InventoryTable: FC<Props> = memo(({ rows, onRowClick }) => {
   const isMobile = useIsMobile();
-  
-  if (!rows.length) return null;
 
-  // Use virtualized table for large datasets on desktop
-  if (!isMobile && rows.length > VIRTUALIZATION_THRESHOLD) {
-    return <VirtualizedTable rows={rows} onRowClick={onRowClick} />;
-  }
-
-  // Group rows by Year, Model, and Model Number (for Silverado variants)
+  // Move useMemo BEFORE any conditional returns
   const groupedRows = useMemo(() => {
+    if (!rows.length) return [];
+    
     const groups: GroupedRows[] = [];
     const groupMap: Record<string, InventoryRow[]> = {};
 
@@ -84,6 +78,14 @@ export const InventoryTable: FC<Props> = memo(({ rows, onRowClick }) => {
 
     return groups;
   }, [rows]);
+
+  // Now safe to do early returns AFTER all hooks
+  if (!rows.length) return null;
+
+  // Use virtualized table for large datasets on desktop
+  if (!isMobile && rows.length > VIRTUALIZATION_THRESHOLD) {
+    return <VirtualizedTable rows={rows} onRowClick={onRowClick} />;
+  }
 
   const handleStockClick = (e: React.MouseEvent, row: InventoryRow) => {
     e.stopPropagation();
