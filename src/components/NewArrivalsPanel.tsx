@@ -1,21 +1,15 @@
 // src/components/NewArrivalsPanel.tsx
-import React, { FC } from "react";
+import React, { FC, memo } from "react";
 import { InventoryRow } from "../types";
-import { formatCurrency } from "../inventoryHelpers";
 import { generateVehicleUrl } from "../utils/vehicleUrl";
-import { isInTransit, formatAge, sortByAgeDescending } from "../utils/inventoryUtils";
 
-type Props = {
+interface Props {
   rows: InventoryRow[];
-};
+}
 
-export const NewArrivalsPanel: FC<Props> = ({ rows }) => {
+export const NewArrivalsPanel: FC<Props> = memo(({ rows }) => {
   if (!rows.length) return null;
 
-  // Sort by age descending (IN TRANSIT at bottom)
-  const sortedRows = sortByAgeDescending(rows);
-
-  // Handle stock number click - open in new tab
   const handleStockClick = (e: React.MouseEvent, row: InventoryRow) => {
     e.stopPropagation();
     const url = generateVehicleUrl(row);
@@ -25,45 +19,31 @@ export const NewArrivalsPanel: FC<Props> = ({ rows }) => {
   };
 
   return (
-    <section className="panel">
+    <section className="panel mb-6">
       <div className="section-title">New Arrivals · Last 7 Days</div>
-      <div className="new-arrivals">
-        {sortedRows.map((row) => (
-          <div className="arrival-card" key={row["Stock Number"]}>
-            <div className="arrival-main">
-              <span
-                className="arrival-stock stock-link"
-                onClick={(e) => handleStockClick(e, row)}
-                style={{
-                  color: "#4fc3f7",
-                  textDecoration: "underline",
-                  cursor: "pointer",
-                }}
-              >
-                #{row["Stock Number"]}
-              </span>
+      <div className="arrivals-list">
+        {rows.slice(0, 15).map((row) => (
+          <div 
+            key={row["Stock Number"]} 
+            className="arrival-card"
+            onClick={(e) => handleStockClick(e, row)}
+          >
+            <div className="arrival-info">
+              <span className="arrival-stock">#{row["Stock Number"]}</span>
               <span className="arrival-title">
-                {row.Year} {row.Make} {row.Model} {row.Trim}
+                {row.Year} CHEVROLET {row.Model} {row.Trim}
               </span>
             </div>
-
             <div className="arrival-meta">
-              <span className="arrival-pill">
-                {row["Exterior Color"] || "Color TBD"}
-              </span>
-              <span 
-                className="arrival-pill"
-                style={isInTransit(row) ? { color: "#fbbf24", fontWeight: 600 } : undefined}
-              >
-                {isInTransit(row) ? "IN TRANSIT" : `${row.Age} day${row.Age === 1 ? "" : "s"} in stock`}
-              </span>
-              <span className="arrival-price">
-                {formatCurrency(row.MSRP)}
-              </span>
+              <span className="arrival-color">{row["Exterior Color"] || "Color TBD"}</span>
+              <span className="arrival-age">{row.Age} days in stock</span>
+              <span className="arrival-price">${Number(row.MSRP).toLocaleString()}</span>
             </div>
           </div>
         ))}
       </div>
     </section>
   );
-};
+});
+
+NewArrivalsPanel.displayName = "NewArrivalsPanel";
