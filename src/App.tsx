@@ -241,6 +241,8 @@ const App: FC = () => {
                 onSetDrillType={setDrillType}
                 onRowClick={setSelectedVehicle}
                 onReset={resetAll}
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
               />
 
               {!hasModelFilter && (
