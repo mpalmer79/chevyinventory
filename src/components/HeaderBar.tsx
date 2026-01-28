@@ -13,11 +13,6 @@ export const HeaderBar: FC<Props> = ({ searchTerm, onSearchChange }) => {
       <div className="header-hero">
         <div className="header-content">
           <div className="header-left">
-            <img 
-              src="/quirk-logo.png" 
-              alt="Quirk Auto" 
-              className="header-logo"
-            />
             <div className="header-title">
               <h1>Inventory Dashboard</h1>
               <span>Quirk Chevrolet • Manchester, NH</span>
