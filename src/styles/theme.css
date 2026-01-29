@@ -967,18 +967,32 @@ tbody tr.click-row {
     width: 100%;
   }
 
-  .filter-actions {
+  .filter-actions-aligned {
     margin-left: 0;
     width: 100%;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 12px;
   }
 
-  .filter-actions .btn {
+  .filter-actions-aligned .filter-group {
+    width: 100%;
+  }
+
+  .filter-actions-aligned .btn {
+    width: 100%;
+  }
+
+  .theme-toggle-group {
+    width: 100%;
+  }
+
+  .theme-toggle-segmented {
+    width: 100%;
+  }
+
+  .theme-segment {
     flex: 1;
-  }
-
-  .filter-actions .theme-toggle {
-    flex: 0;
+    justify-content: center;
   }
 
   .kpi-grid {
