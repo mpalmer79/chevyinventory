@@ -88,6 +88,10 @@ const App: FC = () => {
 
   const filteredRows = useMemo(() => {
     return sortedRows.filter((row) => {
+      // Filter by Make
+      if (filters.make && row.Make !== filters.make) return false;
+      
+      // Filter by Model
       if (filters.model) {
         if (filters.model.startsWith("SILVERADO 1500 ")) {
           const modelNumber = filters.model.replace("SILVERADO 1500 ", "");
