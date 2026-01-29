@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { InventoryRow, Filters, DrillType } from "../types";
+import { InventoryRow, Filters, DrillType, DealerSource } from "../types";
 
 interface InventoryState {
   rows: InventoryRow[];
@@ -12,6 +12,7 @@ interface InventoryState {
   drillType: DrillType;
   selectedVehicle: InventoryRow | null;
   isRefreshing: boolean;
+  selectedMake: DealerSource;
 
   setRows: (rows: InventoryRow[]) => void;
   setLoading: (isLoading: boolean) => void;
@@ -23,6 +24,7 @@ interface InventoryState {
   setDrillType: (type: DrillType) => void;
   setSelectedVehicle: (vehicle: InventoryRow | null) => void;
   setRefreshing: (isRefreshing: boolean) => void;
+  setSelectedMake: (make: DealerSource) => void;
   resetAll: () => void;
 }
 
@@ -45,6 +47,7 @@ export const useInventoryStore = create<InventoryState>()((set, get) => ({
   drillType: null,
   selectedVehicle: null,
   isRefreshing: false,
+  selectedMake: "chevrolet",
 
   setRows: (rows) => set({ rows }),
   setLoading: (isLoading) => set({ isLoading }),
@@ -59,6 +62,7 @@ export const useInventoryStore = create<InventoryState>()((set, get) => ({
   setDrillType: (drillType) => set({ drillType }),
   setSelectedVehicle: (selectedVehicle) => set({ selectedVehicle }),
   setRefreshing: (isRefreshing) => set({ isRefreshing }),
+  setSelectedMake: (selectedMake) => set({ selectedMake }),
   resetAll: () => set({
     filters: DEFAULT_FILTERS,
     searchTerm: "",
