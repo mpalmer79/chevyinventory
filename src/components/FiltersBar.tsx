@@ -1,8 +1,9 @@
 // src/components/FiltersBar.tsx
 import React, { FC, memo } from "react";
-import { Filters, DrillType, AgingBuckets, InventoryRow } from "../types";
+import { Filters, DrillType, AgingBuckets, InventoryRow, DealerSource } from "../types";
 import { InventoryHealthPanel } from "./InventoryHealthPanel";
 import { ThemeToggle } from "./ui/ThemeToggle";
+import { DEALER_LABELS } from "../inventoryHelpers";
 
 interface Props {
   models: string[];
@@ -18,6 +19,8 @@ interface Props {
   onReset: () => void;
   searchTerm: string;
   onSearchChange: (value: string) => void;
+  selectedMake: DealerSource;
+  onMakeChange: (make: DealerSource) => void;
 }
 
 export const FiltersBar: FC<Props> = memo(({
@@ -30,14 +33,33 @@ export const FiltersBar: FC<Props> = memo(({
   onReset,
   searchTerm,
   onSearchChange,
+  selectedMake,
+  onMakeChange,
 }) => {
   const years = Array.from(new Set(rows.map((r) => r.Year)))
     .filter((y) => y > 0)
     .sort((a, b) => b - a);
 
+  const dealerOptions: DealerSource[] = ["chevrolet", "buick-gmc"];
+
   return (
     <div className="panel mb-6">
       <div className="filters-bar">
+        <div className="filter-group">
+          <label className="filter-label">Dealership</label>
+          <select
+            className="filter-select"
+            value={selectedMake}
+            onChange={(e) => onMakeChange(e.target.value as DealerSource)}
+          >
+            {dealerOptions.map((d) => (
+              <option key={d} value={d}>
+                {DEALER_LABELS[d]}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="filter-group">
           <label className="filter-label">Model</label>
           <select
