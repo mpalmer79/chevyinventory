@@ -40,6 +40,7 @@ export type DrillType =
   | "in_transit";
 
 export type Filters = {
+  make: string;
   model: string;
   year: string;
   priceMin: string;
