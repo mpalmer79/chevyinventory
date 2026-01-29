@@ -33,8 +33,6 @@ export const FiltersBar: FC<Props> = memo(({
   rows,
   agingBuckets,
   onRowClick,
-  searchTerm,
-  onSearchChange,
   selectedMake,
   onMakeChange,
 }) => {
@@ -153,23 +151,14 @@ export const FiltersBar: FC<Props> = memo(({
           />
         </div>
 
-        {/* SEARCH INVENTORY */}
-        <div className="filter-group filter-search-group">
-          <label className="filter-label">Search Inventory</label>
-          <input
-            type="text"
-            className="filter-input filter-search-input"
-            placeholder="Search inventory..."
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-          />
-        </div>
-
-        {/* ACTIONS */}
-        <div className="filter-actions">
-          <button className="btn btn-primary" onClick={() => {}}>
-            Search
-          </button>
+        {/* ACTIONS - Search button and Theme toggle aligned */}
+        <div className="filter-actions-aligned">
+          <div className="filter-group">
+            <label className="filter-label">&nbsp;</label>
+            <button className="btn btn-primary" onClick={() => {}}>
+              Search
+            </button>
+          </div>
           <ThemeToggle />
         </div>
       </div>
