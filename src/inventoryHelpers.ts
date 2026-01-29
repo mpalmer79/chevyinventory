@@ -1,9 +1,19 @@
 // src/inventoryHelpers.ts
-import { InventoryRow } from "./types";
+import { InventoryRow, DealerSource } from "./types";
 
 export const QUIRK_GREEN = "#16a34a";
 export const POWDER_BLUE = "#5A6A82";
 export const DEFAULT_INVENTORY_PATH = "/inventory.xlsx";
+
+export const INVENTORY_PATHS: Record<DealerSource, string> = {
+  chevrolet: "/inventory.xlsx",
+  "buick-gmc": "/gmc-inventory.xlsx",
+};
+
+export const DEALER_LABELS: Record<DealerSource, string> = {
+  chevrolet: "Chevrolet",
+  "buick-gmc": "Buick GMC",
+};
 
 export const CHART_COLORS = [
   QUIRK_GREEN,
