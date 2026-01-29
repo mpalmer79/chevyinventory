@@ -25,6 +25,9 @@ const STOP_WORDS = new Set([
   "with", "show", "me", "find", "need", "want", "please",
 ]);
 
+// Models that should be split by Model Number
+const SPLIT_BY_MODEL_NUMBER = ["SILVERADO 1500", "SILVERADO 2500HD", "SIERRA 1500"];
+
 const App: FC = () => {
   const { refetch } = useInventoryLoader();
 
@@ -56,10 +59,8 @@ const App: FC = () => {
   const modelsList = useMemo(() => {
     const modelsSet = new Set<string>();
     validRows.forEach((r) => {
-      if (r.Model === "SILVERADO 1500" && r["Model Number"]) {
-        modelsSet.add(`SILVERADO 1500 ${r["Model Number"]}`);
-      } else if (r.Model === "SILVERADO 2500HD" && r["Model Number"]) {
-        modelsSet.add(`SILVERADO 2500HD ${r["Model Number"]}`);
+      if (SPLIT_BY_MODEL_NUMBER.includes(r.Model) && r["Model Number"]) {
+        modelsSet.add(`${r.Model} ${r["Model Number"]}`);
       } else {
         modelsSet.add(r.Model);
       }
@@ -91,18 +92,18 @@ const App: FC = () => {
       // Filter by Make
       if (filters.make && row.Make !== filters.make) return false;
       
-      // Filter by Model
+      // Filter by Model (handle split models)
       if (filters.model) {
-        if (filters.model.startsWith("SILVERADO 1500 ")) {
-          const modelNumber = filters.model.replace("SILVERADO 1500 ", "");
-          if (row.Model !== "SILVERADO 1500" || row["Model Number"] !== modelNumber) return false;
-        } else if (filters.model.startsWith("SILVERADO 2500HD ")) {
-          const modelNumber = filters.model.replace("SILVERADO 2500HD ", "");
-          if (row.Model !== "SILVERADO 2500HD" || row["Model Number"] !== modelNumber) return false;
+        // Check if filter is for a split model (e.g., "SIERRA 1500 TK10543")
+        const splitModelMatch = SPLIT_BY_MODEL_NUMBER.find(m => filters.model.startsWith(`${m} `));
+        if (splitModelMatch) {
+          const modelNumber = filters.model.replace(`${splitModelMatch} `, "");
+          if (row.Model !== splitModelMatch || row["Model Number"] !== modelNumber) return false;
         } else {
           if (row.Model !== filters.model) return false;
         }
       }
+      
       if (filters.year !== "ALL" && String(row.Year) !== filters.year) return false;
       if (filters.priceMin) {
         const minPrice = Number(filters.priceMin);
@@ -305,7 +306,6 @@ const App: FC = () => {
                 </SectionErrorBoundary>
               )}
 
-              {/* Oldest Units - Now between New Arrivals and Inventory Table */}
               {!(
                 drillType === "0_30" ||
                 drillType === "31_60" ||
