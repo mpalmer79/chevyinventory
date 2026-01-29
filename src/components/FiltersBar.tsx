@@ -1,5 +1,5 @@
 // src/components/FiltersBar.tsx
-import React, { FC, memo } from "react";
+import React, { FC, memo, useMemo } from "react";
 import { Filters, DrillType, AgingBuckets, InventoryRow, DealerSource } from "../types";
 import { InventoryHealthPanel } from "./InventoryHealthPanel";
 import { ThemeToggle } from "./ui/ThemeToggle";
@@ -30,7 +30,6 @@ export const FiltersBar: FC<Props> = memo(({
   rows,
   agingBuckets,
   onRowClick,
-  onReset,
   searchTerm,
   onSearchChange,
   selectedMake,
@@ -40,11 +39,41 @@ export const FiltersBar: FC<Props> = memo(({
     .filter((y) => y > 0)
     .sort((a, b) => b - a);
 
+  // Get unique Makes from the current inventory
+  const makes = useMemo(() => {
+    const makeSet = new Set<string>();
+    rows.forEach((r) => {
+      if (r.Make && r.Make.trim() !== "") {
+        makeSet.add(r.Make);
+      }
+    });
+    return Array.from(makeSet).sort();
+  }, [rows]);
+
+  // Filter models based on selected make filter
+  const filteredModels = useMemo(() => {
+    if (!filters.make) return models;
+    const modelsForMake = new Set<string>();
+    rows.forEach((r) => {
+      if (r.Make === filters.make) {
+        if (r.Model === "SILVERADO 1500" && r["Model Number"]) {
+          modelsForMake.add(`SILVERADO 1500 ${r["Model Number"]}`);
+        } else if (r.Model === "SILVERADO 2500HD" && r["Model Number"]) {
+          modelsForMake.add(`SILVERADO 2500HD ${r["Model Number"]}`);
+        } else {
+          modelsForMake.add(r.Model);
+        }
+      }
+    });
+    return Array.from(modelsForMake).sort();
+  }, [rows, filters.make, models]);
+
   const dealerOptions: DealerSource[] = ["chevrolet", "buick-gmc"];
 
   return (
     <div className="panel mb-6">
       <div className="filters-bar">
+        {/* DEALERSHIP */}
         <div className="filter-group">
           <label className="filter-label">Dealership</label>
           <select
@@ -60,22 +89,7 @@ export const FiltersBar: FC<Props> = memo(({
           </select>
         </div>
 
-        <div className="filter-group">
-          <label className="filter-label">Model</label>
-          <select
-            className="filter-select"
-            value={filters.model}
-            onChange={(e) => onChange({ model: e.target.value })}
-          >
-            <option value="">All Models</option>
-            {models.map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
-        </div>
-
+        {/* YEAR */}
         <div className="filter-group">
           <label className="filter-label">Year</label>
           <select
@@ -92,6 +106,41 @@ export const FiltersBar: FC<Props> = memo(({
           </select>
         </div>
 
+        {/* MAKE */}
+        <div className="filter-group">
+          <label className="filter-label">Make</label>
+          <select
+            className="filter-select"
+            value={filters.make || ""}
+            onChange={(e) => onChange({ make: e.target.value, model: "" })}
+          >
+            <option value="">All Makes</option>
+            {makes.map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* MODEL */}
+        <div className="filter-group">
+          <label className="filter-label">Model</label>
+          <select
+            className="filter-select"
+            value={filters.model}
+            onChange={(e) => onChange({ model: e.target.value })}
+          >
+            <option value="">All Models</option>
+            {filteredModels.map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* STOCK NUMBER */}
         <div className="filter-group">
           <label className="filter-label">Stock Number</label>
           <input
@@ -103,6 +152,7 @@ export const FiltersBar: FC<Props> = memo(({
           />
         </div>
 
+        {/* SEARCH INVENTORY */}
         <div className="filter-group filter-search-group">
           <label className="filter-label">Search Inventory</label>
           <input
@@ -114,12 +164,10 @@ export const FiltersBar: FC<Props> = memo(({
           />
         </div>
 
+        {/* ACTIONS */}
         <div className="filter-actions">
           <button className="btn btn-primary" onClick={() => {}}>
             Search
-          </button>
-          <button className="btn btn-secondary" onClick={onReset}>
-            View All
           </button>
           <ThemeToggle />
         </div>
