@@ -38,11 +38,13 @@ const App: FC = () => {
   const searchTerm = useInventoryStore((s) => s.searchTerm);
   const drillType = useInventoryStore((s) => s.drillType);
   const selectedVehicle = useInventoryStore((s) => s.selectedVehicle);
+  const selectedMake = useInventoryStore((s) => s.selectedMake);
 
   const setFilters = useInventoryStore((s) => s.setFilters);
   const setSearchTerm = useInventoryStore((s) => s.setSearchTerm);
   const setDrillType = useInventoryStore((s) => s.setDrillType);
   const setSelectedVehicle = useInventoryStore((s) => s.setSelectedVehicle);
+  const setSelectedMake = useInventoryStore((s) => s.setSelectedMake);
   const resetAll = useInventoryStore((s) => s.resetAll);
   const setRefreshing = useInventoryStore((s) => s.setRefreshing);
 
@@ -244,6 +246,8 @@ const App: FC = () => {
                 onReset={resetAll}
                 searchTerm={searchTerm}
                 onSearchChange={setSearchTerm}
+                selectedMake={selectedMake}
+                onMakeChange={setSelectedMake}
               />
 
               {!hasModelFilter && (
