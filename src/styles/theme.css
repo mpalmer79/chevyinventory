@@ -467,6 +467,7 @@ body {
   padding: 20px;
   cursor: pointer;
   transition: all var(--transition-fast);
+  text-align: center;
 }
 
 .kpi-card:hover {
@@ -632,6 +633,7 @@ tbody tr.click-row {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 16px;
+  text-align: center;
 }
 
 /* Aging Buckets Grid */
@@ -647,6 +649,7 @@ tbody tr.click-row {
   cursor: pointer;
   transition: all var(--transition-fast);
   border: 1px solid transparent;
+  text-align: center;
 }
 
 .aging-bucket:hover {
@@ -917,7 +920,7 @@ tbody tr.click-row {
   }
 
   .header-hero {
-    height: 350px;
+    height: 220px;
   }
 
   .filters-bar {
@@ -1071,6 +1074,7 @@ tbody tr.click-row {
   padding: 16px;
   background: var(--bg-secondary);
   border-radius: var(--radius-md);
+  text-align: center;
 }
 
 .health-stat-label {
