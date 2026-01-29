@@ -55,7 +55,7 @@ export const ChartsSection: FC<Props> = memo(({
               ))}
             </Pie>
             <Tooltip 
-              formatter={(value: number) => [value, "Units"]}
+              formatter={(value: number, name: string) => [value, name]}
               contentStyle={{
                 background: "var(--bg-elevated)",
                 border: "1px solid var(--border-color)",
