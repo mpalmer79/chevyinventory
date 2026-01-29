@@ -1,5 +1,7 @@
 // src/types.ts
 
+export type DealerSource = "chevrolet" | "buick-gmc";
+
 export type InventoryRow = {
   "Stock Number": string;
   Year: number;
