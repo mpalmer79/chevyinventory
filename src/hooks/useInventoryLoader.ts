@@ -1,12 +1,13 @@
 import { useEffect, useCallback, useRef } from "react";
 import * as XLSX from "xlsx";
-import { InventoryRow } from "../types";
+import { InventoryRow, DealerSource } from "../types";
 import { useInventoryStore } from "../store/inventoryStore";
-import { DEFAULT_INVENTORY_PATH } from "../inventoryHelpers";
+import { INVENTORY_PATHS } from "../inventoryHelpers";
 
-const CACHE_KEY = "inventory-data-cache";
 const STALE_TIME = 5 * 60 * 1000;
 const CACHE_TIME = 30 * 60 * 1000;
+
+const getCacheKey = (make: DealerSource) => `inventory-data-cache-${make}`;
 
 interface CachedData {
   rows: InventoryRow[];
@@ -20,8 +21,9 @@ export function useInventoryLoader() {
   const setError = useInventoryStore((s) => s.setError);
   const setLastUpdated = useInventoryStore((s) => s.setLastUpdated);
   const setRefreshing = useInventoryStore((s) => s.setRefreshing);
+  const selectedMake = useInventoryStore((s) => s.selectedMake);
   
-  const hasFetched = useRef(false);
+  const hasFetched = useRef<DealerSource | null>(null);
 
   const parseArrayBuffer = useCallback((data: ArrayBuffer): InventoryRow[] => {
     const workbook = XLSX.read(data, { type: "array" });
@@ -45,19 +47,19 @@ export function useInventoryLoader() {
         Cylinders: Number(row["Cylinders"]) || 0,
         Age: Number(row["Age"]) || 0,
         MSRP: Number(row["MSRP"]) || 0,
-        Status: String(row["Category"] ?? ""),  // Changed from "Status" to "Category"
+        Status: String(row["Category"] ?? ""),
         VIN: String(row["VIN"] ?? ""),
       }));
   }, []);
 
-  const loadFromCache = useCallback((): CachedData | null => {
+  const loadFromCache = useCallback((make: DealerSource): CachedData | null => {
     try {
-      const cached = localStorage.getItem(CACHE_KEY);
+      const cached = localStorage.getItem(getCacheKey(make));
       if (cached) {
         const parsed: CachedData = JSON.parse(cached);
         const age = Date.now() - parsed.timestamp;
         if (age < CACHE_TIME) return parsed;
-        localStorage.removeItem(CACHE_KEY);
+        localStorage.removeItem(getCacheKey(make));
       }
     } catch (e) {
       console.warn("Cache load failed:", e);
@@ -65,18 +67,18 @@ export function useInventoryLoader() {
     return null;
   }, []);
 
-  const saveToCache = useCallback((data: InventoryRow[]) => {
+  const saveToCache = useCallback((data: InventoryRow[], make: DealerSource) => {
     try {
       const cacheData: CachedData = { rows: data, timestamp: Date.now() };
-      localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+      localStorage.setItem(getCacheKey(make), JSON.stringify(cacheData));
     } catch (e) {
       console.warn("Cache save failed:", e);
     }
   }, []);
 
-  const fetchInventory = useCallback(async (useCache = true) => {
+  const fetchInventory = useCallback(async (useCache = true, make: DealerSource = selectedMake) => {
     if (useCache) {
-      const cached = loadFromCache();
+      const cached = loadFromCache(make);
       if (cached) {
         const age = Date.now() - cached.timestamp;
         setRows(cached.rows);
@@ -87,8 +89,10 @@ export function useInventoryLoader() {
       }
     }
 
+    const inventoryPath = INVENTORY_PATHS[make];
+
     try {
-      const res = await fetch(DEFAULT_INVENTORY_PATH);
+      const res = await fetch(inventoryPath);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.arrayBuffer();
       const parsed = parseArrayBuffer(data);
@@ -97,7 +101,7 @@ export function useInventoryLoader() {
       setError(null);
       setLastUpdated(new Date());
       setStale(false);
-      saveToCache(parsed);
+      saveToCache(parsed, make);
     } catch (err) {
       console.error("Inventory load failed:", err);
       setError("Error loading inventory data.");
@@ -105,18 +109,20 @@ export function useInventoryLoader() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [loadFromCache, parseArrayBuffer, saveToCache, setRows, setLoading, setStale, setError, setLastUpdated, setRefreshing]);
+  }, [loadFromCache, parseArrayBuffer, saveToCache, setRows, setLoading, setStale, setError, setLastUpdated, setRefreshing, selectedMake]);
 
   const refetch = useCallback(async () => {
     setRefreshing(true);
-    await fetchInventory(false);
-  }, [fetchInventory, setRefreshing]);
+    await fetchInventory(false, selectedMake);
+  }, [fetchInventory, setRefreshing, selectedMake]);
 
+  // Initial fetch and refetch when make changes
   useEffect(() => {
-    if (hasFetched.current) return;
-    hasFetched.current = true;
-    fetchInventory();
-  }, [fetchInventory]);
+    if (hasFetched.current === selectedMake) return;
+    hasFetched.current = selectedMake;
+    setLoading(true);
+    fetchInventory(true, selectedMake);
+  }, [fetchInventory, selectedMake, setLoading]);
 
   useEffect(() => {
     const interval = setInterval(() => {
