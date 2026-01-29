@@ -25,7 +25,8 @@ type FlattenedRow =
 const shouldSubgroup = (model: string): boolean => {
   return model === "SILVERADO 1500" || 
          model === "SILVERADO 2500HD" || 
-         model === "SILVERADO 3500HD";
+         model === "SILVERADO 3500HD" ||
+         model === "SIERRA 1500";
 };
 
 const ROW_HEIGHT = 48;
