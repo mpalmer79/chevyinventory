@@ -1,4 +1,4 @@
-# Quirk Auto Dealers - Multi-Dealership Inventory Dashboard
+# Quirk Auto Dealers NH - Multi-Dealership Inventory Dashboard
 
 A modern, real-time inventory management dashboard built for Quirk Auto Dealers, supporting multiple dealership locations across New Hampshire.
 
