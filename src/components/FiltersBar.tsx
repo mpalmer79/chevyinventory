@@ -23,6 +23,9 @@ interface Props {
   onMakeChange: (make: DealerSource) => void;
 }
 
+// Models that should be split by Model Number
+const SPLIT_BY_MODEL_NUMBER = ["SILVERADO 1500", "SILVERADO 2500HD", "SIERRA 1500"];
+
 export const FiltersBar: FC<Props> = memo(({
   models,
   filters,
@@ -56,10 +59,8 @@ export const FiltersBar: FC<Props> = memo(({
     const modelsForMake = new Set<string>();
     rows.forEach((r) => {
       if (r.Make === filters.make) {
-        if (r.Model === "SILVERADO 1500" && r["Model Number"]) {
-          modelsForMake.add(`SILVERADO 1500 ${r["Model Number"]}`);
-        } else if (r.Model === "SILVERADO 2500HD" && r["Model Number"]) {
-          modelsForMake.add(`SILVERADO 2500HD ${r["Model Number"]}`);
+        if (SPLIT_BY_MODEL_NUMBER.includes(r.Model) && r["Model Number"]) {
+          modelsForMake.add(`${r.Model} ${r["Model Number"]}`);
         } else {
           modelsForMake.add(r.Model);
         }
