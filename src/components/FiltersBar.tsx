@@ -5,7 +5,6 @@ import { ThemeToggle } from "./ui/ThemeToggle";
 import { DEALER_LABELS } from "../inventoryHelpers";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { Label } from "./ui/label";
 import {
   Select,
   SelectContent,
@@ -78,12 +77,17 @@ export const FiltersBar: FC<Props> = memo(({
 
   const dealerOptions: DealerSource[] = ["chevrolet", "buick-gmc"];
 
+  // Common label style - black text
+  const labelClass = "text-xs font-semibold uppercase tracking-wide text-black dark:text-white mb-1.5 block";
+
   return (
     <Card className="mb-6 p-4">
       <div className="flex flex-wrap items-end gap-4">
         {/* DEALERSHIP */}
-        <div className="flex flex-col gap-1.5 min-w-[160px]">
-          <Label>Dealership</Label>
+        <div className="flex flex-col min-w-[160px]">
+          <label className="text-sm font-bold uppercase tracking-wide text-black dark:text-white mb-1.5 block">
+            Choose Dealership
+          </label>
           <Select value={selectedMake} onValueChange={(v) => onMakeChange(v as DealerSource)}>
             <SelectTrigger>
               <SelectValue placeholder="Select dealership" />
@@ -99,8 +103,8 @@ export const FiltersBar: FC<Props> = memo(({
         </div>
 
         {/* YEAR */}
-        <div className="flex flex-col gap-1.5 min-w-[120px]">
-          <Label>Year</Label>
+        <div className="flex flex-col min-w-[120px]">
+          <label className={labelClass}>Year</label>
           <Select value={filters.year} onValueChange={(v) => onChange({ year: v })}>
             <SelectTrigger>
               <SelectValue placeholder="All Years" />
@@ -117,8 +121,8 @@ export const FiltersBar: FC<Props> = memo(({
         </div>
 
         {/* MAKE */}
-        <div className="flex flex-col gap-1.5 min-w-[140px]">
-          <Label>Make</Label>
+        <div className="flex flex-col min-w-[140px]">
+          <label className={labelClass}>Make</label>
           <Select 
             value={filters.make || "ALL_MAKES"} 
             onValueChange={(v) => onChange({ make: v === "ALL_MAKES" ? "" : v, model: "" })}
@@ -138,8 +142,8 @@ export const FiltersBar: FC<Props> = memo(({
         </div>
 
         {/* MODEL */}
-        <div className="flex flex-col gap-1.5 min-w-[180px]">
-          <Label>Model</Label>
+        <div className="flex flex-col min-w-[180px]">
+          <label className={labelClass}>Model</label>
           <Select 
             value={filters.model || "ALL_MODELS"} 
             onValueChange={(v) => onChange({ model: v === "ALL_MODELS" ? "" : v })}
@@ -159,8 +163,8 @@ export const FiltersBar: FC<Props> = memo(({
         </div>
 
         {/* STOCK NUMBER */}
-        <div className="flex flex-col gap-1.5 min-w-[140px]">
-          <Label>Stock Number</Label>
+        <div className="flex flex-col min-w-[140px]">
+          <label className={labelClass}>Stock Number</label>
           <Input
             type="text"
             placeholder="Search stock #"
