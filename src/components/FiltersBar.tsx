@@ -1,7 +1,6 @@
 // src/components/FiltersBar.tsx
 import React, { FC, memo, useMemo } from "react";
 import { Filters, DrillType, AgingBuckets, InventoryRow, DealerSource } from "../types";
-import { InventoryHealthPanel } from "./InventoryHealthPanel";
 import { ThemeToggle } from "./ui/ThemeToggle";
 import { DEALER_LABELS } from "../inventoryHelpers";
 import { Button } from "./ui/button";
@@ -43,8 +42,6 @@ export const FiltersBar: FC<Props> = memo(({
   filters,
   onChange,
   rows,
-  agingBuckets,
-  onRowClick,
   selectedMake,
   onMakeChange,
 }) => {
@@ -82,8 +79,8 @@ export const FiltersBar: FC<Props> = memo(({
   const dealerOptions: DealerSource[] = ["chevrolet", "buick-gmc"];
 
   return (
-    <Card className="mb-6 overflow-hidden">
-      <div className="flex flex-wrap items-end gap-4 p-4 border-b border-border">
+    <Card className="mb-6 p-4">
+      <div className="flex flex-wrap items-end gap-4">
         {/* DEALERSHIP */}
         <div className="flex flex-col gap-1.5 min-w-[160px]">
           <Label>Dealership</Label>
@@ -181,12 +178,6 @@ export const FiltersBar: FC<Props> = memo(({
           <ThemeToggle />
         </div>
       </div>
-
-      <InventoryHealthPanel
-        rows={rows}
-        agingBuckets={agingBuckets}
-        onRowClick={onRowClick}
-      />
     </Card>
   );
 });
