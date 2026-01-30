@@ -80,6 +80,14 @@ const App: FC = () => {
     return b;
   }, [validRows]);
 
+  // Calculate average age for KPI
+  const avgAge = useMemo(() => {
+    const onLotRows = validRows.filter((r) => !isInTransit(r) && r.Age > 0);
+    if (onLotRows.length === 0) return 0;
+    const totalAge = onLotRows.reduce((sum, r) => sum + r.Age, 0);
+    return Math.round(totalAge / onLotRows.length);
+  }, [validRows]);
+
   const sortedRows = useMemo(() => {
     return [...validRows].sort((a, b) => {
       if (a.Model !== b.Model) return a.Model.localeCompare(b.Model);
@@ -258,12 +266,13 @@ const App: FC = () => {
               {!hasModelFilter && (
                 <SectionErrorBoundary section="KPI metrics">
                   <KpiBar
-                    totalUnits={filteredRows.length}
-                    newArrivalCount={filteredNewArrivals.length}
-                    inTransitCount={filteredInTransit.length}
-                    onSelectTotalUnits={resetAll}
-                    onSelectNewArrivals={() => setDrillType("new")}
-                    onSelectInTransit={() => setDrillType("in_transit")}
+                    totalVehicles={filteredRows.length}
+                    totalNew={filteredNewArrivals.length}
+                    inTransit={filteredInTransit.length}
+                    avgAge={avgAge}
+                    onTotalClick={resetAll}
+                    onNewClick={() => setDrillType("new")}
+                    onTransitClick={() => setDrillType("in_transit")}
                   />
                 </SectionErrorBoundary>
               )}
