@@ -38,6 +38,7 @@ export type DrillType =
   | "61_90"
   | "90_plus"
   | "in_transit"
+  | "in_stock"
   | `model:${string}`;
 
 export type Filters = {
