@@ -15,6 +15,7 @@ interface Props {
     on61_90: () => void;
     on90_plus: () => void;
   };
+  onModelClick?: (model: string) => void;
 }
 
 const MODEL_COLORS = [
@@ -65,7 +66,15 @@ export const ChartsSection: FC<Props> = memo(({
   modelPieData,
   agingBuckets,
   agingHandlers,
+  onModelClick,
 }) => {
+  // Handle pie chart segment click
+  const handlePieClick = (data: ModelPieDatum) => {
+    if (onModelClick && data?.name) {
+      onModelClick(data.name);
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Model Mix Pie Chart */}
@@ -87,11 +96,14 @@ export const ChartsSection: FC<Props> = memo(({
                 paddingAngle={2}
                 dataKey="value"
                 nameKey="name"
+                onClick={handlePieClick}
+                style={{ cursor: "pointer" }}
               >
-                {modelPieData.map((_, index) => (
+                {modelPieData.map((entry, index) => (
                   <Cell 
                     key={`cell-${index}`} 
-                    fill={MODEL_COLORS[index % MODEL_COLORS.length]} 
+                    fill={MODEL_COLORS[index % MODEL_COLORS.length]}
+                    style={{ cursor: "pointer" }}
                   />
                 ))}
               </Pie>
@@ -109,15 +121,22 @@ export const ChartsSection: FC<Props> = memo(({
           </ResponsiveContainer>
           <div className="flex flex-wrap gap-2 justify-center mt-3">
             {modelPieData.slice(0, 6).map((item, index) => (
-              <div key={item.name} className="flex items-center gap-1.5 text-xs">
+              <button
+                key={item.name}
+                onClick={() => onModelClick?.(item.name)}
+                className="flex items-center gap-1.5 text-xs hover:bg-accent px-2 py-1 rounded transition-colors cursor-pointer"
+              >
                 <span 
                   className="w-2.5 h-2.5 rounded-sm" 
                   style={{ background: MODEL_COLORS[index % MODEL_COLORS.length] }} 
                 />
-                <span className="text-muted-foreground">{item.name}</span>
-              </div>
+                <span className="text-muted-foreground hover:text-foreground">{item.name}</span>
+              </button>
             ))}
           </div>
+          <p className="text-xs text-center text-muted-foreground mt-3">
+            Click on a segment or legend to filter by model
+          </p>
         </CardContent>
       </Card>
 
