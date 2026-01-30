@@ -10,7 +10,8 @@ export const ThemeToggle: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+      {/* Hide "THEME" label on mobile (below md breakpoint) */}
+      <span className="hidden md:block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         Theme
       </span>
       <div className="inline-flex items-center rounded-lg border bg-muted p-0.5">
@@ -18,7 +19,7 @@ export const ThemeToggle: React.FC = () => {
           variant="ghost"
           size="sm"
           className={cn(
-            "h-8 px-3 gap-1.5 rounded-md transition-all",
+            "h-8 sm:h-8 px-2 sm:px-3 gap-1 sm:gap-1.5 rounded-md transition-all",
             theme === "light" 
               ? "bg-background shadow-sm text-foreground" 
               : "text-muted-foreground hover:text-foreground"
@@ -32,7 +33,7 @@ export const ThemeToggle: React.FC = () => {
           variant="ghost"
           size="sm"
           className={cn(
-            "h-8 px-3 gap-1.5 rounded-md transition-all",
+            "h-8 sm:h-8 px-2 sm:px-3 gap-1 sm:gap-1.5 rounded-md transition-all",
             theme === "dark" 
               ? "bg-background shadow-sm text-foreground" 
               : "text-muted-foreground hover:text-foreground"
