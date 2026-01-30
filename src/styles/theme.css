@@ -51,6 +51,49 @@ html {
 }
 
 /* ============================================
+   HEADER - Image Display
+   ============================================ */
+
+.header {
+  background: url("/chevy-showroom.png") top center/cover no-repeat;
+  background-color: #f8fafc;
+  position: relative;
+  overflow: hidden;
+}
+
+.header-hero {
+  position: relative;
+  height: 380px;
+}
+
+/* Light watermark overlay */
+.header-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.08);
+  z-index: 0;
+}
+
+/* Bottom fade gradient */
+.header-hero::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 150px;
+  background: linear-gradient(to bottom, transparent 0%, hsl(var(--background)) 100%);
+  z-index: 1;
+}
+
+@media (max-width: 768px) {
+  .header-hero {
+    height: 220px;
+  }
+}
+
+/* ============================================
    DRILLDOWN TABLE STYLES
    ============================================ */
 
