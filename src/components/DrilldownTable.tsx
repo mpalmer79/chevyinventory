@@ -33,15 +33,66 @@ export const DrilldownTable: FC<Props> = ({ groups, onBack, onRowClick, title })
 
   return (
     <section className="panel drilldown-section">
-      <div className="drill-header">
-        <button className="back-button" onClick={onBack}>
-          ← Back
+      {/* Centered Back Button */}
+      <div style={{ 
+        display: "flex", 
+        justifyContent: "center", 
+        marginBottom: 16 
+      }}>
+        <button 
+          className="back-button" 
+          onClick={onBack}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "12px 32px",
+            fontSize: 16,
+            fontWeight: 600,
+            color: "#0066B1",
+            background: "#e0f2fe",
+            border: "2px solid #0066B1",
+            borderRadius: 8,
+            cursor: "pointer",
+            transition: "all 0.2s ease",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = "#0066B1";
+            e.currentTarget.style.color = "#ffffff";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = "#e0f2fe";
+            e.currentTarget.style.color = "#0066B1";
+          }}
+        >
+          <span style={{ fontSize: 20 }}>←</span>
+          Back to Dashboard
         </button>
-        <div className="drill-title">
-          {title || "Drilldown View"}
-          {title && <span style={{ fontWeight: 400, marginLeft: 8 }}>({totalCount} vehicles)</span>}
-        </div>
       </div>
+
+      {/* Title */}
+      {title && (
+        <div style={{
+          textAlign: "center",
+          marginBottom: 20,
+        }}>
+          <h2 style={{
+            fontSize: 22,
+            fontWeight: 700,
+            color: "var(--text-primary)",
+            margin: 0,
+          }}>
+            {title}
+          </h2>
+          <p style={{
+            fontSize: 14,
+            color: "var(--text-secondary)",
+            marginTop: 4,
+          }}>
+            {totalCount} vehicles
+          </p>
+        </div>
+      )}
 
       {groupKeys.map((key) => {
         const parts = key.split("|");
