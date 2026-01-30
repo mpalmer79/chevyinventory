@@ -4,6 +4,10 @@ import { InventoryRow } from "../types";
 import { generateVehicleUrl } from "../utils/vehicleUrl";
 import { isInTransit, formatAgeShort, sortByAgeDescending } from "../utils/inventoryUtils";
 import { useIsMobile } from "../hooks/useMediaQuery";
+import { Card, CardContent } from "./ui/card";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { ArrowLeft, ExternalLink } from "lucide-react";
 
 type Props = {
   groups: Record<string, InventoryRow[]>;
@@ -32,202 +36,154 @@ export const DrilldownTable: FC<Props> = ({ groups, onBack, onRowClick, title })
   };
 
   return (
-    <section className="panel drilldown-section">
-      {/* Centered Back Button */}
-      <div style={{ 
-        display: "flex", 
-        justifyContent: "center", 
-        marginBottom: 16 
-      }}>
-        <button 
-          className="back-button" 
+    <div className="space-y-4">
+      {/* Centered Back Button and Title */}
+      <div className="flex flex-col items-center gap-4 mb-6">
+        <Button 
+          variant="outline" 
+          size="lg"
           onClick={onBack}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "12px 32px",
-            fontSize: 16,
-            fontWeight: 600,
-            color: "#0066B1",
-            background: "#e0f2fe",
-            border: "2px solid #0066B1",
-            borderRadius: 8,
-            cursor: "pointer",
-            transition: "all 0.2s ease",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = "#0066B1";
-            e.currentTarget.style.color = "#ffffff";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = "#e0f2fe";
-            e.currentTarget.style.color = "#0066B1";
-          }}
+          className="gap-2 px-8"
         >
-          <span style={{ fontSize: 20 }}>←</span>
+          <ArrowLeft className="h-5 w-5" />
           Back to Dashboard
-        </button>
+        </Button>
+        
+        {title && (
+          <div className="text-center">
+            <h2 className="text-xl font-bold">{title}</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              {totalCount} vehicles
+            </p>
+          </div>
+        )}
       </div>
 
-      {/* Title */}
-      {title && (
-        <div style={{
-          textAlign: "center",
-          marginBottom: 20,
-        }}>
-          <h2 style={{
-            fontSize: 22,
-            fontWeight: 700,
-            color: "var(--text-primary)",
-            margin: 0,
-          }}>
-            {title}
-          </h2>
-          <p style={{
-            fontSize: 14,
-            color: "var(--text-secondary)",
-            marginTop: 4,
-          }}>
-            {totalCount} vehicles
-          </p>
-        </div>
-      )}
+      {/* Groups */}
+      <Card>
+        <CardContent className="p-0">
+          {groupKeys.map((key, groupIndex) => {
+            const parts = key.split("|");
+            const make = parts[0] ?? "";
+            const model = parts[1] ?? "";
+            const modelNumber = parts[2] ?? null;
+            const groupRows = groups[key];
+            if (!groupRows) return null;
+            const rowsForGroup = sortByAgeDescending(groupRows);
+            const groupTitle = modelNumber
+              ? `${make} ${model} ${modelNumber}`
+              : `${make} ${model}`;
 
-      {groupKeys.map((key) => {
-        const parts = key.split("|");
-        const make = parts[0] ?? "";
-        const model = parts[1] ?? "";
-        const modelNumber = parts[2] ?? null;
-        const groupRows = groups[key];
-        if (!groupRows) return null;
-        const rowsForGroup = sortByAgeDescending(groupRows);
-        const groupTitle = modelNumber
-          ? `${make} ${model} ${modelNumber} - ${rowsForGroup.length}`
-          : `${make} ${model} - ${rowsForGroup.length}`;
+            return (
+              <div key={key} className={groupIndex > 0 ? "border-t" : ""}>
+                {/* Group Header */}
+                <div className="flex items-center justify-between p-4 bg-primary/10">
+                  <span className="font-bold text-sm">{groupTitle}</span>
+                  <Badge variant="secondary">{rowsForGroup.length}</Badge>
+                </div>
 
-        return (
-          <div key={key} className="drill-group" style={{ marginTop: 16 }}>
-            <div
-              className="drill-group-title"
-              style={{
-                background: "#ffffff",
-                color: "#000000",
-                padding: "12px 16px",
-                fontWeight: 700,
-                fontSize: 15,
-                borderRadius: 8,
-                marginBottom: 8,
-              }}
-            >
-              {groupTitle}
-            </div>
-
-            {isMobile ? (
-              <div className="mobile-card-list">
-                {rowsForGroup.map((r) => (
-                  <div
-                    key={r["Stock Number"]}
-                    className="mobile-card"
-                    onClick={() => onRowClick(r)}
-                  >
-                    <div className="mobile-card-header">
-                      <span
-                        className="mc-stock stock-link"
-                        onClick={(e) => handleStockClick(e, r)}
-                        style={{
-                          color: "#4fc3f7",
-                          textDecoration: "underline",
-                          cursor: "pointer",
-                        }}
+                {/* Mobile View */}
+                {isMobile ? (
+                  <div className="p-4 space-y-2">
+                    {rowsForGroup.map((r) => (
+                      <div
+                        key={r["Stock Number"]}
+                        className="p-3 rounded-lg border bg-card hover:bg-accent/30 transition-colors cursor-pointer"
+                        onClick={() => onRowClick(r)}
                       >
-                        #{r["Stock Number"]}
-                      </span>
-                      <span className="mc-title">
-                        {r.Year} {r.Model}
-                      </span>
-                    </div>
-
-                    <div className="mobile-card-row">
-                      <span>Trim</span>
-                      <span>{r.Trim}</span>
-                    </div>
-
-                    <div className="mobile-card-row">
-                      <span>Exterior</span>
-                      <span>{r["Exterior Color"]}</span>
-                    </div>
-
-                    <div className="mobile-card-row">
-                      <span>Model #</span>
-                      <span>{r["Model Number"]}</span>
-                    </div>
-
-                    <div className="mobile-card-row">
-                      <span>Age</span>
-                      <span style={isInTransit(r) ? { color: "#fbbf24", fontWeight: 600 } : undefined}>
-                        {formatAgeShort(r)}{!isInTransit(r) && " days"}
-                      </span>
-                    </div>
-
-                    <div className="mobile-card-row">
-                      <span>MSRP</span>
-                      <span>${Number(r.MSRP).toLocaleString()}</span>
-                    </div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span
+                            className="text-sm font-semibold text-primary flex items-center gap-1"
+                            onClick={(e) => handleStockClick(e, r)}
+                          >
+                            #{r["Stock Number"]}
+                            <ExternalLink className="h-3 w-3" />
+                          </span>
+                          <span className="text-sm font-medium">
+                            {r.Year} {r.Model}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Trim</span>
+                            <span>{r.Trim}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Exterior</span>
+                            <span>{r["Exterior Color"]}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Model #</span>
+                            <span>{r["Model Number"]}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Age</span>
+                            <span className={isInTransit(r) ? "text-amber-500 font-semibold" : ""}>
+                              {formatAgeShort(r)}{!isInTransit(r) && " days"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between col-span-2">
+                            <span className="text-muted-foreground">MSRP</span>
+                            <span className="font-semibold">${Number(r.MSRP).toLocaleString()}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                ) : (
+                  /* Desktop Table View */
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b bg-muted/30">
+                          <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Stock #</th>
+                          <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Year</th>
+                          <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Model</th>
+                          <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Exterior</th>
+                          <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Trim</th>
+                          <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Model #</th>
+                          <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Age</th>
+                          <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">MSRP</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rowsForGroup.map((r) => (
+                          <tr
+                            key={r["Stock Number"]}
+                            className="border-b hover:bg-accent/30 transition-colors cursor-pointer"
+                            onClick={() => onRowClick(r)}
+                          >
+                            <td className="p-3">
+                              <span
+                                className="text-sm font-medium text-primary hover:underline inline-flex items-center gap-1"
+                                onClick={(e) => handleStockClick(e, r)}
+                              >
+                                {r["Stock Number"]}
+                                <ExternalLink className="h-3 w-3" />
+                              </span>
+                            </td>
+                            <td className="p-3 text-sm">{r.Year}</td>
+                            <td className="p-3 text-sm">{r.Model}</td>
+                            <td className="p-3 text-sm">{r["Exterior Color"]}</td>
+                            <td className="p-3 text-sm">{r.Trim}</td>
+                            <td className="p-3 text-sm">{r["Model Number"]}</td>
+                            <td className="p-3 text-sm">
+                              <span className={isInTransit(r) ? "text-amber-500 font-semibold" : ""}>
+                                {formatAgeShort(r)}
+                              </span>
+                            </td>
+                            <td className="p-3 text-sm font-medium">${Number(r.MSRP).toLocaleString()}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
-            ) : (
-              <table className="table-shell">
-                <thead>
-                  <tr>
-                    <th>Stock #</th>
-                    <th>Year</th>
-                    <th>Model</th>
-                    <th>Exterior</th>
-                    <th>Trim</th>
-                    <th>Model #</th>
-                    <th>Age</th>
-                    <th>MSRP</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rowsForGroup.map((r) => (
-                    <tr
-                      key={r["Stock Number"]}
-                      className="click-row"
-                      onClick={() => onRowClick(r)}
-                    >
-                      <td>
-                        <span
-                          className="stock-link"
-                          onClick={(e) => handleStockClick(e, r)}
-                          style={{
-                            color: "#4fc3f7",
-                            textDecoration: "underline",
-                            cursor: "pointer",
-                          }}
-                        >
-                          {r["Stock Number"]}
-                        </span>
-                      </td>
-                      <td>{r.Year}</td>
-                      <td>{r.Model}</td>
-                      <td>{r["Exterior Color"]}</td>
-                      <td>{r.Trim}</td>
-                      <td>{r["Model Number"]}</td>
-                      <td style={isInTransit(r) ? { color: "#fbbf24", fontWeight: 600 } : undefined}>
-                        {formatAgeShort(r)}
-                      </td>
-                      <td>${Number(r.MSRP).toLocaleString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        );
-      })}
-    </section>
+            );
+          })}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
