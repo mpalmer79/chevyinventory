@@ -261,7 +261,7 @@ To maintain clarity and long-term maintainability, this project intentionally av
 
 ---
 
-Author
+## Author
 
 - Michael Palmer
 - AI Deployment & Solutions Specialist
