@@ -2,6 +2,9 @@
 import React, { FC, memo } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { AgingBuckets, ModelPieDatum } from "../types";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { Badge } from "./ui/badge";
+import { cn } from "../lib/utils";
 
 interface Props {
   modelPieData: ModelPieDatum[];
@@ -25,110 +28,137 @@ const MODEL_COLORS = [
   "#64748b", // Slate
 ];
 
+interface AgingBucketProps {
+  label: string;
+  value: number;
+  variant: "fresh" | "normal" | "watch" | "risk";
+  badgeText: string;
+  onClick: () => void;
+}
+
+const AgingBucket: FC<AgingBucketProps> = ({ label, value, variant, badgeText, onClick }) => {
+  const variantStyles = {
+    fresh: "hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30",
+    normal: "hover:border-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-950/30",
+    watch: "hover:border-orange-400 hover:bg-orange-50 dark:hover:bg-orange-950/30",
+    risk: "hover:border-red-400 hover:bg-red-50 dark:hover:bg-red-950/30",
+  };
+
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "flex flex-col items-center gap-2 p-4 rounded-lg border bg-card transition-all cursor-pointer",
+        variantStyles[variant]
+      )}
+    >
+      <span className="text-xs font-medium text-muted-foreground">{label}</span>
+      <span className="text-3xl font-bold tabular-nums">{value}</span>
+      <Badge variant={variant}>{badgeText}</Badge>
+    </button>
+  );
+};
+
 export const ChartsSection: FC<Props> = memo(({
   modelPieData,
   agingBuckets,
   agingHandlers,
 }) => {
   return (
-    <div className="charts-grid">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Model Mix Pie Chart */}
-      <div className="chart-card">
-        <div className="chart-title">Inventory Mix · Top Models</div>
-        <ResponsiveContainer width="100%" height={250}>
-          <PieChart>
-            <Pie
-              data={modelPieData}
-              cx="50%"
-              cy="50%"
-              innerRadius={60}
-              outerRadius={100}
-              paddingAngle={2}
-              dataKey="value"
-              nameKey="name"
-            >
-              {modelPieData.map((_, index) => (
-                <Cell 
-                  key={`cell-${index}`} 
-                  fill={MODEL_COLORS[index % MODEL_COLORS.length]} 
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-center text-base font-semibold">
+            Inventory Mix · Top Models
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie
+                data={modelPieData}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={100}
+                paddingAngle={2}
+                dataKey="value"
+                nameKey="name"
+              >
+                {modelPieData.map((_, index) => (
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={MODEL_COLORS[index % MODEL_COLORS.length]} 
+                  />
+                ))}
+              </Pie>
+              <Tooltip 
+                formatter={(value: number, name: string) => [value, name]}
+                contentStyle={{
+                  background: "hsl(var(--card))",
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: "var(--radius)",
+                  color: "hsl(var(--card-foreground))",
+                  boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+          <div className="flex flex-wrap gap-2 justify-center mt-3">
+            {modelPieData.slice(0, 6).map((item, index) => (
+              <div key={item.name} className="flex items-center gap-1.5 text-xs">
+                <span 
+                  className="w-2.5 h-2.5 rounded-sm" 
+                  style={{ background: MODEL_COLORS[index % MODEL_COLORS.length] }} 
                 />
-              ))}
-            </Pie>
-            <Tooltip 
-              formatter={(value: number, name: string) => [value, name]}
-              contentStyle={{
-                background: "var(--bg-elevated)",
-                border: "1px solid var(--border-color)",
-                borderRadius: "var(--radius-md)",
-                color: "var(--text-primary)",
-              }}
-            />
-          </PieChart>
-        </ResponsiveContainer>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "center", marginTop: "12px" }}>
-          {modelPieData.slice(0, 6).map((item, index) => (
-            <div key={item.name} style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "12px" }}>
-              <span style={{ 
-                width: "10px", 
-                height: "10px", 
-                borderRadius: "2px", 
-                background: MODEL_COLORS[index % MODEL_COLORS.length] 
-              }} />
-              <span style={{ color: "var(--text-secondary)" }}>{item.name}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+                <span className="text-muted-foreground">{item.name}</span>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Aging Buckets */}
-      <div className="chart-card">
-        <div className="chart-title">Aging Overview · Days in Stock</div>
-        <div className="aging-grid">
-          <div 
-            className="aging-bucket fresh" 
-            onClick={agingHandlers.on0_30}
-            role="button"
-            tabIndex={0}
-          >
-            <div className="aging-bucket-label">0–30 Days</div>
-            <div className="aging-bucket-value">{agingBuckets.bucket0_30}</div>
-            <span className="badge badge-fresh">Fresh</span>
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-center text-base font-semibold">
+            Aging Overview · Days in Stock
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-3">
+            <AgingBucket
+              label="0–30 Days"
+              value={agingBuckets.bucket0_30}
+              variant="fresh"
+              badgeText="Fresh"
+              onClick={agingHandlers.on0_30}
+            />
+            <AgingBucket
+              label="31–60 Days"
+              value={agingBuckets.bucket31_60}
+              variant="normal"
+              badgeText="Normal"
+              onClick={agingHandlers.on31_60}
+            />
+            <AgingBucket
+              label="61–90 Days"
+              value={agingBuckets.bucket61_90}
+              variant="watch"
+              badgeText="Watch"
+              onClick={agingHandlers.on61_90}
+            />
+            <AgingBucket
+              label="90+ Days"
+              value={agingBuckets.bucket90_plus}
+              variant="risk"
+              badgeText="At Risk"
+              onClick={agingHandlers.on90_plus}
+            />
           </div>
-
-          <div 
-            className="aging-bucket normal" 
-            onClick={agingHandlers.on31_60}
-            role="button"
-            tabIndex={0}
-          >
-            <div className="aging-bucket-label">31–60 Days</div>
-            <div className="aging-bucket-value">{agingBuckets.bucket31_60}</div>
-            <span className="badge badge-normal">Normal</span>
-          </div>
-
-          <div 
-            className="aging-bucket watch" 
-            onClick={agingHandlers.on61_90}
-            role="button"
-            tabIndex={0}
-          >
-            <div className="aging-bucket-label">61–90 Days</div>
-            <div className="aging-bucket-value">{agingBuckets.bucket61_90}</div>
-            <span className="badge badge-watch">Watch</span>
-          </div>
-
-          <div 
-            className="aging-bucket risk" 
-            onClick={agingHandlers.on90_plus}
-            role="button"
-            tabIndex={0}
-          >
-            <div className="aging-bucket-label">90+ Days</div>
-            <div className="aging-bucket-value">{agingBuckets.bucket90_plus}</div>
-            <span className="badge badge-risk">At Risk</span>
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 });
