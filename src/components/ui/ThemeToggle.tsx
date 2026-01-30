@@ -1,32 +1,47 @@
 // src/components/ui/ThemeToggle.tsx
 import React from "react";
 import { useTheme } from "../../context/ThemeContext";
+import { Button } from "./button";
+import { Sun, Moon } from "lucide-react";
+import { cn } from "../../lib/utils";
 
 export const ThemeToggle: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <div className="theme-toggle-group">
-      <label className="filter-label">Theme</label>
-      <div className="theme-toggle-segmented">
-        <button
-          type="button"
-          className={`theme-segment ${theme === "light" ? "active" : ""}`}
+    <div className="flex flex-col gap-1.5">
+      <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        Theme
+      </span>
+      <div className="inline-flex items-center rounded-lg border bg-muted p-0.5">
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn(
+            "h-8 px-3 gap-1.5 rounded-md transition-all",
+            theme === "light" 
+              ? "bg-background shadow-sm text-foreground" 
+              : "text-muted-foreground hover:text-foreground"
+          )}
           onClick={() => theme !== "light" && toggleTheme()}
-          aria-label="Light mode"
         >
-          <span className="theme-icon">☀️</span>
-          <span className="theme-label">Light</span>
-        </button>
-        <button
-          type="button"
-          className={`theme-segment ${theme === "dark" ? "active" : ""}`}
+          <Sun className="h-4 w-4" />
+          <span className="text-xs font-medium">Light</span>
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn(
+            "h-8 px-3 gap-1.5 rounded-md transition-all",
+            theme === "dark" 
+              ? "bg-background shadow-sm text-foreground" 
+              : "text-muted-foreground hover:text-foreground"
+          )}
           onClick={() => theme !== "dark" && toggleTheme()}
-          aria-label="Dark mode"
         >
-          <span className="theme-icon">🌙</span>
-          <span className="theme-label">Dark</span>
-        </button>
+          <Moon className="h-4 w-4" />
+          <span className="text-xs font-medium">Dark</span>
+        </Button>
       </div>
     </div>
   );
