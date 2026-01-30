@@ -4,6 +4,18 @@ import { Filters, DrillType, AgingBuckets, InventoryRow, DealerSource } from "..
 import { InventoryHealthPanel } from "./InventoryHealthPanel";
 import { ThemeToggle } from "./ui/ThemeToggle";
 import { DEALER_LABELS } from "../inventoryHelpers";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+import { Card } from "./ui/card";
+import { Search } from "lucide-react";
 
 interface Props {
   models: string[];
@@ -70,95 +82,102 @@ export const FiltersBar: FC<Props> = memo(({
   const dealerOptions: DealerSource[] = ["chevrolet", "buick-gmc"];
 
   return (
-    <div className="panel mb-6">
-      <div className="filters-bar">
+    <Card className="mb-6 overflow-hidden">
+      <div className="flex flex-wrap items-end gap-4 p-4 border-b border-border">
         {/* DEALERSHIP */}
-        <div className="filter-group">
-          <label className="filter-label">Dealership</label>
-          <select
-            className="filter-select"
-            value={selectedMake}
-            onChange={(e) => onMakeChange(e.target.value as DealerSource)}
-          >
-            {dealerOptions.map((d) => (
-              <option key={d} value={d}>
-                {DEALER_LABELS[d]}
-              </option>
-            ))}
-          </select>
+        <div className="flex flex-col gap-1.5 min-w-[160px]">
+          <Label>Dealership</Label>
+          <Select value={selectedMake} onValueChange={(v) => onMakeChange(v as DealerSource)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select dealership" />
+            </SelectTrigger>
+            <SelectContent>
+              {dealerOptions.map((d) => (
+                <SelectItem key={d} value={d}>
+                  {DEALER_LABELS[d]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* YEAR */}
-        <div className="filter-group">
-          <label className="filter-label">Year</label>
-          <select
-            className="filter-select"
-            value={filters.year}
-            onChange={(e) => onChange({ year: e.target.value })}
-          >
-            <option value="ALL">All Years</option>
-            {years.map((y) => (
-              <option key={y} value={String(y)}>
-                {y}
-              </option>
-            ))}
-          </select>
+        <div className="flex flex-col gap-1.5 min-w-[120px]">
+          <Label>Year</Label>
+          <Select value={filters.year} onValueChange={(v) => onChange({ year: v })}>
+            <SelectTrigger>
+              <SelectValue placeholder="All Years" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All Years</SelectItem>
+              {years.map((y) => (
+                <SelectItem key={y} value={String(y)}>
+                  {y}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* MAKE */}
-        <div className="filter-group">
-          <label className="filter-label">Make</label>
-          <select
-            className="filter-select"
-            value={filters.make || ""}
-            onChange={(e) => onChange({ make: e.target.value, model: "" })}
+        <div className="flex flex-col gap-1.5 min-w-[140px]">
+          <Label>Make</Label>
+          <Select 
+            value={filters.make || "ALL_MAKES"} 
+            onValueChange={(v) => onChange({ make: v === "ALL_MAKES" ? "" : v, model: "" })}
           >
-            <option value="">All Makes</option>
-            {makes.map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger>
+              <SelectValue placeholder="All Makes" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL_MAKES">All Makes</SelectItem>
+              {makes.map((m) => (
+                <SelectItem key={m} value={m}>
+                  {m}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* MODEL */}
-        <div className="filter-group">
-          <label className="filter-label">Model</label>
-          <select
-            className="filter-select"
-            value={filters.model}
-            onChange={(e) => onChange({ model: e.target.value })}
+        <div className="flex flex-col gap-1.5 min-w-[180px]">
+          <Label>Model</Label>
+          <Select 
+            value={filters.model || "ALL_MODELS"} 
+            onValueChange={(v) => onChange({ model: v === "ALL_MODELS" ? "" : v })}
           >
-            <option value="">All Models</option>
-            {filteredModels.map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger>
+              <SelectValue placeholder="All Models" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL_MODELS">All Models</SelectItem>
+              {filteredModels.map((m) => (
+                <SelectItem key={m} value={m}>
+                  {m}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* STOCK NUMBER */}
-        <div className="filter-group">
-          <label className="filter-label">Stock Number</label>
-          <input
+        <div className="flex flex-col gap-1.5 min-w-[140px]">
+          <Label>Stock Number</Label>
+          <Input
             type="text"
-            className="filter-input"
             placeholder="Search stock #"
             value={filters.stockNumber}
             onChange={(e) => onChange({ stockNumber: e.target.value })}
           />
         </div>
 
-        {/* ACTIONS - Search button and Theme toggle aligned */}
-        <div className="filter-actions-aligned">
-          <div className="filter-group">
-            <label className="filter-label">&nbsp;</label>
-            <button className="btn btn-primary" onClick={() => {}}>
-              Search
-            </button>
-          </div>
+        {/* ACTIONS */}
+        <div className="flex items-end gap-3 ml-auto">
+          <Button variant="default" className="gap-2">
+            <Search className="h-4 w-4" />
+            Search
+          </Button>
           <ThemeToggle />
         </div>
       </div>
@@ -168,7 +187,7 @@ export const FiltersBar: FC<Props> = memo(({
         agingBuckets={agingBuckets}
         onRowClick={onRowClick}
       />
-    </div>
+    </Card>
   );
 });
 
