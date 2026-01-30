@@ -4,6 +4,9 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { InventoryRow } from "../types";
 import { generateVehicleUrl } from "../utils/vehicleUrl";
 import { isInTransit, formatAgeShort, sortByAgeDescending } from "../utils/inventoryUtils";
+import { Card, CardContent } from "./ui/card";
+import { Badge } from "./ui/badge";
+import { ExternalLink } from "lucide-react";
 
 type Props = {
   rows: InventoryRow[];
@@ -115,7 +118,7 @@ export const VirtualizedTable: FC<Props> = memo(({ rows, onRowClick }) => {
     count: flattenedRows.length,
     getScrollElement: () => parentRef.current,
     estimateSize: getItemSize,
-    overscan: 10, // Render 10 extra rows above/below viewport
+    overscan: 10,
   });
 
   // Handle stock click
@@ -132,151 +135,116 @@ export const VirtualizedTable: FC<Props> = memo(({ rows, onRowClick }) => {
   const virtualItems = virtualizer.getVirtualItems();
 
   return (
-    <section className="panel table-shell">
-      {/* Fixed header */}
-      <div 
-        style={{ 
-          position: "sticky", 
-          top: 0, 
-          zIndex: 10,
-          background: "#0f172a",
-          borderBottom: "1px solid rgba(148,163,184,0.2)",
-        }}
-      >
-        <table style={{ width: "100%", tableLayout: "fixed" }}>
-          <thead>
-            <tr>
-              <th style={{ width: "12%" }}>Stock #</th>
-              <th style={{ width: "8%" }}>Year</th>
-              <th style={{ width: "18%" }}>Model</th>
-              <th style={{ width: "14%" }}>Exterior</th>
-              <th style={{ width: "18%" }}>Trim</th>
-              <th style={{ width: "10%" }}>Model #</th>
-              <th style={{ width: "8%" }}>Age</th>
-              <th style={{ width: "12%" }}>MSRP</th>
-            </tr>
-          </thead>
-        </table>
-      </div>
+    <Card>
+      <CardContent className="p-0">
+        {/* Fixed header */}
+        <div className="sticky top-0 z-10 bg-muted border-b">
+          <table className="w-full" style={{ tableLayout: "fixed" }}>
+            <thead>
+              <tr>
+                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground" style={{ width: "12%" }}>Stock #</th>
+                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground" style={{ width: "8%" }}>Year</th>
+                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground" style={{ width: "18%" }}>Model</th>
+                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground" style={{ width: "14%" }}>Exterior</th>
+                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground" style={{ width: "18%" }}>Trim</th>
+                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground" style={{ width: "10%" }}>Model #</th>
+                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground" style={{ width: "8%" }}>Age</th>
+                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground" style={{ width: "12%" }}>MSRP</th>
+              </tr>
+            </thead>
+          </table>
+        </div>
 
-      {/* Virtualized body */}
-      <div
-        ref={parentRef}
-        style={{
-          height: "600px",
-          overflow: "auto",
-        }}
-      >
+        {/* Virtualized body */}
         <div
-          style={{
-            height: `${virtualizer.getTotalSize()}px`,
-            width: "100%",
-            position: "relative",
-          }}
+          ref={parentRef}
+          className="overflow-auto"
+          style={{ height: "600px" }}
         >
-          {virtualItems.map((virtualRow) => {
-            const item = flattenedRows[virtualRow.index];
-            if (!item) return null;
+          <div
+            style={{
+              height: `${virtualizer.getTotalSize()}px`,
+              width: "100%",
+              position: "relative",
+            }}
+          >
+            {virtualItems.map((virtualRow) => {
+              const item = flattenedRows[virtualRow.index];
+              if (!item) return null;
 
-            if (item.type === "header") {
+              if (item.type === "header") {
+                return (
+                  <div
+                    key={item.id}
+                    className="absolute top-0 left-0 w-full"
+                    style={{
+                      height: `${virtualRow.size}px`,
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                  >
+                    <div className="flex items-center justify-between p-3 bg-primary/10 border-t-2 border-primary/30">
+                      <span className="font-bold text-sm">
+                        {item.group.year} {item.group.displayName}
+                      </span>
+                      <Badge variant="secondary">{item.group.rows.length}</Badge>
+                    </div>
+                  </div>
+                );
+              }
+
+              const r = item.row;
               return (
                 <div
                   key={item.id}
+                  className="absolute top-0 left-0 w-full"
                   style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
                     height: `${virtualRow.size}px`,
                     transform: `translateY(${virtualRow.start}px)`,
                   }}
                 >
-                  <div
-                    style={{
-                      background: "#ffffff",
-                      color: "#000000",
-                      fontWeight: 700,
-                      fontSize: 15,
-                      padding: "14px 16px",
-                      borderTop: "2px solid #1e293b",
-                    }}
-                  >
-                    {item.group.year} {item.group.displayName} - {item.group.rows.length}
-                  </div>
+                  <table className="w-full" style={{ tableLayout: "fixed" }}>
+                    <tbody>
+                      <tr
+                        className="border-b hover:bg-accent/30 transition-colors cursor-pointer"
+                        onClick={() => onRowClick(r)}
+                      >
+                        <td className="p-3" style={{ width: "12%" }}>
+                          <span
+                            className="text-sm font-medium text-primary hover:underline inline-flex items-center gap-1"
+                            onClick={(e) => handleStockClick(e, r)}
+                          >
+                            {r["Stock Number"]}
+                            <ExternalLink className="h-3 w-3" />
+                          </span>
+                        </td>
+                        <td className="p-3 text-sm" style={{ width: "8%" }}>{r.Year}</td>
+                        <td className="p-3 text-sm" style={{ width: "18%" }}>{r.Model}</td>
+                        <td className="p-3 text-sm" style={{ width: "14%" }}>{r["Exterior Color"]}</td>
+                        <td className="p-3 text-sm" style={{ width: "18%" }}>{r.Trim}</td>
+                        <td className="p-3 text-sm" style={{ width: "10%" }}>{r["Model Number"]}</td>
+                        <td className="p-3 text-sm" style={{ width: "8%" }}>
+                          <span className={isInTransit(r) ? "text-amber-500 font-semibold" : ""}>
+                            {formatAgeShort(r)}
+                          </span>
+                        </td>
+                        <td className="p-3 text-sm font-medium" style={{ width: "12%" }}>
+                          ${Number(r.MSRP).toLocaleString()}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               );
-            }
-
-            const r = item.row;
-            return (
-              <div
-                key={item.id}
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  height: `${virtualRow.size}px`,
-                  transform: `translateY(${virtualRow.start}px)`,
-                }}
-              >
-                <table style={{ width: "100%", tableLayout: "fixed" }}>
-                  <tbody>
-                    <tr
-                      className="click-row"
-                      onClick={() => onRowClick(r)}
-                      style={{ cursor: "pointer" }}
-                    >
-                      <td style={{ width: "12%" }}>
-                        <span
-                          className="stock-link"
-                          onClick={(e) => handleStockClick(e, r)}
-                          style={{
-                            color: "#4fc3f7",
-                            textDecoration: "underline",
-                            cursor: "pointer",
-                          }}
-                        >
-                          {r["Stock Number"]}
-                        </span>
-                      </td>
-                      <td style={{ width: "8%" }}>{r.Year}</td>
-                      <td style={{ width: "18%" }}>{r.Model}</td>
-                      <td style={{ width: "14%" }}>{r["Exterior Color"]}</td>
-                      <td style={{ width: "18%" }}>{r.Trim}</td>
-                      <td style={{ width: "10%" }}>{r["Model Number"]}</td>
-                      <td 
-                        style={{ 
-                          width: "8%",
-                          color: isInTransit(r) ? "#fbbf24" : undefined,
-                          fontWeight: isInTransit(r) ? 600 : undefined,
-                        }}
-                      >
-                        {formatAgeShort(r)}
-                      </td>
-                      <td style={{ width: "12%" }}>${Number(r.MSRP).toLocaleString()}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            );
-          })}
+            })}
+          </div>
         </div>
-      </div>
 
-      {/* Row count indicator */}
-      <div
-        style={{
-          padding: "8px 16px",
-          fontSize: "12px",
-          color: "#64748b",
-          borderTop: "1px solid rgba(148,163,184,0.2)",
-          textAlign: "right",
-        }}
-      >
-        Showing {rows.length} vehicles
-      </div>
-    </section>
+        {/* Row count indicator */}
+        <div className="p-3 text-right text-xs text-muted-foreground border-t">
+          Showing {rows.length} vehicles
+        </div>
+      </CardContent>
+    </Card>
   );
 });
 
