@@ -9,11 +9,18 @@ type Props = {
   groups: Record<string, InventoryRow[]>;
   onBack: () => void;
   onRowClick: (row: InventoryRow) => void;
+  title?: string;
 };
 
-export const DrilldownTable: FC<Props> = ({ groups, onBack, onRowClick }) => {
+export const DrilldownTable: FC<Props> = ({ groups, onBack, onRowClick, title }) => {
   const isMobile = useIsMobile();
   const groupKeys = Object.keys(groups);
+
+  // Calculate total count across all groups
+  const totalCount = groupKeys.reduce((sum, key) => {
+    const groupRows = groups[key];
+    return sum + (groupRows ? groupRows.length : 0);
+  }, 0);
 
   // Handle stock number click - open in new tab
   const handleStockClick = (e: React.MouseEvent, row: InventoryRow) => {
@@ -30,7 +37,10 @@ export const DrilldownTable: FC<Props> = ({ groups, onBack, onRowClick }) => {
         <button className="back-button" onClick={onBack}>
           ← Back
         </button>
-        <div className="drill-title">Drilldown View</div>
+        <div className="drill-title">
+          {title || "Drilldown View"}
+          {title && <span style={{ fontWeight: 400, marginLeft: 8 }}>({totalCount} vehicles)</span>}
+        </div>
       </div>
 
       {groupKeys.map((key) => {
@@ -41,7 +51,7 @@ export const DrilldownTable: FC<Props> = ({ groups, onBack, onRowClick }) => {
         const groupRows = groups[key];
         if (!groupRows) return null;
         const rowsForGroup = sortByAgeDescending(groupRows);
-        const title = modelNumber
+        const groupTitle = modelNumber
           ? `${make} ${model} ${modelNumber} - ${rowsForGroup.length}`
           : `${make} ${model} - ${rowsForGroup.length}`;
 
@@ -59,7 +69,7 @@ export const DrilldownTable: FC<Props> = ({ groups, onBack, onRowClick }) => {
                 marginBottom: 8,
               }}
             >
-              {title}
+              {groupTitle}
             </div>
 
             {isMobile ? (
