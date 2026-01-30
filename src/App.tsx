@@ -187,11 +187,22 @@ const App: FC = () => {
     if (drillType === "61_90") result = validRows.filter((r) => r.Age > 60 && r.Age <= 90 && !isInTransit(r));
     if (drillType === "90_plus") result = validRows.filter((r) => r.Age > 90 && !isInTransit(r));
 
+    // Handle model drill type
+    if (drillType.startsWith("model:")) {
+      const modelName = drillType.replace("model:", "");
+      result = validRows.filter((r) => r.Model === modelName);
+    }
+
     return buildGroups(result);
   }, [drillType, validRows, filteredRows, newArrivalRows, inTransitRows]);
 
-  // Get title for aging drilldown
-  const getAgingDrillTitle = (type: string): string => {
+  // Get title for drilldown
+  const getDrillTitle = (type: string): string => {
+    if (type.startsWith("model:")) {
+      const modelName = type.replace("model:", "");
+      const count = validRows.filter((r) => r.Model === modelName).length;
+      return `${modelName} Inventory (${count} vehicles)`;
+    }
     switch (type) {
       case "0_30": return "Fresh Inventory (0-30 Days)";
       case "31_60": return "Normal Aging (31-60 Days)";
@@ -205,11 +216,12 @@ const App: FC = () => {
 
   const hasModelFilter = !!filters.model;
 
-  // Explicit checks for drill types - simpler and guaranteed to work
+  // Explicit checks for drill types
   const isAgingDrill = drillType === "0_30" || drillType === "31_60" || drillType === "61_90" || drillType === "90_plus";
   const isNewArrivalsDrill = drillType === "new";
   const isInTransitDrill = drillType === "in_transit";
-  const isDrillActive = isAgingDrill || isNewArrivalsDrill || isInTransitDrill;
+  const isModelDrill = drillType?.startsWith("model:");
+  const isDrillActive = isAgingDrill || isNewArrivalsDrill || isInTransitDrill || isModelDrill;
 
   const handleSmartSearch = useCallback((text: string) => {
     setSearchTerm(text);
@@ -229,6 +241,11 @@ const App: FC = () => {
     setRefreshing(true);
     await refetch();
   }, [refetch, setRefreshing]);
+
+  // Handle pie chart model click - drill down to that model
+  const handleModelClick = useCallback((modelName: string) => {
+    setDrillType(`model:${modelName}` as any);
+  }, [setDrillType]);
 
   if (isLoading && validRows.length === 0) {
     return (
@@ -304,7 +321,7 @@ const App: FC = () => {
                     groups={drillData}
                     onBack={() => setDrillType(null)}
                     onRowClick={setSelectedVehicle}
-                    title={getAgingDrillTitle(drillType!)}
+                    title={getDrillTitle(drillType!)}
                   />
                 </SectionErrorBoundary>
               )}
@@ -321,6 +338,7 @@ const App: FC = () => {
                       on61_90: () => setDrillType("61_90"),
                       on90_plus: () => setDrillType("90_plus"),
                     }}
+                    onModelClick={handleModelClick}
                   />
                 </SectionErrorBoundary>
               )}
