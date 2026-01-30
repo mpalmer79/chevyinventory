@@ -46,9 +46,11 @@ const AgingBucket: FC<AgingBucketProps> = ({ label, value, variant, badgeText, o
 
   return (
     <button
+      type="button"
       onClick={onClick}
       className={cn(
         "flex flex-col items-center gap-2 p-4 rounded-lg border bg-card transition-all cursor-pointer",
+        "focus:outline-none focus:ring-2 focus:ring-primary",
         variantStyles[variant]
       )}
     >
@@ -70,7 +72,7 @@ export const ChartsSection: FC<Props> = memo(({
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-center text-base font-semibold">
-            Inventory Mix · Top Models
+            Inventory Mix - Top Models
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -123,27 +125,27 @@ export const ChartsSection: FC<Props> = memo(({
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-center text-base font-semibold">
-            Aging Overview · Days in Stock
+            Aging Overview - Days in Stock
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-3">
             <AgingBucket
-              label="0–30 Days"
+              label="0-30 Days"
               value={agingBuckets.bucket0_30}
               variant="fresh"
               badgeText="Fresh"
               onClick={agingHandlers.on0_30}
             />
             <AgingBucket
-              label="31–60 Days"
+              label="31-60 Days"
               value={agingBuckets.bucket31_60}
               variant="normal"
               badgeText="Normal"
               onClick={agingHandlers.on31_60}
             />
             <AgingBucket
-              label="61–90 Days"
+              label="61-90 Days"
               value={agingBuckets.bucket61_90}
               variant="watch"
               badgeText="Watch"
