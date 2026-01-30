@@ -9,9 +9,9 @@ interface Props {
 export const HeaderBar: FC<Props> = () => {
   return (
     <header className="relative overflow-hidden">
-      {/* Hero Image - reduced height on mobile */}
+      {/* Hero Image - bg-top ensures QUIRK logo is visible */}
       <div 
-        className="relative h-[200px] sm:h-[280px] md:h-[380px] bg-cover bg-center bg-no-repeat"
+        className="relative h-[280px] sm:h-[320px] md:h-[380px] bg-cover bg-top bg-no-repeat"
         style={{ backgroundImage: "url('/chevy-showroom.png')" }}
       >
         {/* Light overlay */}
