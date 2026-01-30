@@ -115,6 +115,70 @@ The application follows a **layered frontend architecture** optimized for scalab
 
 ---
 
+## Architecture Decision Records
+
+This section documents **key architectural decisions**, their rationale, and accepted tradeoffs. These decisions prioritize long-term maintainability, performance, and clarity over short-term convenience.
+
+### ADR-001: Frontend-First Architecture
+**Decision:** Implement the system as a frontend-driven analytics application using local data ingestion.
+
+**Rationale:**  
+Dealership inventory data is frequently exported via spreadsheets and internal tools. A frontend-first approach enables rapid iteration, offline validation, and independence from backend availability.
+
+**Tradeoffs:**  
+- Requires careful client-side performance management  
+- Limits real-time updates without future API integration  
+
+---
+
+### ADR-002: Zustand for State Management
+**Decision:** Use Zustand instead of Redux or Context-heavy patterns.
+
+**Rationale:**  
+Zustand provides minimal boilerplate, predictable state access, and fine-grained subscriptions, which are critical for large, frequently updated datasets.
+
+**Tradeoffs:**  
+- Less opinionated structure than Redux  
+- Requires discipline to avoid over-centralization  
+
+---
+
+### ADR-003: Virtualized Tables for Inventory Rendering
+**Decision:** Use virtualized rendering for inventory tables.
+
+**Rationale:**  
+Inventory datasets regularly exceed hundreds or thousands of rows. Virtualization ensures consistent performance and responsiveness regardless of dataset size.
+
+**Tradeoffs:**  
+- Increased implementation complexity  
+- Requires careful row height and layout management  
+
+---
+
+### ADR-004: Drawer-Based Detail Exploration
+**Decision:** Use a slide-out drawer for vehicle detail views instead of route-based navigation.
+
+**Rationale:**  
+Operators frequently need to inspect multiple vehicles rapidly. Drawer-based exploration preserves context and reduces navigation friction.
+
+**Tradeoffs:**  
+- URL deep-linking is limited  
+- Requires additional state coordination  
+
+---
+
+### ADR-005: Restrained Motion and Animation
+**Decision:** Limit animation to state transitions and feedback only.
+
+**Rationale:**  
+This dashboard serves operational and executive users. Motion is used to clarify state changes, not to decorate or entertain.
+
+**Tradeoffs:**  
+- Less visual flair  
+- Higher emphasis on hierarchy and layout clarity  
+
+---
+
 ## Data Flow
 
 1. Inventory data is loaded through a dedicated loader hook
@@ -197,29 +261,10 @@ To maintain clarity and long-term maintainability, this project intentionally av
 
 ---
 
-## Getting Started
-
-```bash
-npm install
-npm run dev
-Project Status
-
-This repository represents a stable, extensible foundation rather than a finished product. It is suitable for:
-
-Internal deployment
-
-Iterative productization
-
-Demonstrating senior-to-principal-level frontend engineering practices
-
-License
-
-MIT License – see LICENSE file
-
 Author
 
 Michael Palmer
 AI Deployment & Solutions Specialist
 Quirk Auto Dealers
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Michael%20Palmer-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/mpalmer1234/)
 
-Built for Quirk Auto Dealers – New England’s largest automotive group
