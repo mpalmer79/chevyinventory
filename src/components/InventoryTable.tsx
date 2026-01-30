@@ -5,6 +5,9 @@ import { generateVehicleUrl } from "../utils/vehicleUrl";
 import { isInTransit, formatAgeShort, sortByAgeDescending } from "../utils/inventoryUtils";
 import { useIsMobile } from "../hooks/useMediaQuery";
 import { VirtualizedTable } from "./VirtualizedTable";
+import { Card, CardContent } from "./ui/card";
+import { Badge } from "./ui/badge";
+import { ExternalLink } from "lucide-react";
 
 type Props = {
   rows: InventoryRow[];
@@ -31,7 +34,6 @@ const VIRTUALIZATION_THRESHOLD = 100;
 export const InventoryTable: FC<Props> = memo(({ rows, onRowClick }) => {
   const isMobile = useIsMobile();
 
-  // Move useMemo BEFORE any conditional returns
   const groupedRows = useMemo(() => {
     if (!rows.length) return [];
     
@@ -80,7 +82,6 @@ export const InventoryTable: FC<Props> = memo(({ rows, onRowClick }) => {
     return groups;
   }, [rows]);
 
-  // Now safe to do early returns AFTER all hooks
   if (!rows.length) return null;
 
   // Use virtualized table for large datasets on desktop
@@ -99,157 +100,144 @@ export const InventoryTable: FC<Props> = memo(({ rows, onRowClick }) => {
   // ---------- MOBILE CARD VIEW (<768px) ----------
   if (isMobile) {
     return (
-      <section className="panel">
-        <div className="section-title">Inventory</div>
-
-        <div className="mobile-card-list">
+      <Card>
+        <CardContent className="p-4">
           {groupedRows.map((group) => (
-            <React.Fragment key={`${group.year}-${group.model}-${group.modelNumber}`}>
-              <div
-                style={{
-                  background: "#ffffff",
-                  color: "#000000",
-                  padding: "12px 16px",
-                  fontWeight: 700,
-                  fontSize: 15,
-                  marginTop: 16,
-                  marginBottom: 8,
-                  borderRadius: 8,
-                }}
-              >
-                {group.year} {group.displayName} - {group.rows.length}
+            <div key={`${group.year}-${group.model}-${group.modelNumber}`} className="mb-6 last:mb-0">
+              {/* Group Header */}
+              <div className="flex items-center justify-between py-3 px-4 bg-primary/10 rounded-lg mb-3">
+                <span className="font-bold text-foreground">
+                  {group.year} {group.displayName}
+                </span>
+                <Badge variant="secondary">{group.rows.length}</Badge>
               </div>
 
-              {group.rows.map((r) => (
-                <div
-                  key={r["Stock Number"]}
-                  className="mobile-card"
-                  onClick={() => onRowClick(r)}
-                >
-                  <div className="mobile-card-header">
-                    <span
-                      className="mc-stock stock-link"
-                      onClick={(e) => handleStockClick(e, r)}
-                      style={{
-                        color: "#4fc3f7",
-                        textDecoration: "underline",
-                        cursor: "pointer",
-                      }}
-                    >
-                      #{r["Stock Number"]}
-                    </span>
-                    <span className="mc-title">
-                      {r.Year} {r.Model}
-                    </span>
+              {/* Mobile Cards */}
+              <div className="space-y-2">
+                {group.rows.map((r) => (
+                  <div
+                    key={r["Stock Number"]}
+                    className="p-3 rounded-lg border bg-card hover:bg-accent/30 transition-colors cursor-pointer"
+                    onClick={() => onRowClick(r)}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span
+                        className="text-sm font-semibold text-primary flex items-center gap-1"
+                        onClick={(e) => handleStockClick(e, r)}
+                      >
+                        #{r["Stock Number"]}
+                        <ExternalLink className="h-3 w-3" />
+                      </span>
+                      <span className="text-sm font-medium">
+                        {r.Year} {r.Model}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Trim</span>
+                        <span>{r.Trim}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Exterior</span>
+                        <span>{r["Exterior Color"]}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Model #</span>
+                        <span>{r["Model Number"]}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Age</span>
+                        <span className={isInTransit(r) ? "text-amber-500 font-semibold" : ""}>
+                          {formatAgeShort(r)}{!isInTransit(r) && " days"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between col-span-2">
+                        <span className="text-muted-foreground">MSRP</span>
+                        <span className="font-semibold">${Number(r.MSRP).toLocaleString()}</span>
+                      </div>
+                    </div>
                   </div>
-
-                  <div className="mobile-card-row">
-                    <span>Trim</span>
-                    <span>{r.Trim}</span>
-                  </div>
-
-                  <div className="mobile-card-row">
-                    <span>Exterior</span>
-                    <span>{r["Exterior Color"]}</span>
-                  </div>
-
-                  <div className="mobile-card-row">
-                    <span>Model #</span>
-                    <span>{r["Model Number"]}</span>
-                  </div>
-
-                  <div className="mobile-card-row">
-                    <span>Age</span>
-                    <span style={isInTransit(r) ? { color: "#fbbf24", fontWeight: 600 } : undefined}>
-                      {formatAgeShort(r)}{!isInTransit(r) && " days"}
-                    </span>
-                  </div>
-
-                  <div className="mobile-card-row">
-                    <span>MSRP</span>
-                    <span>${Number(r.MSRP).toLocaleString()}</span>
-                  </div>
-                </div>
-              ))}
-            </React.Fragment>
+                ))}
+              </div>
+            </div>
           ))}
-        </div>
-      </section>
+        </CardContent>
+      </Card>
     );
   }
 
   // ---------- DESKTOP TABLE VIEW (small datasets) ----------
   return (
-    <section className="panel table-shell">
-      <table>
-        <thead>
-          <tr>
-            <th>Stock #</th>
-            <th>Year</th>
-            <th>Model</th>
-            <th>Exterior</th>
-            <th>Trim</th>
-            <th>Model #</th>
-            <th>Age</th>
-            <th>MSRP</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {groupedRows.map((group) => (
-            <React.Fragment key={`${group.year}-${group.model}-${group.modelNumber}`}>
-              <tr>
-                <td
-                  colSpan={8}
-                  style={{
-                    background: "#ffffff",
-                    color: "#000000",
-                    fontWeight: 700,
-                    fontSize: 15,
-                    padding: "12px 16px",
-                    textAlign: "left",
-                    borderTop: "2px solid #1e293b",
-                  }}
-                >
-                  {group.year} {group.displayName} - {group.rows.length}
-                </td>
+    <Card>
+      <CardContent className="p-0">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b bg-muted/50">
+                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Stock #</th>
+                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Year</th>
+                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Model</th>
+                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Exterior</th>
+                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Trim</th>
+                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Model #</th>
+                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Age</th>
+                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">MSRP</th>
               </tr>
+            </thead>
 
-              {group.rows.map((r) => (
-                <tr
-                  key={r["Stock Number"]}
-                  className="click-row"
-                  onClick={() => onRowClick(r)}
-                >
-                  <td>
-                    <span
-                      className="stock-link"
-                      onClick={(e) => handleStockClick(e, r)}
-                      style={{
-                        color: "#4fc3f7",
-                        textDecoration: "underline",
-                        cursor: "pointer",
-                      }}
+            <tbody>
+              {groupedRows.map((group) => (
+                <React.Fragment key={`${group.year}-${group.model}-${group.modelNumber}`}>
+                  {/* Group Header Row */}
+                  <tr className="bg-primary/10 border-t-2 border-primary/30">
+                    <td
+                      colSpan={8}
+                      className="p-3 font-bold text-sm"
                     >
-                      {r["Stock Number"]}
-                    </span>
-                  </td>
-                  <td>{r.Year}</td>
-                  <td>{r.Model}</td>
-                  <td>{r["Exterior Color"]}</td>
-                  <td>{r.Trim}</td>
-                  <td>{r["Model Number"]}</td>
-                  <td style={isInTransit(r) ? { color: "#fbbf24", fontWeight: 600 } : undefined}>
-                    {formatAgeShort(r)}
-                  </td>
-                  <td>${Number(r.MSRP).toLocaleString()}</td>
-                </tr>
+                      {group.year} {group.displayName}
+                      <Badge variant="secondary" className="ml-2">{group.rows.length}</Badge>
+                    </td>
+                  </tr>
+
+                  {/* Data Rows */}
+                  {group.rows.map((r) => (
+                    <tr
+                      key={r["Stock Number"]}
+                      className="border-b hover:bg-accent/30 transition-colors cursor-pointer"
+                      onClick={() => onRowClick(r)}
+                    >
+                      <td className="p-3">
+                        <span
+                          className="text-sm font-medium text-primary hover:underline inline-flex items-center gap-1"
+                          onClick={(e) => handleStockClick(e, r)}
+                        >
+                          {r["Stock Number"]}
+                          <ExternalLink className="h-3 w-3" />
+                        </span>
+                      </td>
+                      <td className="p-3 text-sm">{r.Year}</td>
+                      <td className="p-3 text-sm">{r.Model}</td>
+                      <td className="p-3 text-sm">{r["Exterior Color"]}</td>
+                      <td className="p-3 text-sm">{r.Trim}</td>
+                      <td className="p-3 text-sm">{r["Model Number"]}</td>
+                      <td className="p-3 text-sm">
+                        <span className={isInTransit(r) ? "text-amber-500 font-semibold" : ""}>
+                          {formatAgeShort(r)}
+                        </span>
+                      </td>
+                      <td className="p-3 text-sm font-medium">${Number(r.MSRP).toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </React.Fragment>
               ))}
-            </React.Fragment>
-          ))}
-        </tbody>
-      </table>
-    </section>
+            </tbody>
+          </table>
+        </div>
+        <div className="p-3 text-right text-xs text-muted-foreground border-t">
+          Showing {rows.length} vehicles
+        </div>
+      </CardContent>
+    </Card>
   );
 });
 
