@@ -1,6 +1,10 @@
-[README.md](https://github.com/user-attachments/files/24967188/README.md)[Uploading README.m# Quirk Auto Dealers NH - Multi-Dealership Inventory Dashboard
+# Quirk Auto Dealers – Inventory Intelligence Dashboard
 
-A modern, real-time inventory management dashboard built for Quirk Auto Dealers, supporting multiple dealership locations across New Hampshire.
+A **production-grade inventory intelligence dashboard** built for Quirk Auto Dealers, supporting multi-rooftop operations across New Hampshire. This system converts raw vehicle inventory data into **actionable, performance-aware insights** for merchandising, aging risk management, and operational decision-making.
+
+This is not a demo dashboard. It is designed as a **scalable internal analytics platform** optimized for large datasets, real-world dealership workflows, and executive visibility.
+
+---
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Version](https://img.shields.io/badge/version-3.1.0-green.svg)
@@ -10,213 +14,212 @@ A modern, real-time inventory management dashboard built for Quirk Auto Dealers,
 ![shadcn/ui](https://img.shields.io/badge/shadcn%2Fui-Latest-000000.svg)
 ![Netlify](https://img.shields.io/badge/Netlify-Deployed-00C7B7.svg)
 
-**Live Site:** [chevynhinventory.netlify.app](https://chevynhinventory.netlify.app/)
+**Live Site:** https://chevynhinventory.netlify.app/
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Michael%20Palmer-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/mpalmer1234/)
 
 ---
 
-## ✨ Features
+## Purpose & Design Goals
 
-### Multi-Dealership Support
-- **Dealership Selector** - Switch between Chevrolet and Buick GMC inventory
-- **Separate Inventory Files** - Each dealership loads from its own Excel file
-- **Per-Dealership Caching** - Independent cache for each dealership's data
+This dashboard is built to support:
+
+- **Fast, reliable visibility** into dealership inventory health
+- **Early detection of aging and stagnation risk**
+- **High-volume data exploration** without performance degradation
+- Both **operator-level execution** and **manager-level oversight**
+- A UI that is **professional, neutral, and trustworthy**
+
+The system prioritizes clarity, performance, and decision support over visual novelty.
+
+---
+
+## Core Capabilities
+
+### Multi-Dealership Inventory
+- Dealership selector (Chevrolet, Buick GMC)
+- Independent Excel inventory sources per rooftop
+- Per-dealership caching and isolation
+- Seamless context switching without reload friction
+
+---
+
+### Inventory Intelligence & Aging Analysis
+- Dynamic aging buckets with drill-down support
+- Clear classification of inventory health:
+  - 0–30 days (Fresh)
+  - 31–60 days (Normal)
+  - 61–90 days (Watch)
+  - 90+ days (At Risk)
+- Oldest units surfaced explicitly for intervention
+- New arrivals highlighted for merchandising opportunity
+
+---
 
 ### Advanced Filtering System
+
 | Filter | Description |
-|--------|-------------|
-| **Dealership** | Toggle between Chevrolet and Buick GMC |
-| **Year** | Filter by model year |
-| **Make** | Filter by manufacturer (Buick, Chevrolet, GMC) |
-| **Model** | Filter by vehicle model (cascades based on Make selection) |
-| **Stock Number** | Search by partial or full stock number |
+|------|------------|
+| Dealership | Toggle between rooftops |
+| Year | Filter by model year |
+| Make | Buick, Chevrolet, GMC |
+| Model | Cascades dynamically from Make |
+| Stock Number | Partial or full search |
 
-### Smart Model Grouping
-High-volume models are automatically split by Model Number for better organization:
-- **Silverado 1500** → Silverado 1500 CK10543, Silverado 1500 CK10743, etc.
-- **Silverado 2500HD** → Silverado 2500HD CK20743, Silverado 2500HD CK20753, etc.
-- **Sierra 1500** → Sierra 1500 TK10543, Sierra 1500 TK10743, Sierra 1500 TK10753
-
-### Inventory Health Dashboard
-- **Fresh Inventory (0-30 days)** - Percentage and count of new stock
-- **At-Risk Inventory (90+ days)** - Aging units requiring attention
-- **Oldest Units List** - Quick access to longest-aged vehicles
-- **New Arrivals Panel** - Vehicles on lot 7 days or less
-
-### Vehicle Aging Analysis
-Interactive aging buckets with drill-down capability:
-- 🟢 **0-30 days** - Fresh inventory
-- 🟡 **31-60 days** - Normal aging
-- 🟠 **61-90 days** - Watch list
-- 🔴 **90+ days** - At-risk inventory
-
-### Additional Features
-- **Real-Time Data** - Auto-loads Excel inventory with smart caching
-- **Stale Data Indicator** - Shows when data needs refresh (5-minute threshold)
-- **Interactive Charts** - Model distribution pie chart and aging visualization
-- **Vehicle Detail Drawer** - Click any row for full vehicle specifications
-- **In-Transit Tracking** - Separate view for vehicles not yet on lot
-- **Mobile Responsive** - Card-based layout on small screens
-- **Light/Dark Theme** - Toggle between display modes
-- **CSV Export** - Download filtered inventory data
+Filters are designed for **rapid narrowing**, not exhaustive querying.
 
 ---
 
-## 🛠 Tech Stack
+### Smart Model Normalization
+High-volume models are automatically split by model number to improve clarity and grouping accuracy.
 
-| Category | Technology |
-|----------|------------|
-| Framework | React 18.3.1, TypeScript 5.7.3 |
-| Build | Vite 6.0.7, Terser minification |
-| State | Zustand 5.0.3 |
-| **UI Components** | **shadcn/ui + Radix UI** |
-| Styling | Tailwind CSS 3.4.17, tailwindcss-animate |
-| Icons | Lucide React |
-| Charts | Recharts 2.15.0 |
-| Data | XLSX 0.18.5 |
-| Performance | @tanstack/react-virtual 3.11.2 |
-| Testing | Vitest 2.1.8, Testing Library |
-| Deployment | Netlify (auto-deploy) |
+Examples:
+- Silverado 1500 → CK10543, CK10743
+- Silverado 2500HD → CK20743, CK20753
+- Sierra 1500 → TK10543, TK10743, TK10753
+
+This reduces ambiguity and improves table readability at scale.
 
 ---
 
-## 🎨 Design System (shadcn/ui)
+### KPI & Executive Visibility
+- Inventory freshness percentage
+- At-risk inventory counts
+- Aging distribution summaries
+- Clear separation between **signals** and **raw data**
 
-This project uses [shadcn/ui](https://ui.shadcn.com/) components built on Radix UI primitives:
-
-| Component | Usage |
-|-----------|-------|
-| **Button** | Primary actions, variants for success/destructive |
-| **Select** | Dropdown filters with search & scroll |
-| **Card** | KPI cards, chart containers, detail panels |
-| **Badge** | Status indicators (Fresh, Normal, Watch, At Risk) |
-| **Input** | Stock number search, form inputs |
-| **Sheet** | Vehicle detail drawer (slide-out panel) |
-| **Label** | Form field labels |
-
-### Customizations
-- Brand colors: Chevy Blue (#0066B1), Quirk Green (#16a34a)
-- Status variants: Fresh (emerald), Normal (yellow), Watch (orange), Risk (red)
-- Dark mode with full component support
+KPIs are designed to support **daily decision-making**, not vanity metrics.
 
 ---
 
-## 🚀 Quick Start
+### Operator-Focused UX
+- Virtualized tables for large inventories
+- Vehicle detail drawer to avoid route churn
+- In-transit inventory tracking
+- Mobile-responsive layout with card-based fallbacks
+- Light and dark themes with full component parity
+- CSV export of filtered results
+
+---
+
+## Architecture Overview
+
+The application follows a **layered frontend architecture** optimized for scalability and performance.
+
+
+### Architectural Principles
+- Separation of concerns over convenience
+- Predictable data flow
+- Composition-first UI design
+- Performance as a first-class constraint
+
+---
+
+## Data Flow
+
+1. Inventory data is loaded through a dedicated loader hook
+2. Data is normalized and cached per dealership
+3. Shared state is coordinated through a centralized store
+4. Components subscribe only to the state they require
+
+This minimizes unnecessary re-renders and maintains responsiveness as datasets grow.
+
+---
+
+## Performance Strategy
+
+- Virtualized rendering for large tables
+- Memoized selectors and derived state
+- Controlled component lifecycles
+- Client-side caching to reduce recomputation
+- Optimized image handling
+
+The system is designed to remain responsive with **thousands of vehicles** loaded.
+
+---
+
+## UI & Design System
+
+This project uses **shadcn/ui** built on Radix UI primitives for accessibility and consistency.
+
+Key components:
+- Button
+- Select
+- Card
+- Badge
+- Input
+- Sheet (vehicle detail drawer)
+- Label
+
+### Design Philosophy
+- Information density without clutter
+- Visual consistency across states
+- Clear affordances and feedback
+- No novelty-driven animation
+
+Motion is intentionally restrained and used only to communicate state changes.
+
+---
+
+## Testing Strategy
+
+Testing focuses on **behavioral correctness and stability**, not snapshot validation.
+
+Covered areas include:
+- Inventory transformation logic
+- KPI calculations
+- Error boundaries
+- Responsive behavior via media query hooks
+
+This provides confidence during iteration without slowing development velocity.
+
+---
+
+## Extensibility
+
+The codebase is structured to support future enhancements without architectural rewrites, including:
+
+- Pricing strategy overlays
+- Predictive aging models
+- Role-based views (sales, management, executives)
+- Real-time API-backed updates
+- Multi-rooftop white-label deployments
+
+---
+
+## Non-Goals
+
+To maintain clarity and long-term maintainability, this project intentionally avoids:
+- Heavy animation frameworks
+- Marketing-driven UI elements
+- Overly opinionated styling
+- Backend-specific assumptions
+
+---
+
+## Getting Started
 
 ```bash
-# Install dependencies
 npm install
-
-# Start development server
 npm run dev
+Project Status
 
-# Production build
-npm run build
+This repository represents a stable, extensible foundation rather than a finished product. It is suitable for:
 
-# Preview production build
-npm run preview
+Internal deployment
 
-# Run tests
-npm run test
+Iterative productization
 
-# Run tests with UI
-npm run test:ui
+Demonstrating senior-to-principal-level frontend engineering practices
 
-# Type checking
-npm run typecheck
+License
 
-# Linting
-npm run lint
+MIT License – see LICENSE file
 
-# Bundle analysis
-npm run analyze
-```
+Author
 
----
-
-## 📁 Project Structure
-
-```
-src/
-├── components/
-│   ├── ui/                  # shadcn/ui components
-│   │   ├── button.tsx       # Button with variants
-│   │   ├── badge.tsx        # Status badges
-│   │   ├── card.tsx         # Card container
-│   │   ├── input.tsx        # Text input
-│   │   ├── label.tsx        # Form labels
-│   │   ├── select.tsx       # Dropdown select
-│   │   ├── sheet.tsx        # Slide-out drawer
-│   │   ├── ThemeToggle.tsx  # Light/dark toggle
-│   │   └── index.ts         # Component exports
-│   ├── ChartsSection.tsx    # Model distribution & aging charts
-│   ├── DrilldownTable.tsx   # Expandable inventory groups
-│   ├── FiltersBar.tsx       # Filter controls & dealership selector
-│   ├── HeaderBar.tsx        # Hero image header
-│   ├── InventoryHealthPanel.tsx
-│   ├── InventoryTable.tsx   # Main data table
-│   ├── KpiBar.tsx           # Key performance indicators
-│   ├── NewArrivalsPanel.tsx
-│   ├── OldestUnitsPanel.tsx
-│   ├── StaleIndicator.tsx
-│   └── VehicleDetailDrawer.tsx
-├── context/
-│   └── ThemeContext.tsx     # Light/dark mode state
-├── hooks/
-│   ├── useInventoryCache.ts
-│   ├── useInventoryLoader.ts
-│   └── useMediaQuery.ts
-├── lib/
-│   └── utils.ts             # cn() helper for className merging
-├── store/
-│   └── inventoryStore.ts    # Zustand global state
-├── styles/
-│   └── theme.css            # Legacy CSS variables
-├── utils/
-├── App.tsx
-├── types.ts
-├── inventoryHelpers.ts
-└── index.css                # Tailwind + shadcn CSS variables
-```
-
----
-
-## 📋 Recent Updates
-
-### v3.1.0 (January 30, 2026)
-- ✅ **shadcn/ui Design System Migration**
-  - Radix UI primitives for accessible components
-  - Button, Select, Card, Badge, Input, Sheet, Label components
-  - Lucide React icons
-  - tailwindcss-animate for smooth transitions
-- ✅ Updated KPI cards with modern card design
-- ✅ Vehicle detail drawer using Sheet component
-- ✅ Aging buckets with interactive hover states
-- ✅ Improved theme toggle with segmented control
-
-### v3.0.0 (January 29, 2026)
-- Multi-dealership support (Chevrolet + Buick GMC)
-- Dealership dropdown selector
-- Make filter (Buick, Chevrolet, GMC)
-- Cascading Model dropdown based on Make selection
-- Sierra 1500 split by Model Number
-- Per-dealership inventory caching
-- Streamlined filter bar layout
-
----
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE)
-
----
-
-## 👤 Author
-
-**Michael Palmer**  
-AI Deployment & Solutions Specialist  
+Michael Palmer
+AI Deployment & Solutions Specialist
 Quirk Auto Dealers
 
----
-
-*Built for Quirk Auto Dealers - New England's Largest Automotive Group*
-d…]()
+Built for Quirk Auto Dealers – New England’s largest automotive group
