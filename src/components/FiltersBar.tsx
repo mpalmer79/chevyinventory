@@ -78,18 +78,19 @@ export const FiltersBar: FC<Props> = memo(({
   const dealerOptions: DealerSource[] = ["chevrolet", "buick-gmc"];
 
   // Common label style - black text
-  const labelClass = "text-xs font-semibold uppercase tracking-wide text-black dark:text-white mb-1.5 block";
+  const labelClass = "text-xs font-semibold uppercase tracking-wide text-black dark:text-white mb-1 block";
 
   return (
-    <Card className="mb-6 p-4">
-      <div className="flex flex-wrap items-end gap-4">
-        {/* DEALERSHIP */}
-        <div className="flex flex-col min-w-[160px]">
-          <label className="text-sm font-bold uppercase tracking-wide text-black dark:text-white mb-1.5 block">
+    <Card className="mb-4 p-3 sm:p-4">
+      {/* Mobile: 2-column grid, Desktop: flex row */}
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 md:flex md:flex-wrap md:items-end md:gap-4">
+        {/* DEALERSHIP - full width on mobile */}
+        <div className="col-span-2 md:col-span-1 md:min-w-[160px]">
+          <label className="text-xs sm:text-sm font-bold uppercase tracking-wide text-black dark:text-white mb-1 block">
             Choose Dealership
           </label>
           <Select value={selectedMake} onValueChange={(v) => onMakeChange(v as DealerSource)}>
-            <SelectTrigger>
+            <SelectTrigger className="h-9 sm:h-10">
               <SelectValue placeholder="Select dealership" />
             </SelectTrigger>
             <SelectContent>
@@ -103,10 +104,10 @@ export const FiltersBar: FC<Props> = memo(({
         </div>
 
         {/* YEAR */}
-        <div className="flex flex-col min-w-[120px]">
+        <div className="md:min-w-[100px]">
           <label className={labelClass}>Year</label>
           <Select value={filters.year} onValueChange={(v) => onChange({ year: v })}>
-            <SelectTrigger>
+            <SelectTrigger className="h-9 sm:h-10">
               <SelectValue placeholder="All Years" />
             </SelectTrigger>
             <SelectContent>
@@ -121,13 +122,13 @@ export const FiltersBar: FC<Props> = memo(({
         </div>
 
         {/* MAKE */}
-        <div className="flex flex-col min-w-[140px]">
+        <div className="md:min-w-[120px]">
           <label className={labelClass}>Make</label>
           <Select 
             value={filters.make || "ALL_MAKES"} 
             onValueChange={(v) => onChange({ make: v === "ALL_MAKES" ? "" : v, model: "" })}
           >
-            <SelectTrigger>
+            <SelectTrigger className="h-9 sm:h-10">
               <SelectValue placeholder="All Makes" />
             </SelectTrigger>
             <SelectContent>
@@ -142,13 +143,13 @@ export const FiltersBar: FC<Props> = memo(({
         </div>
 
         {/* MODEL */}
-        <div className="flex flex-col min-w-[180px]">
+        <div className="md:min-w-[140px]">
           <label className={labelClass}>Model</label>
           <Select 
             value={filters.model || "ALL_MODELS"} 
             onValueChange={(v) => onChange({ model: v === "ALL_MODELS" ? "" : v })}
           >
-            <SelectTrigger>
+            <SelectTrigger className="h-9 sm:h-10">
               <SelectValue placeholder="All Models" />
             </SelectTrigger>
             <SelectContent>
@@ -163,21 +164,22 @@ export const FiltersBar: FC<Props> = memo(({
         </div>
 
         {/* STOCK NUMBER */}
-        <div className="flex flex-col min-w-[140px]">
-          <label className={labelClass}>Stock Number</label>
+        <div className="md:min-w-[120px]">
+          <label className={labelClass}>Stock #</label>
           <Input
             type="text"
-            placeholder="Search stock #"
+            placeholder="Search..."
             value={filters.stockNumber}
             onChange={(e) => onChange({ stockNumber: e.target.value })}
+            className="h-9 sm:h-10"
           />
         </div>
 
-        {/* ACTIONS */}
-        <div className="flex items-end gap-3 ml-auto">
-          <Button variant="default" className="gap-2">
+        {/* ACTIONS - Search and Theme Toggle */}
+        <div className="col-span-2 flex items-end justify-between gap-2 mt-1 md:mt-0 md:ml-auto md:col-span-1">
+          <Button variant="default" className="gap-2 h-9 sm:h-10 flex-1 md:flex-none">
             <Search className="h-4 w-4" />
-            Search
+            <span className="hidden sm:inline">Search</span>
           </Button>
           <ThemeToggle />
         </div>
