@@ -15,6 +15,9 @@ export type InventoryRow = {
   MSRP: number;
   Status: string;
   VIN: string;
+  Body?: string;
+  "Body Type"?: string;
+  Category?: string;
 };
 
 export type ModelPieDatum = {
