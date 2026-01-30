@@ -12,6 +12,7 @@ interface Props {
   onTotalClick: () => void;
   onNewClick: () => void;
   onTransitClick: () => void;
+  onInStockClick?: () => void;
 }
 
 interface KpiCardProps {
@@ -59,6 +60,7 @@ export const KpiBar: FC<Props> = memo(({
   onTotalClick,
   onNewClick,
   onTransitClick,
+  onInStockClick,
 }) => {
   // In Stock = Total Vehicles - In Transit
   const inStock = totalVehicles - inTransit;
@@ -84,12 +86,12 @@ export const KpiBar: FC<Props> = memo(({
         icon={<TrendingUp className="h-5 w-5" />}
         onClick={onTransitClick}
       />
-      {/* In Stock - Mobile only (hidden on lg and up) */}
+      {/* In Stock - Mobile/Tablet only (hidden on lg and up) */}
       <KpiCard
         label="In Stock"
         value={inStock}
         icon={<Warehouse className="h-5 w-5" />}
-        onClick={onTotalClick}
+        onClick={onInStockClick}
         className="lg:hidden"
       />
       {/* Avg. Age - Desktop only (hidden below lg) */}
