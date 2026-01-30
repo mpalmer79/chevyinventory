@@ -1,28 +1,30 @@
 // src/components/KpiBar.test.tsx
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { KpiBar } from "./KpiBar";
 
 describe("KpiBar", () => {
   const defaultProps = {
-    totalUnits: 150,
-    newArrivalCount: 25,
-    inTransitCount: 12,
-    onSelectTotalUnits: vi.fn(),
-    onSelectNewArrivals: vi.fn(),
-    onSelectInTransit: vi.fn(),
+    totalVehicles: 150,
+    totalNew: 25,
+    inTransit: 12,
+    avgAge: 42,
+    onTotalClick: vi.fn(),
+    onNewClick: vi.fn(),
+    onTransitClick: vi.fn(),
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("renders all three KPI cards", () => {
+  it("renders all four KPI cards", () => {
     render(<KpiBar {...defaultProps} />);
 
-    expect(screen.getByText("Total Units")).toBeInTheDocument();
-    expect(screen.getByText("New Arrivals (≤ 7 days)")).toBeInTheDocument();
+    expect(screen.getByText("Total Vehicles")).toBeInTheDocument();
+    expect(screen.getByText("New Arrivals")).toBeInTheDocument();
     expect(screen.getByText("In Transit")).toBeInTheDocument();
+    expect(screen.getByText("Avg. Age")).toBeInTheDocument();
   });
 
   it("displays correct values", () => {
@@ -31,79 +33,74 @@ describe("KpiBar", () => {
     expect(screen.getByText("150")).toBeInTheDocument();
     expect(screen.getByText("25")).toBeInTheDocument();
     expect(screen.getByText("12")).toBeInTheDocument();
+    expect(screen.getByText("42 days")).toBeInTheDocument();
   });
 
-  it("calls onSelectTotalUnits when Total Units card is clicked", () => {
+  it("calls onTotalClick when Total Vehicles card is clicked", () => {
     render(<KpiBar {...defaultProps} />);
 
-    const totalUnitsCard = screen.getByText("Total Units").closest(".kpi-card");
-    fireEvent.click(totalUnitsCard!);
+    const totalCard = screen.getByText("Total Vehicles").closest("[class*='cursor-pointer']");
+    fireEvent.click(totalCard!);
 
-    expect(defaultProps.onSelectTotalUnits).toHaveBeenCalledTimes(1);
+    expect(defaultProps.onTotalClick).toHaveBeenCalledTimes(1);
   });
 
-  it("calls onSelectNewArrivals when New Arrivals card is clicked", () => {
+  it("calls onNewClick when New Arrivals card is clicked", () => {
     render(<KpiBar {...defaultProps} />);
 
-    const newArrivalsCard = screen
-      .getByText("New Arrivals (≤ 7 days)")
-      .closest(".kpi-card");
+    const newArrivalsCard = screen.getByText("New Arrivals").closest("[class*='cursor-pointer']");
     fireEvent.click(newArrivalsCard!);
 
-    expect(defaultProps.onSelectNewArrivals).toHaveBeenCalledTimes(1);
+    expect(defaultProps.onNewClick).toHaveBeenCalledTimes(1);
   });
 
-  it("calls onSelectInTransit when In Transit card is clicked", () => {
+  it("calls onTransitClick when In Transit card is clicked", () => {
     render(<KpiBar {...defaultProps} />);
 
-    const inTransitCard = screen.getByText("In Transit").closest(".kpi-card");
+    const inTransitCard = screen.getByText("In Transit").closest("[class*='cursor-pointer']");
     fireEvent.click(inTransitCard!);
 
-    expect(defaultProps.onSelectInTransit).toHaveBeenCalledTimes(1);
+    expect(defaultProps.onTransitClick).toHaveBeenCalledTimes(1);
   });
 
   it("renders with zero values", () => {
     render(
       <KpiBar
         {...defaultProps}
-        totalUnits={0}
-        newArrivalCount={0}
-        inTransitCount={0}
+        totalVehicles={0}
+        totalNew={0}
+        inTransit={0}
+        avgAge={0}
       />
     );
 
     const zeros = screen.getAllByText("0");
     expect(zeros).toHaveLength(3);
+    expect(screen.getByText("0 days")).toBeInTheDocument();
   });
 
   it("handles large numbers", () => {
     render(
       <KpiBar
         {...defaultProps}
-        totalUnits={9999}
-        newArrivalCount={500}
-        inTransitCount={100}
+        totalVehicles={9999}
+        totalNew={500}
+        inTransit={100}
+        avgAge={365}
       />
     );
 
     expect(screen.getByText("9999")).toBeInTheDocument();
     expect(screen.getByText("500")).toBeInTheDocument();
     expect(screen.getByText("100")).toBeInTheDocument();
+    expect(screen.getByText("365 days")).toBeInTheDocument();
   });
 
-  it("applies clickable class to values", () => {
+  it("renders icons for each KPI card", () => {
     render(<KpiBar {...defaultProps} />);
 
-    const clickableValues = document.querySelectorAll(".kpi-value.clickable");
-    expect(clickableValues).toHaveLength(3);
-  });
-
-  it("applies special color to In Transit value", () => {
-    render(<KpiBar {...defaultProps} />);
-
-    const inTransitCard = screen.getByText("In Transit").closest(".kpi-card");
-    const inTransitValue = inTransitCard?.querySelector(".kpi-value");
-
-    expect(inTransitValue).toHaveStyle({ color: "#fbbf24" });
+    // Lucide icons render as SVG elements
+    const svgIcons = document.querySelectorAll("svg");
+    expect(svgIcons.length).toBeGreaterThanOrEqual(4);
   });
 });
