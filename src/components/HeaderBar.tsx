@@ -11,8 +11,12 @@ export const HeaderBar: FC<Props> = () => {
     <header className="relative overflow-hidden">
       {/* Mobile/Tablet Image - shown below md breakpoint (768px) */}
       <div 
-        className="md:hidden relative h-[180px] sm:h-[220px] bg-cover bg-top bg-no-repeat"
-        style={{ backgroundImage: "url('/chevy-showroom-mobile.png')" }}
+        className="md:hidden relative h-[180px] sm:h-[220px] bg-no-repeat"
+        style={{ 
+          backgroundImage: "url('/chevy-showroom-mobile.png')",
+          backgroundPosition: "center top",
+          backgroundSize: "contain"
+        }}
       >
         {/* Light overlay */}
         <div className="absolute inset-0 bg-white/5" />
