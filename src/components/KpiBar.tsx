@@ -31,15 +31,13 @@ const KpiCard: FC<KpiCardProps> = ({ label, value, icon, onClick, highlight }) =
     onClick={onClick}
   >
     <CardContent className="p-4">
-      <div className="flex items-center justify-between">
-        <div className="flex flex-col">
-          <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            {label}
-          </span>
-          <span className="text-2xl font-bold tabular-nums mt-1">
-            {value}
-          </span>
-        </div>
+      <div className="flex flex-col items-center text-center">
+        <span className="text-xs font-semibold uppercase tracking-wide text-black dark:text-white mb-2">
+          {label}
+        </span>
+        <span className="text-3xl font-bold tabular-nums mb-2">
+          {value}
+        </span>
         <div className={cn(
           "h-10 w-10 rounded-lg flex items-center justify-center",
           highlight ? "bg-primary text-primary-foreground" : "bg-muted"
