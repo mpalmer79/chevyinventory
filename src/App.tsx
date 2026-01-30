@@ -28,6 +28,9 @@ const STOP_WORDS = new Set([
 // Models that should be split by Model Number
 const SPLIT_BY_MODEL_NUMBER = ["SILVERADO 1500", "SILVERADO 2500HD", "SIERRA 1500"];
 
+// Aging bucket drill types
+const AGING_DRILL_TYPES = ["0_30", "31_60", "61_90", "90_plus"] as const;
+
 const App: FC = () => {
   const { refetch } = useInventoryLoader();
 
@@ -190,7 +193,23 @@ const App: FC = () => {
     return buildGroups(result);
   }, [drillType, validRows, filteredRows, newArrivalRows, inTransitRows]);
 
+  // Get title for aging drilldown
+  const getAgingDrillTitle = (type: string): string => {
+    switch (type) {
+      case "0_30": return "Fresh Inventory (0-30 Days)";
+      case "31_60": return "Normal Aging (31-60 Days)";
+      case "61_90": return "Watch List (61-90 Days)";
+      case "90_plus": return "At Risk (90+ Days)";
+      case "new": return "New Arrivals (≤ 7 Days)";
+      default: return "Inventory";
+    }
+  };
+
   const hasModelFilter = !!filters.model;
+
+  // Check if current drillType is an aging bucket
+  const isAgingDrill = drillType && AGING_DRILL_TYPES.includes(drillType as typeof AGING_DRILL_TYPES[number]);
+  const isNewArrivalsDrill = drillType === "new";
 
   const handleSmartSearch = useCallback((text: string) => {
     setSearchTerm(text);
@@ -277,17 +296,32 @@ const App: FC = () => {
                 </SectionErrorBoundary>
               )}
 
+              {/* Aging Bucket Drilldowns (0-30, 31-60, 61-90, 90+) and New Arrivals */}
+              {(isAgingDrill || isNewArrivalsDrill) && drillData && (
+                <SectionErrorBoundary section="aging inventory">
+                  <DrilldownTable
+                    groups={drillData}
+                    onBack={() => setDrillType(null)}
+                    onRowClick={setSelectedVehicle}
+                    title={getAgingDrillTitle(drillType!)}
+                  />
+                </SectionErrorBoundary>
+              )}
+
+              {/* In-Transit Drilldown */}
               {drillType === "in_transit" && drillData && (
                 <SectionErrorBoundary section="in-transit inventory">
                   <DrilldownTable
                     groups={drillData}
                     onBack={() => setDrillType(null)}
                     onRowClick={setSelectedVehicle}
+                    title="In Transit Inventory"
                   />
                 </SectionErrorBoundary>
               )}
 
-              {!hasModelFilter && drillType !== "in_transit" && (
+              {/* Charts - hide when drilling into aging buckets */}
+              {!hasModelFilter && !isAgingDrill && !isNewArrivalsDrill && drillType !== "in_transit" && (
                 <SectionErrorBoundary section="charts">
                   <ChartsSection
                     modelPieData={modelPieData}
@@ -302,38 +336,28 @@ const App: FC = () => {
                 </SectionErrorBoundary>
               )}
 
-              {!(
-                drillType === "0_30" ||
-                drillType === "31_60" ||
-                drillType === "61_90" ||
-                drillType === "90_plus" ||
-                drillType === "in_transit" ||
-                filters.model
-              ) && (
+              {/* New Arrivals Panel - hide when drilling */}
+              {!isAgingDrill && !isNewArrivalsDrill && drillType !== "in_transit" && !filters.model && (
                 <SectionErrorBoundary section="new arrivals">
                   <NewArrivalsPanel rows={filteredNewArrivals} />
                 </SectionErrorBoundary>
               )}
 
-              {!(
-                drillType === "0_30" ||
-                drillType === "31_60" ||
-                drillType === "61_90" ||
-                drillType === "90_plus" ||
-                drillType === "in_transit" ||
-                filters.model
-              ) && (
+              {/* Oldest Units Panel - hide when drilling */}
+              {!isAgingDrill && !isNewArrivalsDrill && drillType !== "in_transit" && !filters.model && (
                 <SectionErrorBoundary section="oldest units">
                   <OldestUnitsPanel rows={validRows} onRowClick={setSelectedVehicle} />
                 </SectionErrorBoundary>
               )}
 
-              {drillType !== "in_transit" && (
+              {/* Main Inventory Table - hide when drilling into aging/transit */}
+              {!isAgingDrill && !isNewArrivalsDrill && drillType !== "in_transit" && (
                 <SectionErrorBoundary section="inventory table">
                   <InventoryTable rows={filteredRows} onRowClick={setSelectedVehicle} />
                 </SectionErrorBoundary>
               )}
 
+              {/* Total drilldown */}
               {drillType === "total" && drillData && (
                 <SectionErrorBoundary section="drilldown">
                   <DrilldownTable
