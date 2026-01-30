@@ -1,7 +1,7 @@
 // src/components/KpiBar.tsx
 import React, { FC, memo } from "react";
 import { Card, CardContent } from "./ui/card";
-import { Car, Package, Clock, TrendingUp } from "lucide-react";
+import { Car, Package, Clock, TrendingUp, Warehouse } from "lucide-react";
 import { cn } from "../lib/utils";
 
 interface Props {
@@ -20,13 +20,15 @@ interface KpiCardProps {
   icon: React.ReactNode;
   onClick?: () => void;
   highlight?: boolean;
+  className?: string;
 }
 
-const KpiCard: FC<KpiCardProps> = ({ label, value, icon, onClick, highlight }) => (
+const KpiCard: FC<KpiCardProps> = ({ label, value, icon, onClick, highlight, className }) => (
   <Card 
     className={cn(
       "cursor-pointer transition-all hover:shadow-md hover:border-primary/50",
-      highlight && "border-primary bg-primary/5"
+      highlight && "border-primary bg-primary/5",
+      className
     )}
     onClick={onClick}
   >
@@ -58,6 +60,9 @@ export const KpiBar: FC<Props> = memo(({
   onNewClick,
   onTransitClick,
 }) => {
+  // In Stock = Total Vehicles - In Transit
+  const inStock = totalVehicles - inTransit;
+
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <KpiCard
@@ -79,10 +84,20 @@ export const KpiBar: FC<Props> = memo(({
         icon={<TrendingUp className="h-5 w-5" />}
         onClick={onTransitClick}
       />
+      {/* In Stock - Mobile only (hidden on lg and up) */}
+      <KpiCard
+        label="In Stock"
+        value={inStock}
+        icon={<Warehouse className="h-5 w-5" />}
+        onClick={onTotalClick}
+        className="lg:hidden"
+      />
+      {/* Avg. Age - Desktop only (hidden below lg) */}
       <KpiCard
         label="Avg. Age"
         value={`${avgAge} days`}
         icon={<Clock className="h-5 w-5" />}
+        className="hidden lg:block"
       />
     </div>
   );
