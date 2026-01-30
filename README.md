@@ -263,8 +263,8 @@ To maintain clarity and long-term maintainability, this project intentionally av
 
 Author
 
-Michael Palmer
-AI Deployment & Solutions Specialist
-Quirk Auto Dealers
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Michael%20Palmer-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/mpalmer1234/)
+- Michael Palmer
+- AI Deployment & Solutions Specialist
+- Quirk Auto Dealers
+- [![LinkedIn](https://img.shields.io/badge/LinkedIn-Michael%20Palmer-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/mpalmer1234/)
 
