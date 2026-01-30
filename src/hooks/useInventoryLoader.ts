@@ -49,6 +49,9 @@ export function useInventoryLoader() {
         MSRP: Number(row["MSRP"]) || 0,
         Status: String(row["Category"] ?? ""),
         VIN: String(row["VIN"] ?? ""),
+        Body: String(row["Body"] ?? ""),
+        "Body Type": String(row["Body Type"] ?? ""),
+        Category: String(row["Category"] ?? ""),
       }));
   }, []);
 
