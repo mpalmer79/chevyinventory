@@ -157,6 +157,11 @@ const App: FC = () => {
     return validRows.filter((r) => isInTransit(r));
   }, [validRows]);
 
+  // In Stock rows = not in transit
+  const inStockRows = useMemo(() => {
+    return validRows.filter((r) => !isInTransit(r));
+  }, [validRows]);
+
   const drillData = useMemo(() => {
     if (!drillType) return null;
 
@@ -179,6 +184,7 @@ const App: FC = () => {
 
     if (drillType === "total") return buildGroups(filteredRows);
     if (drillType === "in_transit") return buildGroups(inTransitRows);
+    if (drillType === "in_stock") return buildGroups(inStockRows);
 
     let result: InventoryRow[] = [];
     if (drillType === "new") result = [...newArrivalRows];
@@ -194,7 +200,7 @@ const App: FC = () => {
     }
 
     return buildGroups(result);
-  }, [drillType, validRows, filteredRows, newArrivalRows, inTransitRows]);
+  }, [drillType, validRows, filteredRows, newArrivalRows, inTransitRows, inStockRows]);
 
   // Get title for drilldown
   const getDrillTitle = (type: string): string => {
@@ -210,6 +216,7 @@ const App: FC = () => {
       case "90_plus": return "At Risk (90+ Days)";
       case "new": return "New Arrivals (≤ 7 Days)";
       case "in_transit": return "In Transit Inventory";
+      case "in_stock": return "In Stock Inventory";
       default: return "Inventory";
     }
   };
@@ -220,8 +227,9 @@ const App: FC = () => {
   const isAgingDrill = drillType === "0_30" || drillType === "31_60" || drillType === "61_90" || drillType === "90_plus";
   const isNewArrivalsDrill = drillType === "new";
   const isInTransitDrill = drillType === "in_transit";
+  const isInStockDrill = drillType === "in_stock";
   const isModelDrill = drillType?.startsWith("model:");
-  const isDrillActive = isAgingDrill || isNewArrivalsDrill || isInTransitDrill || isModelDrill;
+  const isDrillActive = isAgingDrill || isNewArrivalsDrill || isInTransitDrill || isInStockDrill || isModelDrill;
 
   const handleSmartSearch = useCallback((text: string) => {
     setSearchTerm(text);
@@ -310,6 +318,7 @@ const App: FC = () => {
                     onTotalClick={resetAll}
                     onNewClick={() => setDrillType("new")}
                     onTransitClick={() => setDrillType("in_transit")}
+                    onInStockClick={() => setDrillType("in_stock")}
                   />
                 </SectionErrorBoundary>
               )}
