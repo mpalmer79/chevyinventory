@@ -1,6 +1,7 @@
 # Chevy Inventory Dashboard - Upgrade Roadmap
 
 **Assessment Date:** January 28, 2026  
+**Last Updated:** January 30, 2026  
 **Current Version:** 3.0.0
 
 ---
@@ -30,11 +31,11 @@
 - [x] Centralized store with derived selectors
 - [x] useInventoryLoader hook
 
-### Phase 4 (Month 3): Polish
+### Phase 4 (Month 3): Polish — IN PROGRESS
 - [ ] Design system migration (shadcn/ui)
 - [ ] PWA features (offline, install prompt)
 - [ ] Advanced analytics
-- [ ] Multi-dealership support
+- [x] Multi-dealership support ✅ COMPLETE
 - [ ] E2E tests (Playwright)
 
 ---
@@ -58,3 +59,16 @@
 | 2026-01-28 | 3 | URL state sync for filters | ✅ |
 | 2026-01-28 | 3 | useInventoryLoader hook | ✅ |
 | 2026-01-28 | 3 | App.tsx refactor to use store | ✅ |
+| 2026-01-28 | UI | Hero image height reduced (850px → 380px) | ✅ |
+| 2026-01-28 | UI | Oldest Units Panel repositioned | ✅ |
+| 2026-01-28 | UI | Professional header design | ✅ |
+| 2026-01-29 | 4 | DealerSource type added | ✅ |
+| 2026-01-29 | 4 | Dealership dropdown selector | ✅ |
+| 2026-01-29 | 4 | Make filter (Buick, Chevrolet, GMC) | ✅ |
+| 2026-01-29 | 4 | Cascading Model dropdown | ✅ |
+| 2026-01-29 | 4 | Sierra 1500 split by Model Number | ✅ |
+| 2026-01-29 | 4 | Per-dealership inventory caching | ✅ |
+| 2026-01-29 | 4 | Filter bar layout reorganization | ✅ |
+| 2026-01-29 | UI | Theme toggle segmented control | ✅ |
+| 2026-01-29 | UI | Pie chart tooltip shows model name | ✅ |
+| 2026-01-29 | UI | Removed redundant "View All" button | ✅ |
