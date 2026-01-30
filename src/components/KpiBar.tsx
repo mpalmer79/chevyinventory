@@ -1,7 +1,7 @@
 // src/components/KpiBar.tsx
 import React, { FC, memo } from "react";
 import { Card, CardContent } from "./ui/card";
-import { Car, Package, Clock, TrendingUp, Warehouse } from "lucide-react";
+import { Car, Package, TrendingUp, Warehouse } from "lucide-react";
 import { cn } from "../lib/utils";
 
 interface Props {
@@ -56,7 +56,6 @@ export const KpiBar: FC<Props> = memo(({
   totalVehicles,
   totalNew,
   inTransit,
-  avgAge,
   onTotalClick,
   onNewClick,
   onTransitClick,
@@ -86,20 +85,11 @@ export const KpiBar: FC<Props> = memo(({
         icon={<TrendingUp className="h-5 w-5" />}
         onClick={onTransitClick}
       />
-      {/* In Stock - Mobile/Tablet only (hidden on lg and up) */}
       <KpiCard
         label="In Stock"
         value={inStock}
         icon={<Warehouse className="h-5 w-5" />}
         onClick={onInStockClick}
-        className="lg:hidden"
-      />
-      {/* Avg. Age - Desktop only (hidden below lg) */}
-      <KpiCard
-        label="Avg. Age"
-        value={`${avgAge} days`}
-        icon={<Clock className="h-5 w-5" />}
-        className="hidden lg:block"
       />
     </div>
   );
