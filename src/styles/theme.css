@@ -29,17 +29,24 @@ html {
 
 .container {
   max-width: 1400px;
-  margin: -80px auto 0 auto;
-  padding: 24px;
+  margin: -40px auto 0 auto;
+  padding: 16px;
   width: 100%;
   position: relative;
   z-index: 10;
 }
 
-@media (max-width: 768px) {
+@media (min-width: 640px) {
   .container {
-    padding: 16px;
-    margin-top: -40px;
+    margin-top: -60px;
+    padding: 20px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    margin-top: -80px;
+    padding: 24px;
   }
 }
 
@@ -153,13 +160,21 @@ html {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
+  padding: 8px 12px;
   background: hsl(var(--card));
-  border-bottom: 1px solid hsl(var(--border));
-  font-size: 0.875rem;
+  border: 1px solid hsl(var(--border));
+  font-size: 0.75rem;
   color: hsl(var(--muted-foreground));
   border-radius: 8px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
+}
+
+@media (min-width: 640px) {
+  .stale-indicator {
+    padding: 8px 16px;
+    font-size: 0.875rem;
+    margin-bottom: 16px;
+  }
 }
 
 .stale-dot {
@@ -167,6 +182,7 @@ html {
   height: 8px;
   border-radius: 50%;
   background: #22c55e;
+  flex-shrink: 0;
 }
 
 .stale-dot.stale {
@@ -206,7 +222,7 @@ html {
 }
 
 .section-title {
-  padding: 16px;
+  padding: 12px 16px;
   font-weight: 600;
   font-size: 0.875rem;
   color: hsl(var(--foreground));
@@ -217,19 +233,19 @@ html {
    MOBILE CARD STYLES
    ============================================ */
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .mobile-card-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding: 16px;
+    gap: 8px;
+    padding: 12px;
   }
 
   .mobile-card {
     background: hsl(var(--card));
     border: 1px solid hsl(var(--border));
-    border-radius: 12px;
-    padding: 16px;
+    border-radius: 10px;
+    padding: 12px;
     cursor: pointer;
     transition: all 0.15s ease;
   }
@@ -241,27 +257,29 @@ html {
   .mobile-card-header {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 12px;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
   }
 
   .mc-stock {
     font-weight: 600;
     color: hsl(var(--primary));
-    font-size: 0.875rem;
+    font-size: 0.8rem;
   }
 
   .mc-title {
     font-weight: 500;
     color: hsl(var(--foreground));
+    font-size: 0.85rem;
   }
 
   .mobile-card-row {
     display: flex;
     justify-content: space-between;
-    padding: 6px 0;
+    padding: 4px 0;
     border-bottom: 1px solid hsl(var(--border));
-    font-size: 0.875rem;
+    font-size: 0.8rem;
   }
 
   .mobile-card-row:last-child {
@@ -275,5 +293,16 @@ html {
   .mobile-card-row span:last-child {
     color: hsl(var(--foreground));
     font-weight: 500;
+  }
+}
+
+/* ============================================
+   RESPONSIVE GRID HELPERS
+   ============================================ */
+
+@media (max-width: 640px) {
+  /* Make KPI grid 2x2 on small mobile */
+  .grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
