@@ -77,20 +77,18 @@ export const FiltersBar: FC<Props> = memo(({
 
   const dealerOptions: DealerSource[] = ["chevrolet", "buick-gmc"];
 
-  // Common label style - black text
+  // Common label style - black text, same for all breakpoints
   const labelClass = "text-xs font-semibold uppercase tracking-wide text-black dark:text-white mb-1 block";
+  const dealerLabelClass = "text-xs md:text-sm font-bold uppercase tracking-wide text-black dark:text-white mb-1 block";
 
   return (
-    <Card className="mb-4 p-3 sm:p-4">
-      {/* Mobile: 2-column grid, Desktop: flex row */}
-      <div className="grid grid-cols-2 gap-2 sm:gap-3 md:flex md:flex-wrap md:items-end md:gap-4">
-        {/* DEALERSHIP - full width on mobile */}
-        <div className="col-span-2 md:col-span-1 md:min-w-[160px]">
-          <label className="text-xs sm:text-sm font-bold uppercase tracking-wide text-black dark:text-white mb-1 block">
-            Choose Dealership
-          </label>
+    <Card className="mb-4 p-3 md:p-4">
+      <div className="flex flex-wrap items-end gap-2 md:gap-4">
+        {/* DEALERSHIP */}
+        <div className="w-full md:w-auto md:min-w-[160px]">
+          <label className={dealerLabelClass}>Choose Dealership</label>
           <Select value={selectedMake} onValueChange={(v) => onMakeChange(v as DealerSource)}>
-            <SelectTrigger className="h-9 sm:h-10">
+            <SelectTrigger className="h-9 md:h-10">
               <SelectValue placeholder="Select dealership" />
             </SelectTrigger>
             <SelectContent>
@@ -104,10 +102,10 @@ export const FiltersBar: FC<Props> = memo(({
         </div>
 
         {/* YEAR */}
-        <div className="md:min-w-[100px]">
+        <div className="flex-1 min-w-[80px] md:flex-none md:min-w-[100px]">
           <label className={labelClass}>Year</label>
           <Select value={filters.year} onValueChange={(v) => onChange({ year: v })}>
-            <SelectTrigger className="h-9 sm:h-10">
+            <SelectTrigger className="h-9 md:h-10">
               <SelectValue placeholder="All Years" />
             </SelectTrigger>
             <SelectContent>
@@ -122,13 +120,13 @@ export const FiltersBar: FC<Props> = memo(({
         </div>
 
         {/* MAKE */}
-        <div className="md:min-w-[120px]">
+        <div className="flex-1 min-w-[80px] md:flex-none md:min-w-[120px]">
           <label className={labelClass}>Make</label>
           <Select 
             value={filters.make || "ALL_MAKES"} 
             onValueChange={(v) => onChange({ make: v === "ALL_MAKES" ? "" : v, model: "" })}
           >
-            <SelectTrigger className="h-9 sm:h-10">
+            <SelectTrigger className="h-9 md:h-10">
               <SelectValue placeholder="All Makes" />
             </SelectTrigger>
             <SelectContent>
@@ -143,13 +141,13 @@ export const FiltersBar: FC<Props> = memo(({
         </div>
 
         {/* MODEL */}
-        <div className="md:min-w-[140px]">
+        <div className="flex-1 min-w-[80px] md:flex-none md:min-w-[140px]">
           <label className={labelClass}>Model</label>
           <Select 
             value={filters.model || "ALL_MODELS"} 
             onValueChange={(v) => onChange({ model: v === "ALL_MODELS" ? "" : v })}
           >
-            <SelectTrigger className="h-9 sm:h-10">
+            <SelectTrigger className="h-9 md:h-10">
               <SelectValue placeholder="All Models" />
             </SelectTrigger>
             <SelectContent>
@@ -164,22 +162,25 @@ export const FiltersBar: FC<Props> = memo(({
         </div>
 
         {/* STOCK NUMBER */}
-        <div className="md:min-w-[120px]">
-          <label className={labelClass}>Stock #</label>
+        <div className="flex-1 min-w-[80px] md:flex-none md:min-w-[140px]">
+          <label className={labelClass}>
+            <span className="hidden md:inline">Stock Number</span>
+            <span className="md:hidden">Stock #</span>
+          </label>
           <Input
             type="text"
             placeholder="Search..."
             value={filters.stockNumber}
             onChange={(e) => onChange({ stockNumber: e.target.value })}
-            className="h-9 sm:h-10"
+            className="h-9 md:h-10"
           />
         </div>
 
-        {/* ACTIONS - Search and Theme Toggle */}
-        <div className="col-span-2 flex items-end justify-between gap-2 mt-1 md:mt-0 md:ml-auto md:col-span-1">
-          <Button variant="default" className="gap-2 h-9 sm:h-10 flex-1 md:flex-none">
+        {/* ACTIONS - Search Button + Theme Toggle */}
+        <div className="w-full md:w-auto flex items-end gap-2 md:gap-3 md:ml-auto mt-2 md:mt-0">
+          <Button variant="default" className="gap-2 h-9 md:h-10 flex-1 md:flex-none">
             <Search className="h-4 w-4" />
-            <span className="hidden sm:inline">Search</span>
+            <span className="md:inline">Search</span>
           </Button>
           <ThemeToggle />
         </div>
