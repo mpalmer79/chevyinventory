@@ -126,59 +126,60 @@ export const DrilldownTable: FC<Props> = ({ groups, onBack, onRowClick, title })
 
             return (
               <div key={key} className={groupIndex > 0 ? "border-t" : ""}>
-                {/* Group Header */}
-                <div className="p-4 bg-primary/10">
-                  <span className="font-bold text-sm">{groupTitle}  -  {rowsForGroup.length}</span>
-                </div>
-
                 {/* Mobile View */}
                 {isMobile ? (
-                  <div className="p-4 space-y-2">
-                    {rowsForGroup.map((r) => (
-                      <div
-                        key={r["Stock Number"]}
-                        className="p-3 rounded-lg border bg-card hover:bg-accent/30 transition-colors cursor-pointer"
-                        onClick={() => onRowClick(r)}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <span
-                            className="text-sm font-semibold text-primary flex items-center gap-1"
-                            onClick={(e) => handleStockClick(e, r)}
-                          >
-                            #{r["Stock Number"]}
-                            <ExternalLink className="h-3 w-3" />
-                          </span>
-                          <span className="text-sm font-medium">
-                            {r.Year} {r.Model}
-                          </span>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 text-xs">
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Trim</span>
-                            <span>{r.Trim}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Exterior</span>
-                            <span>{r["Exterior Color"]}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Model #</span>
-                            <span>{r["Model Number"]}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Age</span>
-                            <span className={isInTransit(r) ? "text-amber-500 font-semibold" : ""}>
-                              {formatAgeShort(r)}{!isInTransit(r) && " days"}
+                  <>
+                    {/* Mobile Group Header */}
+                    <div className="p-4 bg-primary/10">
+                      <span className="font-bold text-sm">{groupTitle}  -  {rowsForGroup.length}</span>
+                    </div>
+                    <div className="p-4 space-y-2">
+                      {rowsForGroup.map((r) => (
+                        <div
+                          key={r["Stock Number"]}
+                          className="p-3 rounded-lg border bg-card hover:bg-accent/30 transition-colors cursor-pointer"
+                          onClick={() => onRowClick(r)}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <span
+                              className="text-sm font-semibold text-primary flex items-center gap-1"
+                              onClick={(e) => handleStockClick(e, r)}
+                            >
+                              #{r["Stock Number"]}
+                              <ExternalLink className="h-3 w-3" />
+                            </span>
+                            <span className="text-sm font-medium">
+                              {r.Year} {r.Model}
                             </span>
                           </div>
-                          <div className="flex justify-between col-span-2">
-                            <span className="text-muted-foreground">MSRP</span>
-                            <span className="font-semibold">${Number(r.MSRP).toLocaleString()}</span>
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Trim</span>
+                              <span>{r.Trim}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Exterior</span>
+                              <span>{r["Exterior Color"]}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Model #</span>
+                              <span>{r["Model Number"]}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Age</span>
+                              <span className={isInTransit(r) ? "text-amber-500 font-semibold" : ""}>
+                                {formatAgeShort(r)}{!isInTransit(r) && " days"}
+                              </span>
+                            </div>
+                            <div className="flex justify-between col-span-2">
+                              <span className="text-muted-foreground">MSRP</span>
+                              <span className="font-semibold">${Number(r.MSRP).toLocaleString()}</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  </>
                 ) : (
                   /* Desktop Table View */
                   <div className="overflow-x-auto">
@@ -188,14 +189,25 @@ export const DrilldownTable: FC<Props> = ({ groups, onBack, onRowClick, title })
                           <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Stock #</th>
                           <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Year</th>
                           <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Model</th>
-                          <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Exterior</th>
-                          <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Trim</th>
-                          <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Model #</th>
-                          <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Age</th>
-                          <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">MSRP</th>
+                          <th className="p-3"></th>
+                          <th className="p-3"></th>
+                          <th className="p-3"></th>
+                          <th className="p-3"></th>
+                          <th className="p-3"></th>
                         </tr>
                       </thead>
                       <tbody>
+                        {/* Group Header Row */}
+                        <tr className="bg-primary/10">
+                          <td colSpan={3} className="p-3 font-bold text-sm">
+                            {groupTitle}  -  {rowsForGroup.length}
+                          </td>
+                          <td className="p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Exterior Color</td>
+                          <td className="p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Trim</td>
+                          <td className="p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Model #</td>
+                          <td className="p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Age</td>
+                          <td className="p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">MSRP</td>
+                        </tr>
                         {rowsForGroup.map((r) => (
                           <tr
                             key={r["Stock Number"]}
