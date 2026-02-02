@@ -26,7 +26,7 @@ const STOP_WORDS = new Set([
 ]);
 
 // Models that should be split by Model Number
-const SPLIT_BY_MODEL_NUMBER = ["SILVERADO 1500", "SILVERADO 2500HD", "SIERRA 1500"];
+const SPLIT_BY_MODEL_NUMBER = ["SILVERADO 1500", "SILVERADO 2500HD", "SIERRA 1500", "SIERRA 2500HD", "SIERRA 3500HD"];
 
 const App: FC = () => {
   const { refetch } = useInventoryLoader();
