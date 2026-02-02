@@ -19,6 +19,7 @@ type Props = {
 /**
  * Formats the body description for display in group headers
  * Converts "4WD Crew Cab 147" w/3SB" to "4WD CREW CAB 147" WB"
+ * Converts "4WD Reg Cab 142"" to "4WD REG CAB 142" WB"
  */
 function formatBodyDescription(body: string | undefined): string {
   if (!body) return "";
@@ -30,13 +31,18 @@ function formatBodyDescription(body: string | undefined): string {
     .trim();
   
   // Extract the main body style components
-  // Pattern: "4WD Crew Cab 147"" or "4WD Double Cab 147""
+  // Pattern: "4WD Crew Cab 147"" or "4WD Double Cab 147"" or "4WD Reg Cab 142""
   const match = cleaned.match(/^(4WD|2WD|AWD)?\s*(Crew Cab|Double Cab|Reg Cab|Regular Cab)?\s*(\d+)?[""']?/i);
   
   if (match) {
     const driveType = match[1] || "";
-    const cabStyle = match[2] || "";
+    let cabStyle = match[2] || "";
     const wheelbase = match[3] || "";
+    
+    // Normalize "Regular Cab" to "REG CAB"
+    if (cabStyle.toLowerCase() === "regular cab") {
+      cabStyle = "REG CAB";
+    }
     
     // Build the formatted string
     const parts: string[] = [];
