@@ -175,11 +175,11 @@ export const InventoryTable: FC<Props> = memo(({ rows, onRowClick }) => {
                 <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Stock #</th>
                 <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Year</th>
                 <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Model</th>
-                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Exterior</th>
-                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Trim</th>
-                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Model #</th>
-                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Age</th>
-                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">MSRP</th>
+                <th className="p-3"></th>
+                <th className="p-3"></th>
+                <th className="p-3"></th>
+                <th className="p-3"></th>
+                <th className="p-3"></th>
               </tr>
             </thead>
 
@@ -188,12 +188,14 @@ export const InventoryTable: FC<Props> = memo(({ rows, onRowClick }) => {
                 <React.Fragment key={`${group.year}-${group.model}-${group.modelNumber}`}>
                   {/* Group Header Row */}
                   <tr className="bg-primary/10 border-t-2 border-primary/30">
-                    <td
-                      colSpan={8}
-                      className="p-3 font-bold text-sm"
-                    >
+                    <td colSpan={3} className="p-3 font-bold text-sm">
                       {group.year} {group.displayName}  -  {group.rows.length}
                     </td>
+                    <td className="p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Exterior Color</td>
+                    <td className="p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Trim</td>
+                    <td className="p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Model #</td>
+                    <td className="p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Age</td>
+                    <td className="p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">MSRP</td>
                   </tr>
 
                   {/* Data Rows */}
