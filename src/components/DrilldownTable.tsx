@@ -16,6 +16,41 @@ type Props = {
   title?: string;
 };
 
+/**
+ * Formats the body description for display in group headers
+ * Converts "4WD Crew Cab 147" w/3SB" to "4WD CREW CAB 147" WB"
+ */
+function formatBodyDescription(body: string | undefined): string {
+  if (!body) return "";
+  
+  // Remove "w/3SB" and similar suffixes, clean up extra spaces
+  let cleaned = body
+    .replace(/\s*w\/\d+SB\s*/gi, "")
+    .replace(/\s*,\s*\d+"\s*CA\s*/gi, "")  // Remove ", 60" CA" suffix for HD trucks
+    .trim();
+  
+  // Extract the main body style components
+  // Pattern: "4WD Crew Cab 147"" or "4WD Double Cab 147""
+  const match = cleaned.match(/^(4WD|2WD|AWD)?\s*(Crew Cab|Double Cab|Reg Cab|Regular Cab)?\s*(\d+)?[""']?/i);
+  
+  if (match) {
+    const driveType = match[1] || "";
+    const cabStyle = match[2] || "";
+    const wheelbase = match[3] || "";
+    
+    // Build the formatted string
+    const parts: string[] = [];
+    if (driveType) parts.push(driveType.toUpperCase());
+    if (cabStyle) parts.push(cabStyle.toUpperCase());
+    if (wheelbase) parts.push(`${wheelbase}" WB`);
+    
+    return parts.join(" ");
+  }
+  
+  // Fallback: just uppercase the cleaned string
+  return cleaned.toUpperCase();
+}
+
 export const DrilldownTable: FC<Props> = ({ groups, onBack, onRowClick, title }) => {
   const isMobile = useIsMobile();
   const groupKeys = Object.keys(groups);
@@ -64,15 +99,25 @@ export const DrilldownTable: FC<Props> = ({ groups, onBack, onRowClick, title })
         <CardContent className="p-0">
           {groupKeys.map((key, groupIndex) => {
             const parts = key.split("|");
-            const make = parts[0] ?? "";
             const model = parts[1] ?? "";
             const modelNumber = parts[2] ?? null;
             const groupRows = groups[key];
             if (!groupRows) return null;
             const rowsForGroup = sortByAgeDescending(groupRows);
-            const groupTitle = modelNumber
-              ? `${make} ${model} ${modelNumber}`
-              : `${make} ${model}`;
+            
+            // Get body description from first row in group
+            const firstRow = rowsForGroup[0];
+            const bodyDescription = firstRow?.Body ? formatBodyDescription(firstRow.Body) : "";
+            
+            // Build group title: Model + ModelNumber + Body Description
+            // Format: "SIERRA 1500 TK10543 4WD CREW CAB 147" WB"
+            let groupTitle = model;
+            if (modelNumber) {
+              groupTitle += ` ${modelNumber}`;
+              if (bodyDescription) {
+                groupTitle += ` ${bodyDescription}`;
+              }
+            }
 
             return (
               <div key={key} className={groupIndex > 0 ? "border-t" : ""}>
