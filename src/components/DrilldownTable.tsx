@@ -5,7 +5,6 @@ import { generateVehicleUrl } from "../utils/vehicleUrl";
 import { isInTransit, formatAgeShort, sortByAgeDescending } from "../utils/inventoryUtils";
 import { useIsMobile } from "../hooks/useMediaQuery";
 import { Card, CardContent } from "./ui/card";
-import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 
@@ -128,9 +127,8 @@ export const DrilldownTable: FC<Props> = ({ groups, onBack, onRowClick, title })
             return (
               <div key={key} className={groupIndex > 0 ? "border-t" : ""}>
                 {/* Group Header */}
-                <div className="flex items-center justify-between p-4 bg-primary/10">
-                  <span className="font-bold text-sm">{groupTitle}</span>
-                  <Badge variant="secondary">{rowsForGroup.length}</Badge>
+                <div className="p-4 bg-primary/10">
+                  <span className="font-bold text-sm">{groupTitle}  -  {rowsForGroup.length}</span>
                 </div>
 
                 {/* Mobile View */}
