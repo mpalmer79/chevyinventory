@@ -63,7 +63,13 @@ export const useInventoryStore = create<InventoryState>()((set, get) => ({
   setDrillType: (drillType) => set({ drillType }),
   setSelectedVehicle: (selectedVehicle) => set({ selectedVehicle }),
   setRefreshing: (isRefreshing) => set({ isRefreshing }),
-  setSelectedMake: (selectedMake) => set({ selectedMake }),
+  setSelectedMake: (selectedMake) => set({ 
+    selectedMake,
+    filters: DEFAULT_FILTERS,
+    searchTerm: "",
+    drillType: null,
+    selectedVehicle: null,
+  }),
   resetAll: () => set({
     filters: DEFAULT_FILTERS,
     searchTerm: "",
