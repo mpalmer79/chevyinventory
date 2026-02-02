@@ -6,7 +6,6 @@ import { isInTransit, formatAgeShort, sortByAgeDescending } from "../utils/inven
 import { useIsMobile } from "../hooks/useMediaQuery";
 import { VirtualizedTable } from "./VirtualizedTable";
 import { Card, CardContent } from "./ui/card";
-import { Badge } from "./ui/badge";
 import { ExternalLink } from "lucide-react";
 
 type Props = {
@@ -29,7 +28,7 @@ const shouldSubgroup = (model: string): boolean => {
          model === "SIERRA 1500";
 };
 
-const VIRTUALIZATION_THRESHOLD = 100;
+const VIRTUALIZATION_THRESHOLD = 500;
 
 export const InventoryTable: FC<Props> = memo(({ rows, onRowClick }) => {
   const isMobile = useIsMobile();
@@ -105,11 +104,10 @@ export const InventoryTable: FC<Props> = memo(({ rows, onRowClick }) => {
           {groupedRows.map((group) => (
             <div key={`${group.year}-${group.model}-${group.modelNumber}`} className="mb-6 last:mb-0">
               {/* Group Header */}
-              <div className="flex items-center justify-between py-3 px-4 bg-primary/10 rounded-lg mb-3">
+              <div className="py-3 px-4 bg-primary/10 rounded-lg mb-3">
                 <span className="font-bold text-foreground">
-                  {group.year} {group.displayName}
+                  {group.year} {group.displayName}  -  {group.rows.length}
                 </span>
-                <Badge variant="secondary">{group.rows.length}</Badge>
               </div>
 
               {/* Mobile Cards */}
@@ -194,8 +192,7 @@ export const InventoryTable: FC<Props> = memo(({ rows, onRowClick }) => {
                       colSpan={8}
                       className="p-3 font-bold text-sm"
                     >
-                      {group.year} {group.displayName}
-                      <Badge variant="secondary" className="ml-2">{group.rows.length}</Badge>
+                      {group.year} {group.displayName}  -  {group.rows.length}
                     </td>
                   </tr>
 
