@@ -25,8 +25,44 @@ const shouldSubgroup = (model: string): boolean => {
   return model === "SILVERADO 1500" || 
          model === "SILVERADO 2500HD" || 
          model === "SILVERADO 3500HD" ||
-         model === "SIERRA 1500";
+         model === "SIERRA 1500" ||
+         model === "SIERRA 2500HD" ||
+         model === "SIERRA 3500HD";
 };
+
+/**
+ * Formats the body description for display in group headers
+ * Converts "4WD Crew Cab 147" w/3SB" to "4WD CREW CAB 147" WB"
+ */
+function formatBodyDescription(body: string | undefined): string {
+  if (!body) return "";
+  
+  let cleaned = body
+    .replace(/\s*w\/\d+SB\s*/gi, "")
+    .replace(/\s*,\s*\d+"\s*CA\s*/gi, "")
+    .trim();
+  
+  const match = cleaned.match(/^(4WD|2WD|AWD)?\s*(Crew Cab|Double Cab|Reg Cab|Regular Cab)?\s*(\d+)?[""']?/i);
+  
+  if (match) {
+    const driveType = match[1] || "";
+    let cabStyle = match[2] || "";
+    const wheelbase = match[3] || "";
+    
+    if (cabStyle.toLowerCase() === "regular cab") {
+      cabStyle = "REG CAB";
+    }
+    
+    const parts: string[] = [];
+    if (driveType) parts.push(driveType.toUpperCase());
+    if (cabStyle) parts.push(cabStyle.toUpperCase());
+    if (wheelbase) parts.push(`${wheelbase}" WB`);
+    
+    return parts.join(" ");
+  }
+  
+  return cleaned.toUpperCase();
+}
 
 const VIRTUALIZATION_THRESHOLD = 500;
 
@@ -58,9 +94,13 @@ export const InventoryTable: FC<Props> = memo(({ rows, onRowClick }) => {
       const model = parts[1] ?? "";
       const modelNumber = parts[2] ?? "";
       
+      const sortedGroupRows = sortByAgeDescending(groupRows);
+      const firstRow = sortedGroupRows[0];
+      
       let displayName = model;
       if (shouldSubgroup(model) && modelNumber) {
-        displayName = `${model} ${modelNumber}`;
+        const bodyDesc = firstRow?.Body ? formatBodyDescription(firstRow.Body) : "";
+        displayName = `${model} ${modelNumber}${bodyDesc ? ` ${bodyDesc}` : ""}`;
       }
       
       groups.push({
@@ -68,7 +108,7 @@ export const InventoryTable: FC<Props> = memo(({ rows, onRowClick }) => {
         model,
         modelNumber: modelNumber || "",
         displayName,
-        rows: sortByAgeDescending(groupRows),
+        rows: sortedGroupRows,
       });
     });
 
