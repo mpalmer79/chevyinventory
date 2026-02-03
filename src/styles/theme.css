@@ -55,7 +55,7 @@ html {
    ============================================ */
 
 .header {
-  background: url("/chevy-showroom.png") top center/cover no-repeat;
+  background: url("/showroom.png") top center/cover no-repeat;
   background-color: #f8fafc;
   position: relative;
   overflow: hidden;

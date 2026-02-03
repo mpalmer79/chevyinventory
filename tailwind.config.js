@@ -41,17 +41,27 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Brand colors
-        chevy: {
-          blue: "#0066B1",
-          "blue-dark": "#004d86",
-          "blue-light": "#1a7fc7",
-          gold: "#c4a747",
+        // Brand colors - ABC Motors
+        brand: {
+          primary: "#1e40af",
+          "primary-dark": "#1e3a8a",
+          "primary-light": "#3b82f6",
+          secondary: "#0891b2",
+          "secondary-dark": "#0e7490",
+          "secondary-light": "#22d3ee",
+          accent: "#f59e0b",
         },
-        quirk: {
-          green: "#16a34a",
-          "green-dark": "#15803d",
-          "green-light": "#22c55e",
+        // Legacy aliases for compatibility
+        chevy: {
+          blue: "#1e40af",
+          "blue-dark": "#1e3a8a",
+          "blue-light": "#3b82f6",
+          gold: "#f59e0b",
+        },
+        abc: {
+          blue: "#1e40af",
+          "blue-dark": "#1e3a8a",
+          "blue-light": "#3b82f6",
         },
         status: {
           fresh: "#22c55e",
