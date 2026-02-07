@@ -26,14 +26,22 @@
     --ring: 204 100% 35%;
     --radius: 0.5rem;
 
+    /* ABC Motors brand colors */
+    --brand-primary: #1e40af;
+    --brand-primary-dark: #1e3a8a;
+    --brand-primary-light: #3b82f6;
+    --brand-secondary: #0891b2;
+    --brand-secondary-dark: #0e7490;
+    --brand-secondary-light: #22d3ee;
+    --brand-accent: #f59e0b;
     /* Legacy CSS variables for backward compatibility */
-    --chevy-blue: #0066B1;
-    --chevy-blue-dark: #004d86;
-    --chevy-blue-light: #1a7fc7;
-    --chevy-gold: #c4a747;
-    --quirk-green: #16a34a;
-    --quirk-green-dark: #15803d;
-    --quirk-green-light: #22c55e;
+    --chevy-blue: #1e40af;
+    --chevy-blue-dark: #1e3a8a;
+    --chevy-blue-light: #3b82f6;
+    --chevy-gold: #f59e0b;
+    --abc-blue: #1e40af;
+    --abc-blue-dark: #1e3a8a;
+    --abc-blue-light: #3b82f6;
     --status-fresh: #22c55e;
     --status-normal: #eab308;
     --status-watch: #f97316;
@@ -50,7 +58,7 @@
     --text-muted: #94a3b8;
     --border-color: #e2e8f0;
     --accent-primary: var(--chevy-blue);
-    --accent-secondary: var(--quirk-green);
+    --accent-secondary: var(--brand-secondary);
     --card-bg: #ffffff;
     --card-border: #e2e8f0;
     --table-header-bg: #f8fafc;

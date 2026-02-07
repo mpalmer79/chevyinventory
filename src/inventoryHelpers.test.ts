@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import {
   formatCurrency,
   getModelColor,
-  QUIRK_GREEN,
+  BRAND_PRIMARY,
   POWDER_BLUE,
   CHART_COLORS,
 } from "./inventoryHelpers";
@@ -61,15 +61,15 @@ describe("getModelColor", () => {
     expect(getModelColor("TRAVERSE", index)).toBe(CHART_COLORS[index % CHART_COLORS.length]);
   });
 
-  it("uses QUIRK_GREEN as first chart color", () => {
-    expect(CHART_COLORS[0]).toBe(QUIRK_GREEN);
-    expect(getModelColor("TAHOE", 0)).toBe(QUIRK_GREEN);
+  it("uses BRAND_PRIMARY as first chart color", () => {
+    expect(CHART_COLORS[0]).toBe(BRAND_PRIMARY);
+    expect(getModelColor("TAHOE", 0)).toBe(BRAND_PRIMARY);
   });
 });
 
 describe("constants", () => {
-  it("QUIRK_GREEN is correct hex color", () => {
-    expect(QUIRK_GREEN).toBe("#16a34a");
+  it("BRAND_PRIMARY is correct hex color", () => {
+    expect(BRAND_PRIMARY).toBe("#1e40af");
   });
 
   it("POWDER_BLUE is correct hex color", () => {

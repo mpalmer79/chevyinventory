@@ -13,7 +13,7 @@ export const HeaderBar: FC<Props> = () => {
       <div 
         className="md:hidden relative h-[180px] sm:h-[220px] bg-no-repeat"
         style={{ 
-          backgroundImage: "url('/chevy-showroom-mobile.png')",
+          backgroundImage: "url('/showroom-mobile.png')",
           backgroundPosition: "center top",
           backgroundSize: "contain"
         }}
@@ -33,7 +33,7 @@ export const HeaderBar: FC<Props> = () => {
       {/* Desktop Image - shown at md breakpoint and above (768px+) */}
       <div 
         className="hidden md:block relative h-[380px] bg-cover bg-top bg-no-repeat"
-        style={{ backgroundImage: "url('/chevy-showroom.png')" }}
+        style={{ backgroundImage: "url('/showroom.png')" }}
       >
         {/* Light overlay */}
         <div className="absolute inset-0 bg-white/5" />

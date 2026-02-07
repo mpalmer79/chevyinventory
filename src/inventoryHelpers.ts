@@ -1,7 +1,7 @@
 // src/inventoryHelpers.ts
 import { InventoryRow, DealerSource } from "./types";
 
-export const QUIRK_GREEN = "#16a34a";
+export const BRAND_PRIMARY = "#1e40af"; // ABC Motors Blue
 export const POWDER_BLUE = "#5A6A82";
 export const DEFAULT_INVENTORY_PATH = "/inventory.xlsx";
 
@@ -16,7 +16,7 @@ export const DEALER_LABELS: Record<DealerSource, string> = {
 };
 
 export const CHART_COLORS = [
-  QUIRK_GREEN,
+  BRAND_PRIMARY,
   "#22c55e",
   "#4ade80",
   "#a3e635",
@@ -30,7 +30,7 @@ export const getModelColor = (name: string, index: number): string => {
   if (name.toUpperCase() === "SILVERADO 1500") {
     return POWDER_BLUE;
   }
-  return CHART_COLORS[index % CHART_COLORS.length] ?? QUIRK_GREEN;
+  return CHART_COLORS[index % CHART_COLORS.length] ?? BRAND_PRIMARY;
 };
 
 export function formatCurrency(value: number): string {

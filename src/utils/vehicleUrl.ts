@@ -3,13 +3,14 @@ import { InventoryRow } from "../types";
 
 /**
  * Determines the dealership domain based on vehicle make
+ * NOTE: Configure these URLs for your specific dealership websites
  */
 function getDealershipDomain(make: string): string {
   const makeUpper = make.toUpperCase();
   if (makeUpper === "GMC" || makeUpper === "BUICK") {
-    return "https://www.quirkbuickgmc.com";
+    return "https://www.abcmotors-buickgmc.com";
   }
-  return "https://www.quirkchevynh.com";
+  return "https://www.abcmotors.com";
 }
 
 /**
@@ -37,10 +38,10 @@ function formatDriveType(driveType: string, make: string): string {
 }
 
 /**
- * Generates the vehicle detail URL for Quirk dealerships
+ * Generates the vehicle detail URL for ABC Motors dealerships
  * Routes to appropriate domain based on make:
- * - GMC/BUICK → quirkbuickgmc.com
- * - CHEVROLET → quirkchevynh.com
+ * - GMC/BUICK → abcmotors-buickgmc.com
+ * - CHEVROLET → abcmotors.com
  */
 export function generateVehicleUrl(row: InventoryRow): string {
   const year = row.Year;
