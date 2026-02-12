@@ -19,8 +19,8 @@ interface Props {
 }
 
 const MODEL_COLORS = [
-  "#0066B1", // Chevy Blue
-  "#16a34a", // Quirk Green
+  "#1e40af", // ABC Motors Blue
+  "#0891b2", // ABC Motors Teal
   "#f97316", // Orange
   "#eab308", // Yellow
   "#8b5cf6", // Purple

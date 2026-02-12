@@ -1,6 +1,7 @@
 {
-  "name": "quirk-inventory-dashboard",
-  "version": "3.1.0",
+  "name": "abc-motors-inventory-dashboard",
+  "version": "1.0.0",
+  "description": "ABC Motors Inventory Intelligence Dashboard - A production-grade multi-rooftop inventory analytics platform",
   "private": true,
   "type": "module",
   "scripts": {
