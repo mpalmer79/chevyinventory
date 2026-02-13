@@ -1,5 +1,5 @@
 // src/components/HeaderBar.tsx
-import React, { FC } from "react";
+import { FC } from "react";
 
 export const HeaderBar: FC = () => {
   return (
