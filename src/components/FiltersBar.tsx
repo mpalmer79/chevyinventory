@@ -3,6 +3,11 @@ import React, { FC, memo, useMemo } from "react";
 import { Filters, DrillType, AgingBuckets, InventoryRow, DealerSource } from "../types";
 import { ThemeToggle } from "./ui/ThemeToggle";
 import { DEALER_LABELS } from "../inventoryHelpers";
+import { 
+  SPLIT_BY_MODEL_NUMBER, 
+  getModelDisplayName, 
+  shouldSplitByModelNumber 
+} from "../utils/modelFormatting";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import {
@@ -33,9 +38,6 @@ interface Props {
   onMakeChange: (make: DealerSource) => void;
 }
 
-// Models that should be split by Model Number
-const SPLIT_BY_MODEL_NUMBER = ["SILVERADO 1500", "SILVERADO 2500HD", "SIERRA 1500"];
-
 export const FiltersBar: FC<Props> = memo(({
   models,
   filters,
@@ -59,14 +61,14 @@ export const FiltersBar: FC<Props> = memo(({
     return Array.from(makeSet).sort();
   }, [rows]);
 
-  // Filter models based on selected make filter
+  // Filter models based on selected make filter - use friendly display names
   const filteredModels = useMemo(() => {
     if (!filters.make) return models;
     const modelsForMake = new Set<string>();
     rows.forEach((r) => {
       if (r.Make === filters.make) {
-        if (SPLIT_BY_MODEL_NUMBER.includes(r.Model) && r["Model Number"]) {
-          modelsForMake.add(`${r.Model} ${r["Model Number"]}`);
+        if (shouldSplitByModelNumber(r.Model) && r["Model Number"]) {
+          modelsForMake.add(getModelDisplayName(r.Model, r["Model Number"]));
         } else {
           modelsForMake.add(r.Model);
         }
