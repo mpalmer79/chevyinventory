@@ -2,6 +2,7 @@
 import React, { FC, useMemo } from "react";
 import { InventoryRow } from "../types";
 import { isInTransit } from "../utils/inventoryUtils";
+import { formatBodyDescription } from "../utils/modelFormatting";
 import { generateVehicleUrl } from "../utils/vehicleUrl";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
@@ -55,7 +56,7 @@ export const OldestUnitsPanel: FC<Props> = ({ rows, onRowClick }) => {
                 <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Vehicle</th>
                 <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Exterior Color</th>
                 <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Trim</th>
-                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Model #</th>
+                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Body</th>
                 <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Age</th>
                 <th className="text-right p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">MSRP</th>
               </tr>
@@ -78,7 +79,7 @@ export const OldestUnitsPanel: FC<Props> = ({ rows, onRowClick }) => {
                   </td>
                   <td className="p-3 text-sm">{row["Exterior Color"] || "-"}</td>
                   <td className="p-3 text-sm">{row.Trim || "-"}</td>
-                  <td className="p-3 text-sm">{row["Model Number"] || "-"}</td>
+                  <td className="p-3 text-sm">{formatBodyDescription(row.Body) || "-"}</td>
                   <td className="p-3">
                     <Badge variant={getAgeBadgeVariant(row.Age)} className="text-xs">
                       {row.Age} days
@@ -123,8 +124,8 @@ export const OldestUnitsPanel: FC<Props> = ({ rows, onRowClick }) => {
                   <span>{row.Trim || "-"}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Model #</span>
-                  <span>{row["Model Number"] || "-"}</span>
+                  <span className="text-muted-foreground">Body</span>
+                  <span>{formatBodyDescription(row.Body) || "-"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">MSRP</span>
