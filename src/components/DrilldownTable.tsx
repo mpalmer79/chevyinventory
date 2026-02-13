@@ -3,6 +3,7 @@ import React, { FC } from "react";
 import { InventoryRow } from "../types";
 import { generateVehicleUrl } from "../utils/vehicleUrl";
 import { isInTransit, formatAgeShort, sortByAgeDescending } from "../utils/inventoryUtils";
+import { formatBodyDescription } from "../utils/modelFormatting";
 import { useIsMobile } from "../hooks/useMediaQuery";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
@@ -14,47 +15,6 @@ type Props = {
   onRowClick: (row: InventoryRow) => void;
   title?: string;
 };
-
-/**
- * Formats the body description for display in group headers
- * Converts "4WD Crew Cab 147" w/3SB" to "4WD CREW CAB 147" WB"
- * Converts "4WD Reg Cab 142"" to "4WD REG CAB 142" WB"
- */
-function formatBodyDescription(body: string | undefined): string {
-  if (!body) return "";
-  
-  // Remove "w/3SB" and similar suffixes, clean up extra spaces
-  let cleaned = body
-    .replace(/\s*w\/\d+SB\s*/gi, "")
-    .replace(/\s*,\s*\d+"\s*CA\s*/gi, "")  // Remove ", 60" CA" suffix for HD trucks
-    .trim();
-  
-  // Extract the main body style components
-  // Pattern: "4WD Crew Cab 147"" or "4WD Double Cab 147"" or "4WD Reg Cab 142""
-  const match = cleaned.match(/^(4WD|2WD|AWD)?\s*(Crew Cab|Double Cab|Reg Cab|Regular Cab)?\s*(\d+)?[""']?/i);
-  
-  if (match) {
-    const driveType = match[1] || "";
-    let cabStyle = match[2] || "";
-    const wheelbase = match[3] || "";
-    
-    // Normalize "Regular Cab" to "REG CAB"
-    if (cabStyle.toLowerCase() === "regular cab") {
-      cabStyle = "REG CAB";
-    }
-    
-    // Build the formatted string
-    const parts: string[] = [];
-    if (driveType) parts.push(driveType.toUpperCase());
-    if (cabStyle) parts.push(cabStyle.toUpperCase());
-    if (wheelbase) parts.push(`${wheelbase}" WB`);
-    
-    return parts.join(" ");
-  }
-  
-  // Fallback: just uppercase the cleaned string
-  return cleaned.toUpperCase();
-}
 
 export const DrilldownTable: FC<Props> = ({ groups, onBack, onRowClick, title }) => {
   const isMobile = useIsMobile();
