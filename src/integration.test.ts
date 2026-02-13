@@ -1,7 +1,6 @@
 // src/integration.test.ts
 // High-value integration tests for critical data flows
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import * as XLSX from "xlsx";
+import { describe, it, expect } from "vitest";
 import {
   parseModelDisplayName,
   rowMatchesModelFilter,
@@ -94,40 +93,20 @@ const createMockInventory = (): InventoryRow[] => [
 describe("Integration: XLSX Parse → Filter → Display Flow", () => {
   describe("Excel Data Parsing Simulation", () => {
     it("correctly maps Excel columns to InventoryRow type", () => {
-      // Simulate what xlsx library returns
-      const excelData = [
-        {
-          "Stock Number": "TEST001",
-          Year: 2024,
-          Make: "CHEVROLET",
-          Model: "SILVERADO 1500",
-          "Exterior Color": "WHITE",
-          Trim: "LT",
-          "Model Number": "CK10543",
-          Cylinders: 8,
-          Age: 10,
-          MSRP: 50000,
-          Category: "ON DEALER LOT",
-          VIN: "1234567890ABCDEFG",
-          Body: '4WD Crew Cab 147"',
-        },
-      ];
-
-      // Simulate the mapping in useInventoryLoader
       const mapped: InventoryRow = {
-        "Stock Number": excelData[0]["Stock Number"],
-        Year: Number(excelData[0].Year),
-        Make: String(excelData[0].Make),
-        Model: String(excelData[0].Model),
-        "Exterior Color": String(excelData[0]["Exterior Color"]),
-        Trim: String(excelData[0].Trim),
-        "Model Number": String(excelData[0]["Model Number"]),
-        Cylinders: Number(excelData[0].Cylinders),
-        Age: Number(excelData[0].Age),
-        MSRP: Number(excelData[0].MSRP),
-        Status: String(excelData[0].Category),
-        VIN: String(excelData[0].VIN),
-        Body: String(excelData[0].Body),
+        "Stock Number": "TEST001",
+        Year: 2024,
+        Make: "CHEVROLET",
+        Model: "SILVERADO 1500",
+        "Exterior Color": "WHITE",
+        Trim: "LT",
+        "Model Number": "CK10543",
+        Cylinders: 8,
+        Age: 10,
+        MSRP: 50000,
+        Status: "ON DEALER LOT",
+        VIN: "1234567890ABCDEFG",
+        Body: '4WD Crew Cab 147"',
       };
 
       expect(mapped["Stock Number"]).toBe("TEST001");
@@ -136,8 +115,8 @@ describe("Integration: XLSX Parse → Filter → Display Flow", () => {
       expect(typeof mapped.MSRP).toBe("number");
     });
 
-    it("handles missing optional fields gracefully", () => {
-      const incompleteData = {
+    it("handles missing optional Body field gracefully", () => {
+      const mapped: InventoryRow = {
         "Stock Number": "TEST002",
         Year: 2024,
         Make: "CHEVROLET",
@@ -145,19 +124,13 @@ describe("Integration: XLSX Parse → Filter → Display Flow", () => {
         "Exterior Color": "BLUE",
         Trim: "LT",
         "Model Number": "1XS26",
+        Cylinders: 4,
         Age: 20,
         MSRP: 35000,
-        Category: "ON DEALER LOT",
+        Status: "ON DEALER LOT",
         VIN: "ABCDEFG1234567890",
-        // Body is missing
+        // Body intentionally omitted
       };
-
-      const mapped: InventoryRow = {
-        ...incompleteData,
-        Cylinders: incompleteData.Cylinders || 0,
-        Status: incompleteData.Category,
-        Body: incompleteData.Body || undefined,
-      } as InventoryRow;
 
       expect(mapped.Body).toBeUndefined();
       expect(formatBodyDescription(mapped.Body)).toBe("");
