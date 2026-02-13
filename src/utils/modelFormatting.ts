@@ -107,22 +107,26 @@ export function rowMatchesModelFilter(row: InventoryRow, filterModel: string): b
 
 /**
  * Formats the body description from the Body field
- * Converts "4WD Crew Cab 147" w/3SB" to "4WD CREW CAB 147\" WB"
+ * For trucks: Converts "4WD Crew Cab 147" w/3SB" to "4WD CREW CAB 147" WB"
+ * For cars/SUVs: Cleans up and returns readable format like "2DR STINGRAY CPE" or "FWD 4DR"
  */
 export function formatBodyDescription(body: string | undefined): string {
   if (!body) return "";
   
+  // Clean up common suffixes
   let cleaned = body
-    .replace(/\s*w\/\d+SB\s*/gi, "")
-    .replace(/\s*,\s*\d+"\s*CA\s*/gi, "")
+    .replace(/\s*w\/\d*[A-Z]*\s*$/gi, "")  // Remove "w/3SB", "w/1", "w/" etc at end
+    .replace(/\s*,\s*\d+"\s*CA\s*/gi, "")   // Remove ", 60" CA" suffix for HD trucks
+    .replace(/["']+$/g, "")                  // Remove trailing quotes
     .trim();
   
-  const match = cleaned.match(/^(4WD|2WD|AWD)?\s*(Crew Cab|Double Cab|Reg Cab|Regular Cab)?\s*(\d+)?[""']?/i);
+  // Check if this is a truck-style body (has cab type and wheelbase)
+  const truckMatch = cleaned.match(/^(4WD|2WD|AWD|RWD|FWD)?\s*(Crew Cab|Double Cab|Reg Cab|Regular Cab)\s*(\d{2,3})[""']?/i);
   
-  if (match) {
-    const driveType = match[1] || "";
-    let cabStyle = match[2] || "";
-    const wheelbase = match[3] || "";
+  if (truckMatch) {
+    const driveType = truckMatch[1] || "";
+    let cabStyle = truckMatch[2] || "";
+    const wheelbase = truckMatch[3] || "";
     
     if (cabStyle.toLowerCase() === "regular cab") {
       cabStyle = "REG CAB";
@@ -136,6 +140,19 @@ export function formatBodyDescription(body: string | undefined): string {
     return parts.join(" ");
   }
   
+  // Check for van-style body (e.g., "Van 177"", "RWD 2500 135"")
+  const vanMatch = cleaned.match(/^(RWD|FWD|AWD)?\s*(Van)?\s*(\d{4})?\s*(\d{2,3})[""']?/i);
+  if (vanMatch && vanMatch[4]) {
+    const parts: string[] = [];
+    if (vanMatch[1]) parts.push(vanMatch[1].toUpperCase());
+    if (vanMatch[2]) parts.push(vanMatch[2].toUpperCase());
+    if (vanMatch[3]) parts.push(vanMatch[3]);
+    if (vanMatch[4]) parts.push(`${vanMatch[4]}" WB`);
+    return parts.join(" ");
+  }
+  
+  // For everything else (Corvettes, sedans, SUVs, etc.), just clean and uppercase
+  // Examples: "2dr Stingray Cpe" -> "2DR STINGRAY CPE", "FWD 4dr" -> "FWD 4DR"
   return cleaned.toUpperCase();
 }
 
