@@ -7,7 +7,7 @@ This is not a demo dashboard. It is designed as a **scalable internal analytics 
 ---
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/version-3.1.0-green.svg)
+![Version](https://img.shields.io/badge/version-3.2.0-green.svg)
 ![React](https://img.shields.io/badge/React-18.3.1-61dafb.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.7.3-3178c6.svg)
 ![Vite](https://img.shields.io/badge/Vite-6.0.7-646cff.svg)
@@ -51,8 +51,9 @@ The system prioritizes clarity, performance, and decision support over visual no
   - 31–60 days (Normal)
   - 61–90 days (Watch)
   - 90+ days (At Risk)
-- Oldest units surfaced explicitly for intervention
-- New arrivals highlighted for merchandising opportunity
+- **Oldest Units panel** - table view with full vehicle details (Color, Trim, Body, Age, MSRP)
+- **New Arrivals panel** - sorted by age descending, showing vehicles ≤7 days on lot with complete details
+- In-transit vehicles properly excluded from aging calculations
 
 ---
 
@@ -71,12 +72,15 @@ Filters are designed for **rapid narrowing**, not exhaustive querying.
 ---
 
 ### Smart Model Normalization
-High-volume models are automatically split by model number to improve clarity and grouping accuracy.
+High-volume truck models are automatically split by body configuration for improved clarity and grouping accuracy. The Model dropdown displays user-friendly body style descriptions instead of raw model numbers.
 
 Examples:
-- Silverado 1500 → CK10543, CK10743
-- Silverado 2500HD → CK20743, CK20753
-- Sierra 1500 → TK10543, TK10743, TK10753
+- Silverado 1500 CK10543 → **SILVERADO 1500 4WD CREW CAB 147" WB**
+- Silverado 1500 CK10703 → **SILVERADO 1500 4WD REG CAB 126" WB**
+- Silverado 2500HD CK20743 → **SILVERADO 2500HD 4WD CREW CAB 159" WB**
+- Sierra 1500 TK10543 → **SIERRA 1500 4WD CREW CAB 147" WB**
+
+All inventory tables now display the **Body** column (drive type, cab style, wheelbase) instead of raw Model Numbers for improved readability.
 
 This reduces ambiguity and improves table readability at scale.
 
@@ -267,4 +271,3 @@ To maintain clarity and long-term maintainability, this project intentionally av
 - AI Deployment & Solutions Specialist
 - Quirk Auto Dealers
 - [![LinkedIn](https://img.shields.io/badge/LinkedIn-Michael%20Palmer-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/mpalmer1234/)
-
