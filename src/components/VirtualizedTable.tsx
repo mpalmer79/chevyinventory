@@ -4,6 +4,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { InventoryRow } from "../types";
 import { generateVehicleUrl } from "../utils/vehicleUrl";
 import { isInTransit, formatAgeShort, sortByAgeDescending } from "../utils/inventoryUtils";
+import { shouldSplitByModelNumber } from "../utils/modelFormatting";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { ExternalLink } from "lucide-react";
@@ -25,13 +26,6 @@ type FlattenedRow =
   | { type: "header"; group: GroupedRows; id: string }
   | { type: "row"; row: InventoryRow; id: string };
 
-const shouldSubgroup = (model: string): boolean => {
-  return model === "SILVERADO 1500" || 
-         model === "SILVERADO 2500HD" || 
-         model === "SILVERADO 3500HD" ||
-         model === "SIERRA 1500";
-};
-
 const ROW_HEIGHT = 48;
 const HEADER_HEIGHT = 52;
 
@@ -47,7 +41,7 @@ export const VirtualizedTable: FC<Props> = memo(({ rows, onRowClick }) => {
     // Group rows
     rows.forEach((row) => {
       let key: string;
-      if (shouldSubgroup(row.Model) && row["Model Number"]) {
+      if (shouldSplitByModelNumber(row.Model) && row["Model Number"]) {
         key = `${row.Year}|${row.Model}|${row["Model Number"]}`;
       } else {
         key = `${row.Year}|${row.Model}|`;
@@ -67,7 +61,7 @@ export const VirtualizedTable: FC<Props> = memo(({ rows, onRowClick }) => {
       const modelNumber = parts[2] ?? "";
       
       let displayName = model;
-      if (shouldSubgroup(model) && modelNumber) {
+      if (shouldSplitByModelNumber(model) && modelNumber) {
         displayName = `${model} ${modelNumber}`;
       }
       
