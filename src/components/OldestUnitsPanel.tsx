@@ -13,7 +13,7 @@ interface Props {
   onRowClick: (row: InventoryRow) => void;
 }
 
-export const OldestUnitsPanel: FC<Props> = ({ rows, onRowClick }) => {
+export const OldestUnitsPanel: FC<Props> = ({ rows, onRowClick: _onRowClick }) => {
   const oldestUnits = useMemo(() => {
     return [...rows]
       .filter((r) => !isInTransit(r) && r.Age > 0)
