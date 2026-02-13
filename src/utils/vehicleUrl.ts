@@ -179,7 +179,7 @@ function buildVanUrl(
   }
 
   // Extract wheelbase from Body (e.g., "135\"", "139\"", "155\"", "177\"")
-  const wheelbaseMatch = body.match(/(\d{3})["\"]/);
+  const wheelbaseMatch = body.match(/(\d{3})["]/);
   if (wheelbaseMatch) {
     const wb = parseInt(wheelbaseMatch[1]!);
     if (wb <= 139) {
@@ -210,7 +210,7 @@ function buildTruckUrl(
 
   // Process model: "SILVERADO 2500HD" → "silverado-2500-hd", "SIERRA 1500" → "sierra-1500"
   // Remove "CC" suffix for chassis cab models in URL
-  let model = modelUpper
+  const model = modelUpper
     .replace(/\s*CC\s*$/i, "") // Remove CC suffix
     .toLowerCase()
     .replace(/\s+/g, "-")
@@ -220,7 +220,7 @@ function buildTruckUrl(
 
   // Add trim (remove drive type from it)
   if (trim) {
-    let trimClean = trim
+    const trimClean = trim
       .replace(/\b(AWD|4WD|RWD|FWD|2WD)\b/gi, "")
       .trim()
       .toLowerCase()
@@ -268,7 +268,7 @@ function buildGenericUrl(
   const parts = ["new", String(year), make];
 
   // Process model
-  let model = (row.Model || "")
+  const model = (row.Model || "")
     .toLowerCase()
     .replace(/\s+/g, "-")
     .replace(/--+/g, "-");
@@ -276,7 +276,7 @@ function buildGenericUrl(
 
   // Add trim (remove drive type)
   if (trim) {
-    let trimClean = trim
+    const trimClean = trim
       .replace(/\b(AWD|4WD|RWD|FWD|2WD)\b/gi, "")
       .trim()
       .toLowerCase()
