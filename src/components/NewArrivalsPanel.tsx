@@ -30,31 +30,91 @@ export const NewArrivalsPanel: FC<Props> = memo(({ rows }) => {
           <Badge variant="secondary" className="ml-2">{rows.length}</Badge>
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-2">
+      <CardContent className="p-0">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b bg-muted/30">
+                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Stock #</th>
+                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Vehicle</th>
+                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Exterior Color</th>
+                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Trim</th>
+                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Model #</th>
+                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Age</th>
+                <th className="text-right p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">MSRP</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.slice(0, 15).map((row) => (
+                <tr
+                  key={row["Stock Number"]}
+                  className="border-b hover:bg-accent/30 transition-colors cursor-pointer"
+                  onClick={(e) => handleStockClick(e, row)}
+                >
+                  <td className="p-3">
+                    <span className="text-sm font-semibold text-primary flex items-center gap-1">
+                      #{row["Stock Number"]}
+                      <ExternalLink className="h-3 w-3" />
+                    </span>
+                  </td>
+                  <td className="p-3 text-sm font-medium">
+                    {row.Year} {row.Make} {row.Model}
+                  </td>
+                  <td className="p-3 text-sm">{row["Exterior Color"] || "-"}</td>
+                  <td className="p-3 text-sm">{row.Trim || "-"}</td>
+                  <td className="p-3 text-sm">{row["Model Number"] || "-"}</td>
+                  <td className="p-3">
+                    <Badge variant="fresh" className="text-xs">
+                      {row.Age} {row.Age === 1 ? "day" : "days"}
+                    </Badge>
+                  </td>
+                  <td className="p-3 text-sm font-semibold text-right">
+                    ${Number(row.MSRP).toLocaleString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile Card View */}
+        <div className="md:hidden p-4 space-y-2">
           {rows.slice(0, 15).map((row) => (
             <div 
               key={row["Stock Number"]} 
-              className="group flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 hover:border-primary/30 transition-all cursor-pointer"
+              className="group p-3 rounded-lg border bg-card hover:bg-accent/50 hover:border-primary/30 transition-all cursor-pointer"
               onClick={(e) => handleStockClick(e, row)}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-semibold text-primary flex items-center gap-1">
                   #{row["Stock Number"]}
                   <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </span>
-                <span className="text-sm font-medium">
-                  {row.Year} {row.Make} {row.Model} {row.Trim}
-                </span>
-              </div>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span className="hidden sm:inline">{row["Exterior Color"] || "Color TBD"}</span>
                 <Badge variant="fresh" className="text-xs">
                   {row.Age} {row.Age === 1 ? "day" : "days"}
                 </Badge>
-                <span className="font-semibold text-foreground">
-                  ${Number(row.MSRP).toLocaleString()}
-                </span>
+              </div>
+              <div className="text-sm font-medium mb-2">
+                {row.Year} {row.Make} {row.Model}
+              </div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Exterior</span>
+                  <span>{row["Exterior Color"] || "-"}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Trim</span>
+                  <span>{row.Trim || "-"}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Model #</span>
+                  <span>{row["Model Number"] || "-"}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">MSRP</span>
+                  <span className="font-semibold">${Number(row.MSRP).toLocaleString()}</span>
+                </div>
               </div>
             </div>
           ))}
