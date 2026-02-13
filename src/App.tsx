@@ -1,4 +1,4 @@
-import React, { FC, useCallback, useMemo } from "react";
+import { FC, useCallback, useMemo } from "react";
 import "./index.css";
 import "./styles/theme.css";
 
@@ -6,7 +6,6 @@ import { useInventoryStore } from "./store/inventoryStore";
 import { useInventoryLoader } from "./hooks/useInventoryLoader";
 import { isInTransit, sortByAgeDescending } from "./utils/inventoryUtils";
 import { 
-  SPLIT_BY_MODEL_NUMBER, 
   getModelDisplayName, 
   rowMatchesModelFilter,
   shouldSplitByModelNumber 
