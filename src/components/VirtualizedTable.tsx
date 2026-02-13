@@ -4,7 +4,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { InventoryRow } from "../types";
 import { generateVehicleUrl } from "../utils/vehicleUrl";
 import { isInTransit, formatAgeShort, sortByAgeDescending } from "../utils/inventoryUtils";
-import { shouldSplitByModelNumber } from "../utils/modelFormatting";
+import { shouldSplitByModelNumber, formatBodyDescription } from "../utils/modelFormatting";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { ExternalLink } from "lucide-react";
@@ -141,7 +141,7 @@ export const VirtualizedTable: FC<Props> = memo(({ rows, onRowClick }) => {
                 <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground" style={{ width: "18%" }}>Model</th>
                 <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground" style={{ width: "14%" }}>Exterior</th>
                 <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground" style={{ width: "18%" }}>Trim</th>
-                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground" style={{ width: "10%" }}>Model #</th>
+                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground" style={{ width: "10%" }}>Body</th>
                 <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground" style={{ width: "8%" }}>Age</th>
                 <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground" style={{ width: "12%" }}>MSRP</th>
               </tr>
@@ -215,7 +215,7 @@ export const VirtualizedTable: FC<Props> = memo(({ rows, onRowClick }) => {
                         <td className="p-3 text-sm" style={{ width: "18%" }}>{r.Model}</td>
                         <td className="p-3 text-sm" style={{ width: "14%" }}>{r["Exterior Color"]}</td>
                         <td className="p-3 text-sm" style={{ width: "18%" }}>{r.Trim}</td>
-                        <td className="p-3 text-sm" style={{ width: "10%" }}>{r["Model Number"]}</td>
+                        <td className="p-3 text-sm" style={{ width: "10%" }}>{formatBodyDescription(r.Body) || "-"}</td>
                         <td className="p-3 text-sm" style={{ width: "8%" }}>
                           <span className={isInTransit(r) ? "text-amber-500 font-semibold" : ""}>
                             {formatAgeShort(r)}
