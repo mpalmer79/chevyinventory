@@ -5,6 +5,12 @@ import "./styles/theme.css";
 import { useInventoryStore } from "./store/inventoryStore";
 import { useInventoryLoader } from "./hooks/useInventoryLoader";
 import { isInTransit, sortByAgeDescending } from "./utils/inventoryUtils";
+import { 
+  SPLIT_BY_MODEL_NUMBER, 
+  getModelDisplayName, 
+  rowMatchesModelFilter,
+  shouldSplitByModelNumber 
+} from "./utils/modelFormatting";
 import { AgingBuckets, InventoryRow } from "./types";
 
 import { ErrorBoundary, SectionErrorBoundary } from "./components/ErrorBoundary";
@@ -24,9 +30,6 @@ const STOP_WORDS = new Set([
   "i", "im", "i'm", "looking", "for", "to", "the", "a", "an",
   "with", "show", "me", "find", "need", "want", "please",
 ]);
-
-// Models that should be split by Model Number
-const SPLIT_BY_MODEL_NUMBER = ["SILVERADO 1500", "SILVERADO 2500HD", "SIERRA 1500", "SIERRA 2500HD", "SIERRA 3500HD"];
 
 const App: FC = () => {
   const { refetch } = useInventoryLoader();
@@ -59,8 +62,8 @@ const App: FC = () => {
   const modelsList = useMemo(() => {
     const modelsSet = new Set<string>();
     validRows.forEach((r) => {
-      if (SPLIT_BY_MODEL_NUMBER.includes(r.Model) && r["Model Number"]) {
-        modelsSet.add(`${r.Model} ${r["Model Number"]}`);
+      if (shouldSplitByModelNumber(r.Model) && r["Model Number"]) {
+        modelsSet.add(getModelDisplayName(r.Model, r["Model Number"]));
       } else {
         modelsSet.add(r.Model);
       }
@@ -100,17 +103,8 @@ const App: FC = () => {
       // Filter by Make
       if (filters.make && row.Make !== filters.make) return false;
       
-      // Filter by Model (handle split models)
-      if (filters.model) {
-        // Check if filter is for a split model (e.g., "SIERRA 1500 TK10543")
-        const splitModelMatch = SPLIT_BY_MODEL_NUMBER.find(m => filters.model.startsWith(`${m} `));
-        if (splitModelMatch) {
-          const modelNumber = filters.model.replace(`${splitModelMatch} `, "");
-          if (row.Model !== splitModelMatch || row["Model Number"] !== modelNumber) return false;
-        } else {
-          if (row.Model !== filters.model) return false;
-        }
-      }
+      // Filter by Model (handles display names with body styles)
+      if (filters.model && !rowMatchesModelFilter(row, filters.model)) return false;
       
       if (filters.year !== "ALL" && String(row.Year) !== filters.year) return false;
       if (filters.priceMin) {
