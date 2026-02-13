@@ -138,8 +138,8 @@ export const InventoryTable: FC<Props> = memo(({ rows, onRowClick }) => {
                         <span>{r["Exterior Color"]}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Model #</span>
-                        <span>{r["Model Number"]}</span>
+                        <span className="text-muted-foreground">Body</span>
+                        <span>{formatBodyDescription(r.Body) || "-"}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Age</span>
@@ -191,7 +191,7 @@ export const InventoryTable: FC<Props> = memo(({ rows, onRowClick }) => {
                     </td>
                     <td className="p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Exterior Color</td>
                     <td className="p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Trim</td>
-                    <td className="p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Model #</td>
+                    <td className="p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Body</td>
                     <td className="p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Age</td>
                     <td className="p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">MSRP</td>
                   </tr>
@@ -216,7 +216,7 @@ export const InventoryTable: FC<Props> = memo(({ rows, onRowClick }) => {
                       <td className="p-3 text-sm">{r.Model}</td>
                       <td className="p-3 text-sm">{r["Exterior Color"]}</td>
                       <td className="p-3 text-sm">{r.Trim}</td>
-                      <td className="p-3 text-sm">{r["Model Number"]}</td>
+                      <td className="p-3 text-sm">{formatBodyDescription(r.Body) || "-"}</td>
                       <td className="p-3 text-sm">
                         <span className={isInTransit(r) ? "text-amber-500 font-semibold" : ""}>
                           {formatAgeShort(r)}
