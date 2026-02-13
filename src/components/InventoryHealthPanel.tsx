@@ -1,5 +1,5 @@
 // src/components/InventoryHealthPanel.tsx
-import React, { FC, useMemo } from "react";
+import { FC, useMemo } from "react";
 import { InventoryRow, AgingBuckets } from "../types";
 import { isInTransit } from "../utils/inventoryUtils";
 import { TrendingUp, AlertTriangle } from "lucide-react";
