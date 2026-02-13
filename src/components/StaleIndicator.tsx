@@ -1,5 +1,5 @@
 // src/components/StaleIndicator.tsx
-import React, { FC } from "react";
+import { FC } from "react";
 
 interface Props {
   isStale: boolean;
