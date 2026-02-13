@@ -80,9 +80,15 @@ export function parseModelDisplayName(displayName: string): { model: string; mod
   for (const baseModel of SPLIT_BY_MODEL_NUMBER) {
     if (displayName.startsWith(`${baseModel} `)) {
       const remainder = displayName.replace(`${baseModel} `, "");
+      
+      // Determine expected model number prefix based on model name
+      // Silverado uses CK prefix, Sierra uses TK prefix
+      const expectedPrefix = baseModel.startsWith("SIERRA") ? "TK" : "CK";
+      
       // Check if remainder matches a known body style pattern or model number
       for (const [modelNum, bodyStyle] of Object.entries(MODEL_NUMBER_DISPLAY_MAP)) {
-        if (remainder === bodyStyle || remainder === modelNum) {
+        // Only match if the model number has the correct prefix for this model
+        if ((remainder === bodyStyle || remainder === modelNum) && modelNum.startsWith(expectedPrefix)) {
           return { model: baseModel, modelNumber: modelNum };
         }
       }
