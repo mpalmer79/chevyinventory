@@ -1,10 +1,9 @@
 // src/components/FiltersBar.tsx
-import React, { FC, memo, useMemo } from "react";
+import { FC, memo, useMemo } from "react";
 import { Filters, DrillType, AgingBuckets, InventoryRow, DealerSource } from "../types";
 import { ThemeToggle } from "./ui/ThemeToggle";
 import { DEALER_LABELS } from "../inventoryHelpers";
 import { 
-  SPLIT_BY_MODEL_NUMBER, 
   getModelDisplayName, 
   shouldSplitByModelNumber 
 } from "../utils/modelFormatting";
