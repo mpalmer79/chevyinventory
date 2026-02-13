@@ -125,7 +125,7 @@ export function formatBodyDescription(body: string | undefined): string {
   if (!body) return "";
   
   // Clean up common suffixes
-  let cleaned = body
+  const cleaned = body
     .replace(/\s*w\/\d*[A-Z]*\s*$/gi, "")  // Remove "w/3SB", "w/1", "w/" etc at end
     .replace(/\s*,\s*\d+"\s*CA\s*/gi, "")   // Remove ", 60" CA" suffix for HD trucks
     .replace(/["']+$/g, "")                  // Remove trailing quotes
