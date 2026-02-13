@@ -1,5 +1,5 @@
 // src/components/ChartsSection.tsx
-import React, { FC, memo } from "react";
+import { FC, memo } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { AgingBuckets, ModelPieDatum } from "../types";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
