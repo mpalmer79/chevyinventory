@@ -3,6 +3,7 @@ import React, { FC, useMemo, memo } from "react";
 import { InventoryRow } from "../types";
 import { generateVehicleUrl } from "../utils/vehicleUrl";
 import { isInTransit, formatAgeShort, sortByAgeDescending } from "../utils/inventoryUtils";
+import { shouldSplitByModelNumber, formatBodyDescription } from "../utils/modelFormatting";
 import { useIsMobile } from "../hooks/useMediaQuery";
 import { VirtualizedTable } from "./VirtualizedTable";
 import { Card, CardContent } from "./ui/card";
@@ -21,49 +22,6 @@ type GroupedRows = {
   rows: InventoryRow[];
 };
 
-const shouldSubgroup = (model: string): boolean => {
-  return model === "SILVERADO 1500" || 
-         model === "SILVERADO 2500HD" || 
-         model === "SILVERADO 3500HD" ||
-         model === "SIERRA 1500" ||
-         model === "SIERRA 2500HD" ||
-         model === "SIERRA 3500HD";
-};
-
-/**
- * Formats the body description for display in group headers
- * Converts "4WD Crew Cab 147" w/3SB" to "4WD CREW CAB 147" WB"
- */
-function formatBodyDescription(body: string | undefined): string {
-  if (!body) return "";
-  
-  let cleaned = body
-    .replace(/\s*w\/\d+SB\s*/gi, "")
-    .replace(/\s*,\s*\d+"\s*CA\s*/gi, "")
-    .trim();
-  
-  const match = cleaned.match(/^(4WD|2WD|AWD)?\s*(Crew Cab|Double Cab|Reg Cab|Regular Cab)?\s*(\d+)?[""']?/i);
-  
-  if (match) {
-    const driveType = match[1] || "";
-    let cabStyle = match[2] || "";
-    const wheelbase = match[3] || "";
-    
-    if (cabStyle.toLowerCase() === "regular cab") {
-      cabStyle = "REG CAB";
-    }
-    
-    const parts: string[] = [];
-    if (driveType) parts.push(driveType.toUpperCase());
-    if (cabStyle) parts.push(cabStyle.toUpperCase());
-    if (wheelbase) parts.push(`${wheelbase}" WB`);
-    
-    return parts.join(" ");
-  }
-  
-  return cleaned.toUpperCase();
-}
-
 const VIRTUALIZATION_THRESHOLD = 500;
 
 export const InventoryTable: FC<Props> = memo(({ rows, onRowClick }) => {
@@ -77,7 +35,7 @@ export const InventoryTable: FC<Props> = memo(({ rows, onRowClick }) => {
 
     rows.forEach((row) => {
       let key: string;
-      if (shouldSubgroup(row.Model) && row["Model Number"]) {
+      if (shouldSplitByModelNumber(row.Model) && row["Model Number"]) {
         key = `${row.Year}|${row.Model}|${row["Model Number"]}`;
       } else {
         key = `${row.Year}|${row.Model}|`;
@@ -98,7 +56,7 @@ export const InventoryTable: FC<Props> = memo(({ rows, onRowClick }) => {
       const firstRow = sortedGroupRows[0];
       
       let displayName = model;
-      if (shouldSubgroup(model) && modelNumber) {
+      if (shouldSplitByModelNumber(model) && modelNumber) {
         const bodyDesc = firstRow?.Body ? formatBodyDescription(firstRow.Body) : "";
         displayName = `${model} ${modelNumber}${bodyDesc ? ` ${bodyDesc}` : ""}`;
       }
