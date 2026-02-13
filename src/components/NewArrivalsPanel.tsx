@@ -2,6 +2,7 @@
 import React, { FC, memo } from "react";
 import { InventoryRow } from "../types";
 import { generateVehicleUrl } from "../utils/vehicleUrl";
+import { formatBodyDescription } from "../utils/modelFormatting";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Sparkles, ExternalLink } from "lucide-react";
@@ -43,7 +44,7 @@ export const NewArrivalsPanel: FC<Props> = memo(({ rows }) => {
                 <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Vehicle</th>
                 <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Exterior Color</th>
                 <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Trim</th>
-                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Model #</th>
+                <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Body</th>
                 <th className="text-left p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Age</th>
                 <th className="text-right p-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">MSRP</th>
               </tr>
@@ -66,7 +67,7 @@ export const NewArrivalsPanel: FC<Props> = memo(({ rows }) => {
                   </td>
                   <td className="p-3 text-sm">{row["Exterior Color"] || "-"}</td>
                   <td className="p-3 text-sm">{row.Trim || "-"}</td>
-                  <td className="p-3 text-sm">{row["Model Number"] || "-"}</td>
+                  <td className="p-3 text-sm">{formatBodyDescription(row.Body) || "-"}</td>
                   <td className="p-3">
                     <Badge variant="fresh" className="text-xs">
                       {row.Age} {row.Age === 1 ? "day" : "days"}
@@ -111,8 +112,8 @@ export const NewArrivalsPanel: FC<Props> = memo(({ rows }) => {
                   <span>{row.Trim || "-"}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Model #</span>
-                  <span>{row["Model Number"] || "-"}</span>
+                  <span className="text-muted-foreground">Body</span>
+                  <span>{formatBodyDescription(row.Body) || "-"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">MSRP</span>
