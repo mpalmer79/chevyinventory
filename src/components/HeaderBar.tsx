@@ -1,12 +1,7 @@
 // src/components/HeaderBar.tsx
 import React, { FC } from "react";
 
-interface Props {
-  searchTerm: string;
-  onSearchChange: (value: string) => void;
-}
-
-export const HeaderBar: FC<Props> = () => {
+export const HeaderBar: FC = () => {
   return (
     <header className="relative overflow-hidden">
       {/* Mobile/Tablet Image - shown below md breakpoint (768px) */}
