@@ -6,32 +6,32 @@ type Props = {
 };
 
 export const MicSearchBar: React.FC<Props> = ({ onVoiceResult }) => {
-  const recognitionRef = useRef<any | null>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const [listening, setListening] = useState(false);
 
   const startListening = () => {
-    const SpeechRecognition =
-      (window as any).SpeechRecognition ||
-      (window as any).webkitSpeechRecognition;
+    const SpeechRecognitionAPI =
+      window.SpeechRecognition ||
+      window.webkitSpeechRecognition;
 
-    if (!SpeechRecognition) {
+    if (!SpeechRecognitionAPI) {
       alert("Voice search is not supported on this device.");
       return;
     }
 
     if (!recognitionRef.current) {
-      const recog = new SpeechRecognition();
+      const recog = new SpeechRecognitionAPI();
       recog.lang = "en-US";
       recog.continuous = false;
       recog.interimResults = false;
 
-      recog.onresult = (event: any) => {
+      recog.onresult = (event: SpeechRecognitionEvent) => {
         let transcript = event.results[0][0].transcript.trim();
 
-        // 🔥 FIX #1 — REMOVE ALL SPACES inside the spoken VIN/model code
+        // Remove all spaces inside the spoken VIN/model code
         const cleaned = transcript.replace(/\s+/g, "");
 
-        // 🔥 FIX #2 — AUTO-SEARCH
+        // Auto-search
         onVoiceResult(cleaned);
       };
 
