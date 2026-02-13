@@ -13,6 +13,9 @@ interface Props {
 export const NewArrivalsPanel: FC<Props> = memo(({ rows }) => {
   if (!rows.length) return null;
 
+  // Sort by age descending (7 days first, down to 1 day)
+  const sortedRows = [...rows].sort((a, b) => b.Age - a.Age);
+
   const handleStockClick = (e: React.MouseEvent, row: InventoryRow) => {
     e.stopPropagation();
     const url = generateVehicleUrl(row);
@@ -46,7 +49,7 @@ export const NewArrivalsPanel: FC<Props> = memo(({ rows }) => {
               </tr>
             </thead>
             <tbody>
-              {rows.slice(0, 15).map((row) => (
+              {sortedRows.slice(0, 15).map((row) => (
                 <tr
                   key={row["Stock Number"]}
                   className="border-b hover:bg-accent/30 transition-colors cursor-pointer"
@@ -80,7 +83,7 @@ export const NewArrivalsPanel: FC<Props> = memo(({ rows }) => {
 
         {/* Mobile Card View */}
         <div className="md:hidden p-4 space-y-2">
-          {rows.slice(0, 15).map((row) => (
+          {sortedRows.slice(0, 15).map((row) => (
             <div 
               key={row["Stock Number"]} 
               className="group p-3 rounded-lg border bg-card hover:bg-accent/50 hover:border-primary/30 transition-all cursor-pointer"
