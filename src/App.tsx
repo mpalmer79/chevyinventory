@@ -11,7 +11,7 @@ import {
   rowMatchesModelFilter,
   shouldSplitByModelNumber 
 } from "./utils/modelFormatting";
-import { AgingBuckets, InventoryRow } from "./types";
+import { AgingBuckets, DrillType, InventoryRow } from "./types";
 
 import { ErrorBoundary, SectionErrorBoundary } from "./components/ErrorBoundary";
 import { HeaderBar } from "./components/HeaderBar";
@@ -246,13 +246,14 @@ const App: FC = () => {
 
   // Handle pie chart model click - drill down to that model
   const handleModelClick = useCallback((modelName: string) => {
-    setDrillType(`model:${modelName}` as any);
+    const drillValue: DrillType = `model:${modelName}`;
+    setDrillType(drillValue);
   }, [setDrillType]);
 
   if (isLoading && validRows.length === 0) {
     return (
       <div className="app-root">
-        <HeaderBar searchTerm="" onSearchChange={() => {}} />
+        <HeaderBar />
         <main className="container">
           <LoadingIndicator message="Loading inventory..." size="large" />
         </main>
@@ -263,7 +264,7 @@ const App: FC = () => {
   return (
     <ErrorBoundary>
       <div className="app-root">
-        <HeaderBar searchTerm={searchTerm} onSearchChange={handleSmartSearch} />
+        <HeaderBar />
         <main className="container">
           {lastUpdated && (
             <StaleIndicator
